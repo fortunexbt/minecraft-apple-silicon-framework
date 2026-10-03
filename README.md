@@ -1,3 +1,5 @@
+<p align="center"><img src="site/assets/logo.png" width="120" alt="Silicon Shader — an apple made from smooth ivory and Minecraft blocks"></p>
+
 <p align="center"><img src="docs/banner.svg" alt="Silicon Shader — keep the atmosphere, lose the guesswork" width="900"></p>
 
 <p align="center"><strong>A small, open-source workbench for better Minecraft shaders on Apple Silicon.</strong><br>Discover → isolate → measure → keep the winner → play.</p>
