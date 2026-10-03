@@ -222,7 +222,11 @@ class CommunityTests(unittest.TestCase):
             "repos/owner/repo/pulls/1": {
                 "changed_files": 1,
                 "user": {"login": "tester"},
-                "base": {"sha": base_sha},
+                "base": {
+                    "sha": base_sha,
+                    "ref": "main",
+                    "repo": {"full_name": "owner/repo"},
+                },
                 "head": {"sha": head_sha},
             },
             compare_key: {
@@ -287,7 +291,20 @@ class CommunityTests(unittest.TestCase):
 
         self.assertEqual(check().returncode, 0)
         self.assertEqual(
-            output_file.read_text(), f"eligible=true\nhead_sha={head_sha}\n"
+            output_file.read_text(),
+            f"eligible=true\nbase_sha={base_sha}\nhead_sha={head_sha}\n",
+        )
+        responses["repos/owner/repo/pulls/1"]["base"]["ref"] = "feature"
+        self.assertEqual(check().returncode, 0)
+        self.assertEqual(output_file.read_text(), "")
+        responses["repos/owner/repo/pulls/1"]["base"]["ref"] = "main"
+        responses["repos/owner/repo/pulls/1"]["base"]["repo"]["full_name"] = (
+            "other/repo"
+        )
+        self.assertEqual(check().returncode, 0)
+        self.assertEqual(output_file.read_text(), "")
+        responses["repos/owner/repo/pulls/1"]["base"]["repo"]["full_name"] = (
+            "owner/repo"
         )
         responses[compare_key]["files"][0]["status"] = "modified"
         previous_key = "repos/owner/repo/contents/" + path + "?ref=" + base_sha

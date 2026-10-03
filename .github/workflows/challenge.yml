@@ -11,6 +11,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       eligible: ${{ steps.gate.outputs.eligible }}
+      base_sha: ${{ steps.gate.outputs.base_sha }}
       head_sha: ${{ steps.gate.outputs.head_sha }}
     steps:
       - uses: actions/checkout@v4
@@ -42,15 +43,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.number }}
+          VALIDATED_BASE_SHA: ${{ needs.validate.outputs.base_sha }}
           VALIDATED_HEAD_SHA: ${{ needs.validate.outputs.head_sha }}
         run: |
           set -euo pipefail
           [[ "$GH_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
           [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]
+          [[ "$VALIDATED_BASE_SHA" =~ ^[a-f0-9]{40,64}$ ]]
           [[ "$VALIDATED_HEAD_SHA" =~ ^[a-f0-9]{40,64}$ ]]
 
-          current="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER" --jq '.head.sha + " " + (.draft | tostring) + " " + .state')"
-          read -r current_sha is_draft state <<< "$current"
+          current="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER" --jq '.base.sha + " " + .head.sha + " " + (.draft | tostring) + " " + .state')"
+          read -r current_base_sha current_sha is_draft state <<< "$current"
+          if [[ "$current_base_sha" != "$VALIDATED_BASE_SHA" ]]; then
+            echo "The PR base moved after validation. Update your contribution branch from main, then retry." >&2
+            exit 1
+          fi
           [[ "$current_sha" == "$VALIDATED_HEAD_SHA" ]]
           [[ "$is_draft" == "false" && "$state" == "open" ]]
 

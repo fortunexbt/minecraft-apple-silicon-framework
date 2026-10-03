@@ -68,3 +68,5 @@ Submissions are **self-reported**. Validation recomputes timing metrics and reje
 [Compare setups for your Mac](FAIRNESS.md) · [Submission format and validation rules](reference/SUBMISSIONS.md) · [Sampler protocol](../sampler/README.md)
 
 Automatic publication checks data consistency and format. It does not certify the screenshot, visual quality, account ownership or independent performance. Report a misleading entry through the repository issues; maintainers can correct or remove it.
+
+If the automatic check reports that `main` moved, update your existing contribution branch with `gh pr update-branch PR_URL` and let the checks rerun. Do not create another submission or change the measured bundle. Other failures need the reported data error fixed before retrying; publication is not proof of image quality.
