@@ -1,0 +1,42 @@
+--- a/shaders/common/composite_vertex.glsl
++++ b/shaders/common/composite_vertex.glsl
+@@ -84,7 +84,10 @@
+     float prev_exposure = texture2D(gaux3, vec2(0.5)).r;
+ 
+     exposure = (exp(-exposure) * 3.03) + 0.6;
+-    exposure = mix(exposure, prev_exposure, exp(-frameTime * 1.25));
++    // Local: zero exposure history denotes a newly cleared render target.
++    if (prev_exposure > 0.0) {
++        exposure = mix(exposure, prev_exposure, exp(-frameTime * 1.25));
++    }
+ 
+     #if (VOL_LIGHT == 1 && !defined NETHER) || (VOL_LIGHT == 2 && defined SHADOW_CASTING && !defined NETHER)
+         float vol_attenuation;
+--- a/shaders/lib/cas.glsl
++++ b/shaders/lib/cas.glsl
+@@ -6,6 +6,9 @@
+ 
+ // THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ 
++// Local finite-CAS fix: retain the original nine-tap neighborhood.
++// Algebra: -1 / (inversesqrt(a) * peak) = -sqrt(a) / peak for a > 0.
++// At a == 0, use the defined zero weight; guard zero-valued max channels.
+ vec3 CAS(vec2 texcoord) {
+     vec3 e = texture2DLod(colortex1, texcoord, 0.0).rgb;
+ 
+@@ -26,12 +29,12 @@
+     vec3 mxRGB2 = max(max(max(mxRGB,ul),max(dl,ur)),dr);
+     mxRGB += mxRGB2;
+ 
+-    vec3 rcpMxRGB = vec3(1.0) / mxRGB;
++    vec3 rcpMxRGB = vec3(1.0) / max(mxRGB, vec3(1e-8));
+     vec3 ampRGB = clamp(min(mnRGB, 2.0 - mxRGB) * rcpMxRGB, 0.0, 1.0);
+ 
+-    ampRGB = inversesqrt(ampRGB);
++    ampRGB = sqrt(ampRGB);
+     float peak = 8.0 - 3.0 * SHARPENING;
+-    vec3 wRGB = -vec3(1.0) / (ampRGB * peak);
++    vec3 wRGB = -ampRGB / peak;
+     vec3 rcpWeightRGB = vec3(1.0) / (1.0 + 4.0 * wRGB);
+ 
+     vec3 window = (up + down) + (left + right);
