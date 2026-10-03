@@ -18,6 +18,7 @@ class CommunityTests(unittest.TestCase):
         self.presentation = {
             "title": "Example setup",
             "minecraft_profile": "ExamplePlayer",
+            "agent": {"model": "Example Model 1", "harness": "Example Agent"},
             "screenshot_url": "https://raw.githubusercontent.com/tester/recipe/"
             + "a" * 40
             + "/shot.png",
@@ -44,7 +45,32 @@ class CommunityTests(unittest.TestCase):
                     if k != "minecraft_profile"
                 },
             )
+        with self.assertRaisesRegex(ValueError, "agent.model"):
+            submit(
+                self.bundle,
+                True,
+                request=request,
+                presentation={
+                    k: v for k, v in self.presentation.items() if k != "agent"
+                },
+            )
         request.assert_not_called()
+
+    def test_agent_labels_preserve_legacy_and_reject_invalid_attribution(self):
+        from silicon_shader.presentation import validate_presentation
+
+        legacy = {k: v for k, v in self.presentation.items() if k != "agent"}
+        validate_presentation(legacy)
+        for agent in (
+            {"model": ""},
+            {"model": "\nsecret", "harness": "Codex"},
+            {"model": "https://example.com", "harness": "Codex"},
+            {"model": "x" * 81, "harness": "Codex"},
+        ):
+            with self.assertRaises(ValueError):
+                validate_presentation({**self.presentation, "agent": agent})
+        manual = {**self.presentation, "agent": {"model": "None", "harness": "Manual"}}
+        self.assertEqual(validate_presentation(manual, for_submission=True), manual)
 
     def test_existing_pr_does_not_publish_again(self):
         request = Mock(
@@ -195,6 +221,10 @@ class CommunityTests(unittest.TestCase):
                             "presentation": {
                                 "title": "Example setup",
                                 "minecraft_profile": "ExamplePlayer",
+                                "agent": {
+                                    "model": "Example Model 1",
+                                    "harness": "Example Agent",
+                                },
                                 "screenshot_url": "https://raw.githubusercontent.com/tester/recipe/"
                                 + "a" * 40
                                 + "/shot.png",

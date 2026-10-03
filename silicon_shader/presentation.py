@@ -4,14 +4,33 @@ import re
 from urllib.parse import urlsplit
 
 
-def validate_presentation(value):
+def validate_presentation(value, *, for_submission=False):
     required = {"title", "screenshot_url", "recipe_url"}
     if (
         not isinstance(value, dict)
         or not required <= set(value)
-        or set(value) - required - {"minecraft_profile"}
+        or set(value) - required - {"minecraft_profile", "agent"}
     ):
         raise ValueError("Setup details need title, screenshot_url and recipe_url")
+    if for_submission and not value.get("minecraft_profile"):
+        raise ValueError("Add minecraft_profile to setup.json before publishing")
+    if for_submission and "agent" not in value:
+        raise ValueError(
+            "Add agent.model and agent.harness to setup.json before publishing"
+        )
+    if "agent" in value:
+        agent = value["agent"]
+        if not isinstance(agent, dict) or set(agent) != {"model", "harness"}:
+            raise ValueError("Agent attribution needs model and harness")
+        for label in agent.values():
+            if (
+                not isinstance(label, str)
+                or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._+()-]{0,79}", label)
+                or label != label.strip()
+            ):
+                raise ValueError(
+                    "Use a short public model/harness label (1–80 characters), without paths or URLs"
+                )
     profile = value.get("minecraft_profile")
     if "minecraft_profile" in value and (
         not isinstance(profile, str)

@@ -220,7 +220,7 @@ def parser():
         if action == "submit":
             a.add_argument(
                 "--presentation",
-                help="JSON containing title, minecraft_profile, screenshot_url and recipe_url",
+                help="JSON containing title, minecraft_profile, agent (model and harness), screenshot_url and recipe_url",
             )
             a.add_argument("--publish", action="store_true")
             a.add_argument("--reviewed-digest")
@@ -306,7 +306,7 @@ def run(args):
             }
         if args.publish and not args.presentation:
             raise ValueError(
-                "Add --presentation setup.json with a Minecraft profile, screenshot and recipe before publishing"
+                "Add --presentation setup.json with a Minecraft profile, agent credits, screenshot and recipe before publishing"
             )
         presentation = read(args.presentation) if args.presentation else None
         result = community.submit(
