@@ -60,6 +60,72 @@ def instance_info(path):
     )
 
 
+def parse_chip(chip):
+    match = re.fullmatch(
+        r"(?:Apple\s+)?([MA][1-9][0-9]*)(?:\s+(Pro|Max|Ultra))?", chip.strip(), re.I
+    )
+    if not match:
+        return None, None
+    return match[1].upper(), (match[2] or "base").lower()
+
+
+def hardware_info():
+    """Read generic hardware fields only; never return serials or machine UUIDs."""
+    mac = platform.system() == "Darwin"
+    chip = (
+        command(["sysctl", "-n", "machdep.cpu.brand_string"])
+        if mac
+        else platform.processor()
+    )
+    memory = command(["sysctl", "-n", "hw.memsize"]) if mac else ""
+    cores = command(["sysctl", "-n", "hw.ncpu"]) if mac else str(os.cpu_count())
+    raw = (
+        command(
+            ["system_profiler", "SPHardwareDataType", "SPDisplaysDataType", "-json"]
+        )
+        if mac
+        else ""
+    )
+    gpu = []
+    model = None
+    model_id = None
+    try:
+        report = json.loads(raw)
+        hardware = report.get("SPHardwareDataType", [{}])[0]
+        model = hardware.get("machine_name")
+        model_id = hardware.get("machine_model")
+        for item in report.get("SPDisplaysDataType", []):
+            gpu.append(
+                {
+                    key: item[key]
+                    for key in ("sppci_model", "sppci_cores", "spdisplays_metal")
+                    if key in item
+                }
+            )
+    except (ValueError, IndexError, TypeError):
+        pass
+    family, tier = parse_chip(chip)
+    apple_gpu = next(
+        (item for item in gpu if str(item.get("sppci_model", "")).startswith("Apple")),
+        {},
+    )
+    gpu_count = str(apple_gpu.get("sppci_cores", ""))
+    gpu_match = re.fullmatch(r"\s*(\d+)(?:\s+.*)?", gpu_count)
+    return {
+        "chip": chip,
+        "family": family,
+        "tier": tier,
+        "model": model,
+        "model_identifier": model_id,
+        "architecture": platform.machine(),
+        "cpu_cores": int(cores) if cores.isdigit() else None,
+        "gpu_cores": int(gpu_match[1]) if gpu_match else None,
+        "memory_gib": round(int(memory) / 2**30, 1) if memory.isdigit() else None,
+        "gpu": gpu,
+        "os": platform.platform(),
+    }
+
+
 def discover(prism=None):
     candidates = (
         [Path(prism).expanduser()]
@@ -71,36 +137,7 @@ def discover(prism=None):
         ]
     )
     roots = [p.resolve() for p in candidates if (p / "instances").is_dir()]
-    chip = (
-        command(["sysctl", "-n", "machdep.cpu.brand_string"])
-        if platform.system() == "Darwin"
-        else platform.processor()
-    )
-    memory = (
-        command(["sysctl", "-n", "hw.memsize"]) if platform.system() == "Darwin" else ""
-    )
-    cores = (
-        command(["sysctl", "-n", "hw.ncpu"])
-        if platform.system() == "Darwin"
-        else str(os.cpu_count())
-    )
-    displays = (
-        command(["system_profiler", "SPDisplaysDataType", "-json"])
-        if platform.system() == "Darwin"
-        else ""
-    )
-    gpu = []
-    try:
-        for item in json.loads(displays).get("SPDisplaysDataType", []):
-            gpu.append(
-                {
-                    k: item[k]
-                    for k in ["sppci_model", "sppci_cores", "spdisplays_metal"]
-                    if k in item
-                }
-            )
-    except ValueError:
-        pass
+    hardware = hardware_info()
     instances = []
     for root in roots:
         for p in sorted((root / "instances").iterdir()):
@@ -112,16 +149,18 @@ def discover(prism=None):
                         {"id": p.name, "error": "unreadable instance metadata"}
                     )
     return dict(
-        hardware={
-            "chip": chip,
-            "architecture": platform.machine(),
-            "cpu_cores": int(cores) if cores.isdigit() else None,
-            "memory_gib": round(int(memory) / 2**30, 1) if memory.isdigit() else None,
-            "gpu": gpu,
-            "os": platform.platform(),
-        },
+        hardware=hardware,
         prism_roots=[str(p) for p in roots],
         instances=instances,
+        game_directories=[
+            str(p)
+            for p in (
+                Path.home() / "Library/Application Support/minecraft",
+                Path.home() / ".minecraft",
+                Path(os.environ.get("APPDATA", "~")).expanduser() / ".minecraft",
+            )
+            if (p / "options.txt").is_file()
+        ],
         java_homes=command(["/usr/libexec/java_home", "-V"]),
         performance="Unmeasured on this machine; do not infer FPS from chip family",
     )

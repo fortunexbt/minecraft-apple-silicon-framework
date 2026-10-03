@@ -1,5 +1,3 @@
 # Give this to your coding agent
 
-Find a suitable shared Minecraft shader setup for my Apple Silicon Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework.
-
-Read [the Silicon Shader skill](../silicon_shader/skills/silicon-shader/SKILL.md). Inspect my hardware, launcher, mods and image-quality preferences, then use `challenge find` to compare matching setups, screenshots and settings. Check compatibility and try the chosen recipe in an isolated copy, preserving my worlds and current settings. Tune further only if needed. Show me the result and ask before publishing a contribution.
+Find and try a Minecraft shader setup that would improve my experience on this Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework. Follow silicon_shader/skills/silicon-shader/SKILL.md. Detect my hardware and existing game, compare suitable shared setups and screenshots, then adapt a compatible recipe in an isolated copy while preserving my worlds and current settings. Use my current image quality as the default floor, measure with an existing harness if available, and stop when the result is useful. Ask only for missing choices or required access, and before publishing anything.

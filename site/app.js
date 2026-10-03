@@ -213,6 +213,7 @@ function detailsFor(entry) {
   const workload = metadata.workload || {};
   const quality = metadata.quality_review || {};
   const rows = [
+    ['Mac model', [asText(hardware(entry).model), asText(hardware(entry).model_identifier)].filter(Boolean).join(' · ') || 'Not recorded'],
     ['Measurement', 'CPU frame production; not displayed or generated FPS'],
     ['Minecraft', asText(metadata.minecraft, 'Not recorded')],
     ['Launcher and loader', [asText(metadata.launcher, 'Launcher not recorded'), metadata.loader ? titleCase(asText(metadata.loader.name, '')) + (metadata.loader.version ? ' ' + metadata.loader.version : '') : ''].filter(Boolean).join(' · ')],
@@ -395,7 +396,7 @@ function render() {
 
   const selected = sortEntries(matchingEntries());
   byId('count').textContent = selected.length + (selected.length === 1 ? ' setup' : ' setups');
-  byId('load-status').textContent = selected.length + ' setups shown.';
+  byId('load-status').textContent = selected.length + (selected.length === 1 ? ' setup shown.' : ' setups shown.');
   if (selected.length === 0) {
     showEmpty('No setups match those filters.', 'Try another chip family, tier, or memory size.', 'Clear filters', 'clear');
     return;

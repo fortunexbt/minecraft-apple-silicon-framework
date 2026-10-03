@@ -18,7 +18,7 @@ The supported metric is **CPU frame production**. It is not GPU presentation, di
 
 Unknown keys are rejected throughout public metadata. Required fields are:
 
-- `hardware`: `family` M1–M5, `tier` base/pro/max/ultra, integer `cpu_cores`, `gpu_cores`, and `memory_gib` (1–512).
+- `hardware`: observed `family` such as M1–M6 or A18, `tier` base/pro/max/ultra, integer `cpu_cores`, `gpu_cores`, and `memory_gib` (1–2048). Optional `model` (e.g. MacBook Pro) and `model_identifier` (e.g. Mac16,1) preserve chassis context without serial numbers. The hardware reference is not an admission whitelist.
 - `minecraft`, `launcher`, `harness`, `runtime`: short product/version labels. `loader` has `name` and `version`.
 - `workload`: generic public `scene`, `route`, and `terrain` recipe labels, matching capture context exactly. Use reproducible recipe names, never a private world name. Runtime must also match the capture.
 - `baseline` and `candidate`: each has `mods` (1–200 name-to-version entries), `shader` (`name`, `version`), and `settings`.
