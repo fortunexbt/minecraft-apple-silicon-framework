@@ -1,5 +1,7 @@
 # Benchmark and tune a setup
 
+This is the optional guide for private exploratory tuning. **Public challenge submissions use [the shared workload](../WORKLOAD.md)**, not the custom scene suite below. A normal challenge comparison is one baseline and candidate on the short standard route.
+
 ## 1. Discover and isolate
 
 `silicon-shader discover` reads hardware and Prism metadata; it does not launch games. `--prism /path/to/PrismLauncher` supports portable/custom installations. Output may contain local paths: keep discovery output private.

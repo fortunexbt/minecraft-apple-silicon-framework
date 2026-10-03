@@ -1,0 +1,280 @@
+{
+  "id": "silicon-shader-overworld-v1",
+  "name": "Overworld flight v1",
+  "minecraft": "26.3",
+  "data_version": 5023,
+  "seed": 20260929,
+  "duration_s": 21,
+  "fov": 70,
+  "dimension": "overworld",
+  "game_mode": "creative",
+  "weather": "clear",
+  "time": "noon",
+  "guide": "https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKLOAD.md",
+  "route": {
+    "start": [
+      -121.3,
+      100.0,
+      438.7
+    ],
+    "yaw": 180.0,
+    "pitch": 5.0,
+    "position_tolerance": 0.5,
+    "client_ticks": 420,
+    "turn": {
+      "start_tick": 180,
+      "end_tick": 240,
+      "from_yaw": 180,
+      "to_yaw": 90,
+      "easing": "smoothstep"
+    },
+    "samples": [
+      {
+        "tick": 0,
+        "position": [
+          -121.3,
+          100.0,
+          438.7
+        ],
+        "yaw": -180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 20,
+        "position": [
+          -121.3,
+          100.0,
+          432.48125248562667
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 40,
+        "position": [
+          -121.3,
+          100.0,
+          422.30056417831804
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 60,
+        "position": [
+          -121.3,
+          100.0,
+          411.51906735765107
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 80,
+        "position": [
+          -121.3,
+          100.0,
+          400.64646092970077
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 100,
+        "position": [
+          -121.3,
+          100.0,
+          389.76003818531234
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 120,
+        "position": [
+          -121.3,
+          100.0,
+          378.87152026561125
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 140,
+        "position": [
+          -121.3,
+          100.0,
+          367.98268462304895
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 160,
+        "position": [
+          -121.3,
+          100.0,
+          357.0938007994032
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 180,
+        "position": [
+          -121.3,
+          100.0,
+          346.204909669337
+        ],
+        "yaw": 180.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 200,
+        "position": [
+          -121.84573692201802,
+          100.0,
+          335.3669378518964
+        ],
+        "yaw": 156.66667,
+        "pitch": 5.0
+      },
+      {
+        "tick": 220,
+        "position": [
+          -126.45982193977184,
+          100.0,
+          326.0595969159254
+        ],
+        "yaw": 113.333336,
+        "pitch": 5.0
+      },
+      {
+        "tick": 240,
+        "position": [
+          -135.61737191685964,
+          100.0,
+          321.66111845492617
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 260,
+        "position": [
+          -146.23001732592726,
+          100.0,
+          320.8123818594477
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 280,
+        "position": [
+          -157.07701828148836,
+          100.0,
+          320.6836751980377
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 300,
+        "position": [
+          -167.9595580840046,
+          100.0,
+          320.6641574763092
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 320,
+        "position": [
+          -178.8474871749837,
+          100.0,
+          320.6611977113888
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 340,
+        "position": [
+          -189.73623352461422,
+          100.0,
+          320.660748877836
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 360,
+        "position": [
+          -200.6251038074333,
+          100.0,
+          320.66068081447173
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 380,
+        "position": [
+          -211.51399288410082,
+          100.0,
+          320.66067049300284
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 400,
+        "position": [
+          -222.40288481076155,
+          100.0,
+          320.6606689278038
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      },
+      {
+        "tick": 420,
+        "position": [
+          -233.2917771696095,
+          100.0,
+          320.6606686904491
+        ],
+        "yaw": 90.0,
+        "pitch": 5.0
+      }
+    ]
+  },
+  "terrain": [
+    {
+      "x": -121,
+      "z": 438,
+      "height": 70,
+      "block": "minecraft:sand"
+    },
+    {
+      "x": -121,
+      "z": 320,
+      "height": 63,
+      "block": "minecraft:water"
+    },
+    {
+      "x": -240,
+      "z": 300,
+      "height": 64,
+      "block": "minecraft:sand"
+    }
+  ],
+  "repeat_budget_s": 300,
+  "warmup_seconds": 30,
+  "attempt_timeout_seconds": 65,
+  "terrain_generation": "Prepared vanilla terrain; fresh generation excluded from timed route",
+  "max_capture_seconds": 30,
+  "timing": "Nominally 21 seconds; complete the same 420 ticks and retain slow frames, up to the 30-second capture limit."
+}

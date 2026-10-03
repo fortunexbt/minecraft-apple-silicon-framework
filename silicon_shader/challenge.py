@@ -248,33 +248,38 @@ def _cohort(bundle):
             baseline["settings"].pop(key)
         else:
             baseline.pop(key)
-    return _hash(
-        {
-            "metadata": meta,
-            "controls": bundle["controls"],
-            "fixed_configuration": baseline,
-        }
-    )
+    cohort = {
+        "metadata": meta,
+        "controls": bundle["controls"],
+        "fixed_configuration": baseline,
+    }
+    # Preserve the exact v1 cohort calculation. The versioned route is part of
+    # the identity only for v2 bundles that carry standardized route receipts.
+    if bundle.get("schema_version") == 2:
+        cohort["workload_id"] = bundle["workload_id"]
+    return _hash(cohort)
 
 
 def _check_bundle(bundle):
-    _keys(
-        bundle,
-        {
-            "schema_version",
-            "status",
-            "metric",
-            "metadata",
-            "controls",
-            "runs",
-            "cohort_hash",
-            "content_digest",
-        },
-        "bundle",
-    )
+    legacy_keys = {
+        "schema_version",
+        "status",
+        "metric",
+        "metadata",
+        "controls",
+        "runs",
+        "cohort_hash",
+        "content_digest",
+    }
+    schema = bundle.get("schema_version") if isinstance(bundle, dict) else None
+    if schema == 1:
+        _keys(bundle, legacy_keys, "bundle")
+    elif schema == 2:
+        _keys(bundle, legacy_keys | {"workload_id"}, "bundle")
+    else:
+        raise ValueError("Unsupported schema, status or metric")
     if (
         type(bundle["schema_version"]) is not int
-        or bundle["schema_version"] != 1
         or bundle["status"] != "self_reported"
         or bundle["metric"] != "cpu_frame_production"
     ):
@@ -299,7 +304,10 @@ def _check_bundle(bundle):
     _keys(bundle["runs"], {"baseline", "candidate"}, "runs")
     durations = []
     for run in bundle["runs"].values():
-        _keys(run, {"intervals_ms", "metrics", "csv_sha256"}, "run")
+        run_keys = {"intervals_ms", "metrics", "csv_sha256"}
+        if schema == 2:
+            run_keys.add("route_receipt")
+        _keys(run, run_keys, "run")
         if not isinstance(run["csv_sha256"], str) or not re.fullmatch(
             "[0-9a-f]{64}", run["csv_sha256"]
         ):
@@ -308,8 +316,12 @@ def _check_bundle(bundle):
         if _canonical(metrics) != _canonical(run["metrics"]):
             raise ValueError("Metrics differ from recomputed trace")
         durations.append(metrics["duration_s"])
-    if abs(durations[0] - durations[1]) > 1:
+    if schema == 1 and abs(durations[0] - durations[1]) > 1:
         raise ValueError("Run durations differ by more than one second")
+    if schema == 2:
+        from .workload import validate_workload
+
+        validate_workload(bundle)
     if bundle["cohort_hash"] != _cohort(bundle):
         raise ValueError("Cohort hash mismatch")
     unsigned = {k: v for k, v in bundle.items() if k != "content_digest"}
@@ -341,9 +353,13 @@ def prepare(
     baseline_csv_path,
     candidate_csv_path,
     metadata_path,
+    baseline_route_path=None,
+    candidate_route_path=None,
 ):
     """Prepare a privacy-minimized dict, raising ValueError on invalid evidence."""
     try:
+        if (baseline_route_path is None) != (candidate_route_path is None):
+            raise ValueError("Provide both baseline and candidate route receipts")
         meta = _load(metadata_path)
         _metadata(meta)
         captures, runs = {}, {}
@@ -382,6 +398,9 @@ def prepare(
                 "metrics": metrics,
                 "csv_sha256": csv_digest,
             }
+        if baseline_route_path is not None:
+            runs["baseline"]["route_receipt"] = _load(baseline_route_path)
+            runs["candidate"]["route_receipt"] = _load(candidate_route_path)
         allowed = set(meta["interventions"]) - {"visual_properties", "mods"}
         if "mods" in meta["interventions"]:
             allowed.add("versions")
@@ -393,13 +412,17 @@ def prepare(
             ):
                 raise ValueError("Unmatched capture context: " + key)
         bundle = {
-            "schema_version": 1,
+            "schema_version": 2 if baseline_route_path is not None else 1,
             "status": "self_reported",
             "metric": "cpu_frame_production",
             "metadata": meta,
             "controls": {k: captures["baseline"]["observed"][k] for k in SAFE_CONTROLS},
             "runs": runs,
         }
+        if baseline_route_path is not None:
+            from .workload import WORKLOAD_ID
+
+            bundle["workload_id"] = WORKLOAD_ID
         bundle["cohort_hash"] = _cohort(bundle)
         bundle["content_digest"] = _hash(bundle)
         errors = validate_bundle(bundle)
