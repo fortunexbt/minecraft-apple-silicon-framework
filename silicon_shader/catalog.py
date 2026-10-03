@@ -42,6 +42,7 @@ def select(
             key
             for key in fields
             if requested.get(key) is not None
+            and not (key == "model_identifier" and not hardware.get(key))
             and (
                 str(hardware.get(key, "")).lower() != str(requested[key]).lower()
                 if key in ("family", "tier", "model_identifier")
@@ -97,6 +98,12 @@ def select(
                 if any(v is not None for v in requested.values())
                 else "unfiltered",
                 "hardware_differences": diffs,
+                "hardware_unknowns": [
+                    key
+                    for key in fields
+                    if requested.get(key) is not None
+                    and entry["metadata"]["hardware"].get(key) is None
+                ],
             }
         )
     return {

@@ -6,7 +6,7 @@ import zipfile
 from unittest.mock import patch
 
 from silicon_shader.catalog import select
-from silicon_shader.discover import hardware_info, parse_chip
+from silicon_shader.discover import hardware_info, parse_chip, public_profiles
 from silicon_shader.doctor import doctor
 import test_challenge
 
@@ -73,6 +73,18 @@ class OnboardingTests(unittest.TestCase):
         )
         self.assertEqual(result["setups"][0]["digest"], "a")
         self.assertFalse(result["broadened_search"])
+        legacy = select(
+            entries,
+            target={
+                "family": "M4",
+                "tier": "base",
+                "memory_gib": 24,
+                "gpu_cores": 10,
+                "model_identifier": "Mac16,1",
+            },
+        )
+        self.assertEqual(legacy["setups"][0]["hardware_differences"], [])
+        self.assertEqual(legacy["setups"][0]["hardware_unknowns"], ["model_identifier"])
         result = select(
             entries,
             target={"family": "M4", "tier": "base", "memory_gib": 16, "gpu_cores": 10},
@@ -95,6 +107,31 @@ class OnboardingTests(unittest.TestCase):
         )
         fixture.save()
         self.assertEqual(fixture.prepare()["metadata"]["hardware"]["family"], "M6")
+
+    def test_public_profile_discovery_excludes_credentials(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "accounts.json").write_text(
+                json.dumps(
+                    {
+                        "accounts": [
+                            {
+                                "active": True,
+                                "msa": {"token": "PRIVATE"},
+                                "profile": {
+                                    "name": "ExamplePlayer",
+                                    "id": "a" * 32,
+                                    "skin": {"data": "UNNEEDED"},
+                                },
+                            }
+                        ]
+                    }
+                )
+            )
+            self.assertEqual(
+                public_profiles(root),
+                [{"name": "ExamplePlayer", "uuid": "a" * 32, "active": True}],
+            )
 
     def test_generic_doctor_reads_mods_without_assuming_prism(self):
         with tempfile.TemporaryDirectory() as tmp:

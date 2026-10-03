@@ -126,6 +126,32 @@ def hardware_info():
     }
 
 
+def public_profiles(root):
+    """Return only public Minecraft identity fields, never account credentials."""
+    try:
+        accounts = json.loads((root / "accounts.json").read_text()).get("accounts", [])
+        result = []
+        for account in accounts:
+            profile = account.get("profile", {})
+            name, uuid = profile.get("name", ""), profile.get("id", "")
+            if (
+                isinstance(name, str)
+                and isinstance(uuid, str)
+                and re.fullmatch(r"[A-Za-z0-9_]{3,16}", name)
+                and re.fullmatch(r"[a-fA-F0-9]{32}", uuid.replace("-", ""))
+            ):
+                result.append(
+                    {
+                        "name": name,
+                        "uuid": uuid,
+                        "active": account.get("active") is True,
+                    }
+                )
+        return result
+    except (OSError, ValueError, AttributeError, TypeError):
+        return []
+
+
 def discover(prism=None):
     candidates = (
         [Path(prism).expanduser()]
@@ -150,6 +176,9 @@ def discover(prism=None):
                     )
     return dict(
         hardware=hardware,
+        minecraft_profiles=[
+            profile for root in roots for profile in public_profiles(root)
+        ],
         prism_roots=[str(p) for p in roots],
         instances=instances,
         game_directories=[
