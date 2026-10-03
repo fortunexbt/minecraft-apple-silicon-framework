@@ -70,3 +70,18 @@ Discovery is designed for M1–M5 families, including Pro/Max/Ultra and MacBooks
 Original framework code is [MIT licensed](LICENSE). Third-party components retain their own licenses. This project is independent of Apple, Prism and the mod/shader authors.
 
 **NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.**
+
+## Open community challenge
+
+[Explore the hosted challenge](https://fortunexbt.github.io/minecraft-apple-silicon-framework/) · [Agent skill](silicon_shader/skills/silicon-shader/SKILL.md) · [Rules and optional submission](docs/CHALLENGE.md) · [What we learned from Yukon](docs/YUKON.md)
+
+Version 0.2 adds launcher-neutral game-directory isolation, a read-only setup doctor, user-selected quality floors and an optional quality-first search. Community contributions pair a baseline and candidate, export bounded relative timing evidence, and use an explicit reviewed-digest publication command. The hosted board separates cohorts and labels all initial results self-reported. No community measurements are fabricated to populate it.
+
+```sh
+silicon-shader doctor /path/to/game --game-dir
+silicon-shader isolate /path/to/game /path/to/new-lab --game-dir --closed
+silicon-shader challenge show
+silicon-shader install-skill --destination ~/.agents/skills/silicon-shader
+```
+
+Generic game directories preserve the existing mod/shader stack. Automatic settings edits still require a supported adapter; launcher JVM arguments/hooks remain the operator's responsibility. Any harness can implement the documented [capture protocol](sampler/README.md), but missing focus/completion evidence cannot be invented.

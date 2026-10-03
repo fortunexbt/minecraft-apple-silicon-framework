@@ -84,3 +84,11 @@ The resulting status is **clean copy, unverified gameplay**. To call it ready to
 For >33/50/100 ms, `time_ms` sums **whole interval durations** crossing the threshold. It is not time in excess of that threshold. `local_outliers` separately counts intervals over twice the neighboring 60-frame median and over 8 ms above it. This heuristic helps distinguish abrupt stalls from sustained gradual slowdowns. Review the source intervals before attributing a cause.
 
 The included reference ledger is prior campaign evidence on one M4. A new Mac, renderer, shader, game version or terrain cohort requires its own valid baseline. Do not pool invalid captures, pristine scenes and fresh-generation stress into one impressive number.
+
+## Adapt to the player
+
+Run `doctor INSTANCE` before tuning, or `doctor GAME_DIRECTORY --game-dir` for another launcher. The JSON result includes detected config and a manifest template with unknown live observations. Do not turn those placeholders into claims without measurement. `isolate --game-dir` copies supported game files into a managed lab while preserving the original. Runtime choice and external launcher arguments remain manual. Configuration adapters currently target Iris and the supported scaling mod; an unsupported stack can supply evidence through the capture protocol without pretending those settings are writable.
+
+Choose explicit floors with `loop start SESSION INSTANCE --min-scale 0.75 --min-render-distance 20`. The default objective seeks performance while preserving those floors. For higher visual quality with verified headroom, use `--objective quality --max-scale 1 --max-render-distance 24`. If a minimum exceeds the default maximum, pass a matching higher maximum. Quality mode can retain a lower-FPS candidate when scale/view distance improves and the chosen pacing target still passes. It does not automatically search arbitrary shaders or mods.
+
+New capture manifests require `game_state=playing`, `player_alive=true`, and the actual `game_mode` in both expected and observed context. Legacy captures without this evidence are not automatically upgraded. Menus and death screens can produce misleadingly high counters. Nearest filtering is a preference unless a matched run shows a speed difference; old world coordinates are not proof of the intended scene.

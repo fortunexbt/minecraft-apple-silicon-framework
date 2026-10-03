@@ -8,13 +8,42 @@ SETTING_CONTEXT = (
 )
 
 
-def start(scenes, target_fps=85, max_trials=4):
+def start(
+    scenes,
+    target_fps=85,
+    max_trials=4,
+    min_scale=0.65,
+    min_render_distance=12,
+    objective="performance",
+    max_scale=1.0,
+    max_render_distance=24,
+):
     if not scenes or len(set(scenes)) != len(scenes):
         raise ValueError("Choose unique representative scenes")
     if not 1 <= max_trials <= 6 or not 30 <= target_fps <= 120:
         raise ValueError("Budget 1–6 trials; target 30–120 FPS")
+    if type(min_scale) not in (int, float) or not 0.5 <= min_scale <= 1:
+        raise ValueError("Minimum scale must be 0.5–1.0")
+    if type(min_render_distance) is not int or not 12 <= min_render_distance <= 64:
+        raise ValueError("Minimum view distance must be 12–64")
+    if objective not in ("performance", "quality"):
+        raise ValueError("Objective must be performance or quality")
+    if type(max_scale) not in (int, float) or not min_scale <= max_scale <= 1:
+        raise ValueError("Maximum scale must be between minimum scale and 1.0")
+    if (
+        type(max_render_distance) is not int
+        or not min_render_distance <= max_render_distance <= 64
+    ):
+        raise ValueError(
+            "Maximum view distance must be between minimum distance and 64"
+        )
     return dict(
-        format=1,
+        format=2,
+        objective=objective,
+        max_scale=max_scale,
+        max_render_distance=max_render_distance,
+        min_scale=min_scale,
+        min_render_distance=min_render_distance,
         scenes=scenes,
         target_fps=target_fps,
         max_trials=max_trials,
@@ -41,7 +70,8 @@ def get_suite(state, profile):
 def _good(state, suite):
     return all(
         c["metrics"]["worst_5s_fps"] >= state["target_fps"]
-        and c["metrics"]["over_50"]["count"] == 0
+        and c["metrics"]["over_33"]["count"] == 0
+        and c["metrics"]["local_outliers"]["count"] == 0
         for c in suite
     )
 
@@ -53,8 +83,10 @@ def submit(state, capture):
     if errors:
         raise ValueError("; ".join(errors))
     distance = capture["observed"].get("render_distance")
-    if type(distance) is not int or distance < 12:
-        raise ValueError("Optimization requires verified render distance at least 12")
+    if type(distance) is not int or distance < state.get("min_render_distance", 12):
+        raise ValueError("Capture is below the session view-distance floor")
+    if capture["observed"]["scale"] < state.get("min_scale", 0.65):
+        raise ValueError("Capture is below the session resolution floor")
     profile = capture.get("profile", "baseline")
     scene = capture["observed"]["scene"]
     if (
@@ -109,7 +141,13 @@ def submit(state, capture):
         state["decisions"].append(
             {"profile": profile, "decision": "baseline validated"}
         )
-        if _good(state, suite):
+        if state.get("objective") == "quality":
+            if not _good(state, suite):
+                state.update(
+                    stopped=True,
+                    reason="Baseline has no verified headroom for quality upgrades",
+                )
+        elif _good(state, suite):
             state.update(stopped=True, reason="Baseline already meets chosen tradeoff")
         return state
     old = get_suite(state, state["winner"])
@@ -130,13 +168,33 @@ def submit(state, capture):
         <= o["metrics"]["local_outliers"]["count"]
         for n, o in zip(suite, old)
     )
-    won = gain >= 0.05 and pacing
+    quality_gain = False
+    if state.get("objective") == "quality":
+        previous = state.get("winner_profile", state["baseline_profile"])
+        candidate = state["pending"]["profile"]
+        quality_gain = (
+            (
+                candidate["scale"] > previous["scale"]
+                or candidate["options"]["renderDistance"]
+                > previous["options"]["renderDistance"]
+            )
+            and candidate["scale"] >= previous["scale"]
+            and candidate["options"]["renderDistance"]
+            >= previous["options"]["renderDistance"]
+        )
+        pacing = _good(state, suite) and all(
+            c["metrics"]["p95_ms"] <= 1000 / state["target_fps"] for c in suite
+        )
+        won = quality_gain and pacing
+    else:
+        won = gain >= 0.05 and pacing
     state["decisions"].append(
         {
             "profile": profile,
             "decision": "retain" if won else "reject",
             "worst_scene_gain": gain,
             "pacing_passed": pacing,
+            "quality_gain": quality_gain,
             "visual_gate": "passed by supplied reviewer; subjective quality remains a user decision",
         }
     )
@@ -147,7 +205,9 @@ def submit(state, capture):
     else:
         state["plateau"] += 1
     state["pending"] = None
-    if _good(state, get_suite(state, state["winner"])):
+    if state.get("objective", "performance") == "performance" and _good(
+        state, get_suite(state, state["winner"])
+    ):
         state.update(stopped=True, reason="Chosen tradeoff met")
     elif state["trials"] >= state["max_trials"]:
         state.update(stopped=True, reason="Trial budget exhausted")
@@ -176,26 +236,68 @@ def propose(state, base_profile):
     opts = profile.setdefault("options", {})
     if not isinstance(profile.get("scale"), (int, float)):
         raise ValueError("Readable static scaling config required")
+    min_scale = state.get("min_scale", 0.65)
+    min_distance = state.get("min_render_distance", 12)
+    if profile["scale"] < min_scale or opts.get("renderDistance", 0) < min_distance:
+        raise ValueError("Base profile is below the session quality floors")
     candidates = []
-    if opts.get("simulationDistance", 8) > 6:
+    if state.get("objective") == "quality":
+        if profile["scale"] < state["max_scale"]:
+            p = copy.deepcopy(profile)
+            p["scale"] = min(state["max_scale"], round(profile["scale"] + 0.05, 2))
+            if "irisScale" in p.get("scale_options", {}):
+                p["scale_options"]["irisScale"] = p["scale"]
+            candidates.append(
+                (
+                    f"Increase internal scale to {p['scale']:g}; retain only with gameplay headroom",
+                    p,
+                )
+            )
+        if opts["renderDistance"] < state["max_render_distance"]:
+            p = copy.deepcopy(profile)
+            p["options"]["renderDistance"] = min(
+                state["max_render_distance"], opts["renderDistance"] + 2
+            )
+            candidates.append(
+                (
+                    f"Extend view distance to {p['options']['renderDistance']}; retain only with gameplay headroom",
+                    p,
+                )
+            )
+    if (
+        state.get("objective", "performance") == "performance"
+        and opts.get("simulationDistance", 8) > 6
+    ):
         p = copy.deepcopy(profile)
         p["options"]["simulationDistance"] = 6
         candidates.append(
             ("Reduce simulation distance to 6 while preserving view distance", p)
         )
-    if opts.get("renderDistance", 12) > 12:
+    if (
+        state.get("objective", "performance") == "performance"
+        and opts.get("renderDistance", 12) > min_distance
+    ):
         p = copy.deepcopy(profile)
-        p["options"]["renderDistance"] = max(12, opts["renderDistance"] - 4)
+        p["options"]["renderDistance"] = max(min_distance, opts["renderDistance"] - 4)
         candidates.append(
-            ("Trade four chunks of distant view for lower rendering cost", p)
+            (
+                f"Reduce view distance from {opts['renderDistance']} to {p['options']['renderDistance']}",
+                p,
+            )
         )
-    if profile["scale"] > 0.65:
+    if (
+        state.get("objective", "performance") == "performance"
+        and profile["scale"] > min_scale
+    ):
         p = copy.deepcopy(profile)
-        p["scale"] = round(max(0.65, profile["scale"] - 0.05), 2)
+        p["scale"] = max(min_scale, round(profile["scale"] - 0.05, 2))
         if "irisScale" in p.get("scale_options", {}):
             p["scale_options"]["irisScale"] = p["scale"]
         candidates.append(
-            ("Try five percentage points less internal resolution; review crispness", p)
+            (
+                f"Try internal scale {profile['scale']:g} → {p['scale']:g}; review crispness",
+                p,
+            )
         )
     used = [d.get("profile_settings") for d in state["decisions"]]
     remaining = [c for c in candidates if c[1] not in used]

@@ -34,6 +34,9 @@ def fixture(root):
 
 def capture(fps=90, scene="loaded", profile="baseline"):
     ctx = dict(
+        game_state="playing",
+        player_alive=True,
+        game_mode="creative",
         instance="lab",
         save="test",
         dimension="overworld",
