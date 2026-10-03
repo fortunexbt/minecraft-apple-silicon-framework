@@ -149,7 +149,21 @@ class CommunityTests(unittest.TestCase):
                 "size": 1000,
                 "encoding": "base64",
                 "content": base64.b64encode(
-                    json.dumps({"author": "tester", "bundle": self.bundle}).encode()
+                    json.dumps(
+                        {
+                            "author": "tester",
+                            "bundle": self.bundle,
+                            "presentation": {
+                                "title": "Example setup",
+                                "screenshot_url": "https://raw.githubusercontent.com/tester/recipe/"
+                                + "a" * 40
+                                + "/shot.png",
+                                "recipe_url": "https://github.com/tester/recipe/blob/"
+                                + "a" * 40
+                                + "/setup.md",
+                            },
+                        }
+                    ).encode()
                 ).decode(),
             },
         }

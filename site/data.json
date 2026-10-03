@@ -7,9 +7,7 @@
     "leaderboard": "https://fortunexbt.github.io/minecraft-apple-silicon-framework/",
     "submission": "Optional data-only pull request; maintainer review before publication on the board",
     "eligibility": "Matched same-machine 20\u201330 second living gameplay, explicit controls and visual review",
-    "ranking": "Unranked setup showcase; official fixed-preset ranking awaits a qualified reference workload and independent replay",
-    "ranking_status": "not_open",
-    "fairness_rules": "https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/FAIRNESS.md",
+    "comparison": "Browse screenshots and measured setups; filter by hardware and compare resolution, shader and view distance before FPS",
     "verification": "Trace consistency is self-reported evidence, not independent reproduction",
     "rules": "https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md",
     "editable_submission_paths": [
