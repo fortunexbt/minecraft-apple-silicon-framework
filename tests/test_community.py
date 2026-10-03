@@ -155,6 +155,7 @@ class CommunityTests(unittest.TestCase):
                             "bundle": self.bundle,
                             "presentation": {
                                 "title": "Example setup",
+                                "minecraft_profile": "ExamplePlayer",
                                 "screenshot_url": "https://raw.githubusercontent.com/tester/recipe/"
                                 + "a" * 40
                                 + "/shot.png",
@@ -193,6 +194,22 @@ class CommunityTests(unittest.TestCase):
             )
 
         self.assertEqual(check().returncode, 0)
+        responses["repos/owner/repo/pulls/1"]["base"] = {"sha": "b" * 40}
+        responses["repos/owner/repo/pulls/1/files?per_page=100"][0]["status"] = (
+            "modified"
+        )
+        previous_key = "repos/owner/repo/contents/" + path + "?ref=" + "b" * 40
+        responses[previous_key] = dict(
+            responses["repos/owner/repo/git/blobs/" + "a" * 40]
+        )
+        self.assertEqual(check().returncode, 0)
+        previous = json.loads(base64.b64decode(responses[previous_key]["content"]))
+        previous["author"] = "someone-else"
+        responses[previous_key]["content"] = base64.b64encode(
+            json.dumps(previous).encode()
+        ).decode()
+        self.assertNotEqual(check().returncode, 0)
+        responses["repos/owner/repo/pulls/1/files?per_page=100"][0]["status"] = "added"
         responses["repos/owner/repo/pulls/1"]["user"]["login"] = "someone-else"
         self.assertNotEqual(check().returncode, 0)
         responses["repos/owner/repo/pulls/1"]["user"]["login"] = "tester"
