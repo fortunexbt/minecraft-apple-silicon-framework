@@ -129,7 +129,7 @@ def hardware_info():
 def public_profiles(root):
     """Return only public Minecraft identity fields, never account credentials."""
     try:
-        accounts = json.loads((root / "accounts.json").read_text()).get("accounts", [])
+        accounts = read(root / "accounts.json").get("accounts", [])
         result = []
         for account in accounts:
             profile = account.get("profile", {})

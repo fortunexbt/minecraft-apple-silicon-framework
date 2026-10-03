@@ -1,6 +1,8 @@
-# Release verification
+# Initial release verification snapshot
 
-This release was built without launching Minecraft, using the foreground, altering source Prism instances, or running GPU workloads.
+This historical snapshot records the initial framework build. Current checks are in [GitHub Actions](https://github.com/fortunexbt/minecraft-apple-silicon-framework/actions). It is not a current hardware-qualification matrix.
+
+That release was built without launching Minecraft, using the foreground, altering source Prism instances, or running GPU workloads.
 
 - Python fixture suite exercises the public CLI from isolation through baseline intake, finite stopping, retained settings and clean daily copy. It also checks rollback drift, source preservation, symlink refusal, capture completion/CSV integrity, outlier semantics and version-specific Java requirements.
 - Local Python 3.11 and 3.14 runs passed. The package installed into a fresh virtual environment and its installed command ran.
