@@ -86,7 +86,7 @@ public final class FrameAgent {
                         if (seconds < 5 || seconds > 1200) throw new IllegalArgumentException("duration out of bounds");
                         if (client == null || hook.equals("not installed")) throw new IllegalStateException("frame hook not ready");
                         String preflight = validatePolicy(client);
-                        count = 0; unfocusedFrames = 0;
+                        count = 0; unfocusedFrames = 0; error = "";
                         deadline = System.nanoTime() + seconds * 1000000000L;
                         current = id;
                         Files.writeString(root.resolve(id + "-start.txt"), "hook=" + hook + "\nseconds=" + seconds + "\n" + preflight);

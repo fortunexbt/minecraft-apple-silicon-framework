@@ -1,0 +1,371 @@
+# Minecraft 26.3 + Minescript 5/Pyjinn. Runtime validation/calibration required.
+# Guarded preparation uses native jump and teleport before warmup only. Never fabricates sampler completion.
+import sys
+import atexit
+from pathlib import Path
+from minescript import JavaClass, player, world_info, echo, add_event_listener, remove_event_listener, player_set_orientation, execute
+
+mc = JavaClass('net.minecraft.client.Minecraft').getInstance()
+System = JavaClass('java.lang.System')
+Files = JavaClass('java.nio.file.Files')
+Writer = JavaClass('java.io.FileWriter')
+UUID = JavaClass('java.util.UUID')
+def absolute(value):
+    return -value if value < 0 else value
+
+
+def any_true(values):
+    for value in values:
+        if value:
+            return True
+    return False
+
+
+run = str(sys.argv[1]) if len(sys.argv) > 1 else 'owv1-' + str(UUID.randomUUID())
+if not run or len(run) > 100 or any_true([c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-' for c in run]):
+    raise Exception('Run ID must be 1-100 ASCII letters, digits, _ or -')
+root = System.getenv('MCBENCH_EVIDENCE')
+if not root:
+    root = 'minescript/bench-output'
+root = Path(str(root))
+root.mkdir()
+start_file = root.joinpath(run + '-start.txt')
+done_file = root.joinpath(run + '-done.txt')
+frames_file = root.joinpath(run + '-frames.csv')
+refused_file = root.joinpath(run + '-refused.txt')
+samples_file = root.joinpath(run + '-route.csv')
+receipt_file = root.joinpath(run + '-route.txt')
+warmup_file = root.joinpath(run + '-warmup.csv')
+for f in [start_file, done_file, frames_file, refused_file, samples_file, receipt_file, warmup_file]:
+    if f.exists():
+        raise Exception('Refusing reused run ID: ' + run)
+
+keys = [mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft,
+        mc.options.keyRight, mc.options.keySprint, mc.options.keyJump,
+        mc.options.keyShift]
+state = 'arming'
+prep_ticks = 0
+prep_needs_flight = False
+teleport_tick = -1
+tick_count = 0
+born_ns = System.nanoTime()
+requested_ns = 0
+begin_ns = 0
+end_ns = 0
+start_observed_ns = 0
+done_observed_ns = 0
+listener_tick = -1
+listener_render = -1
+warmup_begin_ns = 0
+warmup_end_ns = 0
+warmup_ticks = 0
+world_facts = []
+warmup_rows = ['client_tick,nano_time,elapsed_seconds,game_tick,x,y,z,yaw,pitch,vx,vy,vz,flying,game_mode,focused,paused,width,height,dimension,day_ticks,raining,thundering']
+rows = ['client_tick,nano_time,elapsed_seconds,game_tick,x,y,z,yaw,pitch,vx,vy,vz,flying,game_mode,focused,paused,width,height,dimension,day_ticks,raining,thundering']
+
+
+def write_text(path, text):
+    out = Writer(path.path)
+    try:
+        out.write(text)
+    finally:
+        out.close()
+
+
+def release():
+    for key in keys:
+        key.setDown(False)
+
+
+def release_at_exit():
+    # Listener teardown can already have destroyed Java handles. Best effort on exit.
+    try:
+        release()
+    except Exception:
+        pass
+
+
+atexit.register(release_at_exit)
+release()
+
+
+def snapshot():
+    p = player()
+    w = world_info()
+    a = mc.player.getAbilities()
+    return {'pos': [p.position[0], p.position[1], p.position[2]],
+            'vel': [p.velocity[0], p.velocity[1], p.velocity[2]],
+            'yaw': p.yaw, 'pitch': p.pitch, 'game_tick': w.game_ticks,
+            'dimension': str(w.dimension), 'day_ticks': w.day_ticks,
+            'raining': w.raining, 'thundering': w.thundering,
+            'flying': a.getClass().getField('flying').getBoolean(a),
+            'speed': a.getFlyingSpeed(), 'sprinting': mc.player.isSprinting(), 'mode': str(mc.gameMode.getPlayerMode()),
+            'focused': mc.isWindowActive(), 'paused': mc.isPaused(),
+            'fov': mc.options.fov().get(), 'effects': mc.options.fovEffectScale().get(),
+            'width': mc.getWindow().getWidth(), 'height': mc.getWindow().getHeight()}
+
+
+def scheduled_yaw(tick):
+    if tick <= 180:
+        return 180.0
+    if tick >= 240:
+        return 90.0
+    u = (tick - 180) / 60.0
+    return 180.0 - 90.0 * u * u * (3.0 - 2.0 * u)
+
+
+def check(s, at_start=False):
+    if not s['focused'] or s['paused'] or mc.gui.screen() != None or mc.gui.overlay() != None:
+        raise Exception('focus lost, paused, or menu/chat open')
+    if s['sprinting']:
+        raise Exception('sprinting active')
+    if s['mode'].lower() != 'creative' or not s['flying']:
+        raise Exception('requires actual creative flight; enable with native double-jump')
+    if s['dimension'] != 'minecraft:overworld':
+        raise Exception('wrong dimension')
+    if absolute(s['fov'] - 70) > 0.000001 or absolute(s['effects']) > 0.000001:
+        raise Exception('requires FOV 70 and FOV effects 0')
+    if absolute(s['speed'] - 0.05) > 0.000001:
+        raise Exception('requires default creative flying speed 0.05')
+    if s['raining'] or s['thundering'] or absolute(s['day_ticks'] % 24000 - 6000) > 0.000001:
+        raise Exception('requires clear weather and frozen time 6000: day='+str(s['day_ticks'])+' rain='+str(s['raining'])+' thunder='+str(s['thundering']))
+    yaw = 180.0 if at_start else scheduled_yaw(tick_count)
+    if absolute((s['yaw'] - yaw + 180) % 360 - 180) > 0.01 or absolute(s['pitch'] - 5) > 0.01:
+        raise Exception('camera differs from scheduled yaw/pitch')
+    if absolute(s['pos'][1] - 100) > 0.01:
+        raise Exception('vertical drift')
+    if at_start:
+        if absolute(s['pos'][0] + 121.3) > 0.01 or absolute(s['pos'][2] - 438.7) > 0.01 or any_true([absolute(v) > 0.0001 for v in s['vel']]):
+            raise Exception('requires exact start from rest')
+
+
+def sample(s, now, warming=False):
+    origin = warmup_begin_ns if warming else begin_ns
+    count = warmup_ticks if warming else tick_count
+    values = [count, now, (now - origin) / 1000000000.0, s['game_tick']]
+    values.extend(s['pos'])
+    values.extend([s['yaw'], s['pitch']])
+    values.extend(s['vel'])
+    values.extend([s['flying'], s['mode'], s['focused'], s['paused'], s['width'], s['height'], s['dimension'], s['day_ticks'], s['raining'], s['thundering']])
+    target = warmup_rows if warming else rows
+    target.append(','.join([str(v) for v in values]))
+
+
+def guard_preparation():
+    w = world_info()
+    server = mc.getSingleplayerServer()
+    if str(w.name) != 'Silicon Shader Overworld v1' or server == None:
+        raise Exception('preparation requires named singleplayer reference world')
+    settings = server.getWorldGenSettings()
+    options = settings.options()
+    generator = settings.dimensions().overworld()
+    biome_key = JavaClass('net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists').OVERWORLD
+    if absolute(options.seed() - 20260929) > 0.000001 or not options.generateStructures() or options.generateBonusChest():
+        raise Exception('preparation world seed/structures/bonus-chest mismatch')
+    if str(generator.getClass().getName()) != 'net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator':
+        raise Exception('preparation generator class mismatch')
+    if str(generator.generatorSettings().getRegisteredName()) != 'minecraft:overworld' or not generator.getBiomeSource().stable(biome_key):
+        raise Exception('preparation overworld generator/biome settings mismatch')
+    if str(mc.gameMode.getPlayerMode()).lower() != 'creative':
+        raise Exception('preparation requires creative mode')
+
+
+def observe_world():
+    server = mc.getSingleplayerServer()
+    if server == None:
+        raise Exception('requires integrated singleplayer server for world facts')
+    settings = server.getWorldGenSettings()
+    options = settings.options()
+    generator = settings.dimensions().overworld()
+    version = JavaClass('net.minecraft.SharedConstants').getCurrentVersion()
+    overworld_biomes = JavaClass('net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists').OVERWORLD
+    facts = ['observed_minecraft_version=' + str(version.name()),
+             'observed_data_version=' + str(version.dataVersion().version()),
+             'observed_overworld_biome_source_stable=' + str(generator.getBiomeSource().stable(overworld_biomes)),
+             'observed_fov=' + str(mc.options.fov().get()),
+             'observed_fov_effect_scale=' + str(mc.options.fovEffectScale().get()),
+             'observed_flying_speed=' + str(mc.player.getAbilities().getFlyingSpeed()),
+             'observed_seed=' + str(options.seed()),
+             'observed_generate_structures=' + str(options.generateStructures()),
+             'observed_bonus_chest=' + str(options.generateBonusChest()),
+             'observed_generator_class=' + str(generator.getClass().getName()),
+             'observed_generator_settings=' + str(generator.generatorSettings().getRegisteredName()),
+             'observed_biome_source_class=' + str(generator.getBiomeSource().getClass().getName()),
+             'world_provenance=observed_runtime_settings_only; creation_and_pristine_status_require_separate_evidence']
+    packs = server.getWorldData().getDataConfiguration().dataPacks().getEnabled()
+    for i in range(packs.size()):
+        facts.append('observed_enabled_pack_' + str(i) + '=' + str(packs.get(i)))
+    level = server.overworld()
+    height_type = JavaClass('net.minecraft.world.level.levelgen.Heightmap$Types').MOTION_BLOCKING_NO_LEAVES
+    BlockPos = JavaClass('net.minecraft.core.BlockPos')
+    blocks = JavaClass('net.minecraft.core.registries.BuiltInRegistries').BLOCK
+    for point in [[-121, 438], [-121, 320], [-240, 300]]:
+        x = point[0]
+        z = point[1]
+        height = level.getHeight(height_type, x, z)
+        block = level.getBlockState(BlockPos(x, height - 1, z)).getBlock()
+        facts.append('observed_terrain_' + str(x) + '_' + str(z) + '=' + str(height) + ',' + str(blocks.getKey(block)))
+    return facts
+
+
+def finish(status, reason):
+    global state
+    if state == 'finished':
+        return
+    state = 'finished'
+    release()
+    write_text(samples_file, '\n'.join(rows) + '\n')
+    write_text(warmup_file, '\n'.join(warmup_rows) + '\n')
+    fields = ['workload=silicon-shader-overworld-v1', 'run_id=' + run,
+              'status=' + status, 'reason=' + reason.replace('\n', ' '),
+              'client_ticks=' + str(tick_count), 'nominal_seconds=21', 'requested_safety_seconds=30',
+              'preparation=guarded_name_and_worldgen;native_jump_if_needed;teleport_before_warmup_only',
+              'yaw_schedule=180_until_edge180;smoothstep_180_to90_edges180_to240;90_until420;pitch5',
+              'warmup_begin_nano=' + str(warmup_begin_ns), 'warmup_end_nano=' + str(warmup_end_ns),
+              'warmup_client_ticks=' + str(warmup_ticks), 'warmup_samples=' + run + '-warmup.csv',
+              'warmup_elapsed_seconds=' + str((warmup_end_ns - warmup_begin_ns) / 1000000000.0 if warmup_end_ns else 0),
+              'request_nano=' + str(requested_ns), 'start_observed_nano=' + str(start_observed_ns),
+              'route_begin_nano=' + str(begin_ns), 'route_end_nano=' + str(end_ns),
+              'done_observed_nano=' + str(done_observed_ns),
+              'route_elapsed_seconds=' + str((end_ns - begin_ns) / 1000000000.0 if end_ns else 0),
+              'sampler_start=' + run + '-start.txt', 'sampler_csv=' + run + '-frames.csv',
+              'sampler_completion=' + run + '-done.txt', 'route_samples=' + run + '-route.csv',
+              'association=first_START_LEVEL_TICK_observing_sampler_start; up_to_one_frame_or_tick_start_skew',
+              'acceptance=requires_runtime_validation_reference_calibration_and_frame_timestamp_overlap_review']
+    fields.extend(world_facts)
+    if done_file.exists():
+        fields.append('observed_completion_begin')
+        fields.append(str(Files.readString(done_file.java_path)).strip())
+        fields.append('observed_completion_end')
+    write_text(receipt_file, '\n'.join(fields) + '\n')
+    echo('Reference flight ' + run + ': ' + status + ' (' + reason + ')')
+    # Removing the final listener may destroy the Pyjinn Java handle table.
+    # Keep ALL Java operations above these final two calls.
+    if listener_tick >= 0:
+        remove_event_listener(listener_tick)
+    if listener_render >= 0:
+        remove_event_listener(listener_render)
+
+
+def on_tick(event):
+    global state, requested_ns, begin_ns, end_ns, start_observed_ns, tick_count
+    global warmup_begin_ns, warmup_end_ns, warmup_ticks, world_facts
+    global prep_ticks, prep_needs_flight, teleport_tick
+    try:
+        now = System.nanoTime()
+        if state == 'arming':
+            release()
+            if now - born_ns < 1000000000 or mc.gui.screen() != None or mc.gui.overlay() != None:
+                return
+            guard_preparation()
+            mc.options.fov().set(70)
+            mc.options.fovEffectScale().set(0.0)
+            execute('gamerule minecraft:advance_time false')
+            execute('gamerule minecraft:advance_weather false')
+            execute('time set 6000')
+            execute('weather clear 1200s')
+            prep_needs_flight = not snapshot()['flying']
+            prep_ticks = 0
+            state = 'preparing'
+        elif state == 'preparing':
+            release()
+            prep_ticks += 1
+            s = snapshot()
+            if prep_needs_flight and prep_ticks < 7:
+                # Native double-jump: 2 ticks down, 2 up, 2 down, then up.
+                mc.options.keyJump.setDown(prep_ticks <= 2 or prep_ticks >= 5)
+            if prep_ticks >= 8 and s['flying'] and teleport_tick < 0:
+                execute('tp @s -121.3 100 438.7 180 5')
+                teleport_tick = prep_ticks
+            if teleport_tick >= 0 and prep_ticks - teleport_tick >= 12:
+                s = snapshot()
+                check(s, True)
+                world_facts = observe_world()
+                warmup_begin_ns = now
+                warmup_ticks = 0
+                sample(s, now, True)
+                state = 'warming'
+        elif state == 'warming':
+            release()
+            s = snapshot()
+            check(s, True)
+            warmup_ticks += 1
+            if absolute(warmup_ticks % 20) < 0.000001:
+                sample(s, now, True)
+            if now - warmup_begin_ns >= 30000000000:
+                if absolute(warmup_ticks % 20) > 0.000001:
+                    sample(s, now, True)
+                warmup_end_ns = now
+                requested_ns = now
+                write_text(root.joinpath('measure.properties'), 'id=' + run + '\nseconds=30\n')
+                state = 'waiting_start'
+        elif state == 'waiting_start':
+            release()
+            s = snapshot()
+            check(s, True)
+            if start_file.exists():
+                start_observed_ns = now
+                begin_ns = now
+                tick_count = 0
+                sample(s, now)
+                state = 'flying'
+                mc.options.keyUp.setDown(True)
+        elif state == 'flying':
+            # At START_LEVEL_TICK, prior tick has completed. Release on edge 420.
+            tick_count += 1
+            player_set_orientation(scheduled_yaw(tick_count), 5.0)
+            s = snapshot()
+            check(s)
+            if absolute(tick_count % 20) < 0.000001:
+                sample(s, now)
+            if tick_count >= 420:
+                end_ns = now
+                release()
+                JavaClass('m4peak.FrameSink').requestStop()
+                state = 'waiting_done'
+            else:
+                release()
+                mc.options.keyUp.setDown(True)
+    except Exception as error:
+        finish('rejected', str(error))
+
+
+def on_render(event):
+    global done_observed_ns
+    try:
+        now = System.nanoTime()
+        if state == 'finished':
+            return
+        if now - born_ns > 75000000000:
+            raise Exception('75-second total workload timeout')
+        if state != 'arming' and (not mc.isWindowActive() or mc.isPaused() or mc.gui.screen() != None or mc.gui.overlay() != None):
+            raise Exception('focus lost, paused, or menu/chat open')
+        if refused_file.exists():
+            raise Exception('FrameAgent refused run; inspect actual refused receipt')
+        if done_file.exists() and done_observed_ns <= 0:
+            done_observed_ns = now
+        if state == 'waiting_done' and done_observed_ns:
+            if not frames_file.exists():
+                raise Exception('sampler completion without frame CSV')
+            completion = str(Files.readString(done_file.java_path))
+            if 'unfocused_frames=0\n' not in completion or 'buffer_full=false\n' not in completion or 'frame_sink_error=\n' not in completion:
+                raise Exception('sampler completion reports focus loss, full buffer, or sink error')
+            elapsed = (end_ns - begin_ns) / 1000000000.0
+            if elapsed < 20.8 or elapsed > 30:
+                raise Exception('420-tick route outside 20.8-to-30-second safety range')
+            if tick_count < 420 or len(rows) < 23:
+                raise Exception('requires all 420 ticks and all 22 pose samples')
+            finish('calibration_required', '420 input ticks complete; actual sampler files present')
+        elif state in ['arming', 'preparing'] and now - born_ns > 5000000000:
+            raise Exception('5-second preparation timeout; check chat closure and native flight')
+        elif state == 'waiting_start' and now - requested_ns > 10000000000:
+            raise Exception('no actual FrameAgent start within 10 seconds')
+        elif state in ['flying', 'waiting_done'] and now - begin_ns > 35000000000:
+            raise Exception('route or sampler completion timed out')
+    except Exception as error:
+        finish('rejected', str(error))
+
+
+listener_tick = add_event_listener('tick', on_tick)
+listener_render = add_event_listener('render', on_render)
+echo('Reference flight armed: ' + run)

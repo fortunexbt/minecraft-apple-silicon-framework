@@ -49,6 +49,11 @@ def build(source, destination):
                 "presentation": entry.get("presentation"),
                 "digest": bundle["content_digest"],
                 "cohort": bundle["cohort_hash"],
+                "schema_version": bundle["schema_version"],
+                "workload_id": bundle.get("workload_id"),
+                "benchmark": "Standard route"
+                if bundle["schema_version"] == 2
+                else "Earlier route",
                 "status": bundle["status"],
                 "metadata": bundle["metadata"],
                 "runs": {k: v["metrics"] for k, v in bundle["runs"].items()},

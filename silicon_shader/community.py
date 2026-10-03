@@ -14,16 +14,24 @@ REPOSITORY = "fortunexbt/minecraft-apple-silicon-framework"
 
 
 def contract():
+    from . import workload
+
     return {
-        "id": "silicon-shader-ab-v1",
-        "schema_version": 1,
+        "id": "silicon-shader-ab-v2",
+        "schema_version": 2,
         "metric": "cpu_frame_production",
+        "workload_id": workload.WORKLOAD_ID,
+        "standard_workload": workload.contract(),
+        "workload_guide": "https://github.com/"
+        + REPOSITORY
+        + "/blob/main/docs/WORKLOAD.md",
         "repository": REPOSITORY,
         "leaderboard": "https://fortunexbt.github.io/minecraft-apple-silicon-framework/",
         "submission": "Optional data-only pull request; maintainer review before publication on the board",
-        "eligibility": "Matched same-machine 20–30 second living gameplay, explicit controls and visual review",
-        "comparison": "Browse screenshots and measured setups; filter by hardware and compare resolution, shader and view distance before FPS",
+        "eligibility": "New evidence uses the pinned standard route with matching baseline and candidate receipts, same-machine captures, and a visual review",
+        "comparison": "Compare route-matched captures; browse screenshots and setups by hardware, resolution, shader and view distance",
         "verification": "Trace consistency is self-reported evidence, not independent reproduction",
+        "legacy_evidence": "Schema v1 entries remain visible as earlier-route historical evidence; new submissions require v2",
         "rules": "https://github.com/" + REPOSITORY + "/blob/main/docs/CHALLENGE.md",
         "editable_submission_paths": ["contributions/<content_digest>.json"],
         "executes_contributor_code": False,
@@ -107,11 +115,17 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api, presentatio
     errors = validate_bundle(bundle)
     if errors:
         raise ValueError("; ".join(errors))
+    if publish:
+        from .workload import require_standard
+
+        # Enforce before any GitHub identity lookup, fork, branch, or PR request.
+        require_standard(bundle)
     digest = _digest(bundle["content_digest"])
     if publish or presentation is not None:
         validate_presentation(presentation, for_submission=publish)
     preview = {
         "digest": digest,
+        "workload_id": bundle.get("workload_id"),
         "destination": "https://github.com/" + REPOSITORY,
         "path": f"contributions/{digest}.json",
         "metadata": bundle["metadata"],
@@ -135,6 +149,9 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api, presentatio
         },
         "review": "The full relative traces remain in your bundle file and will also be published.",
         "publication": "Public evidence and authenticated GitHub handle; may create a fork, branch and pull request",
+        "benchmark": "Standard route"
+        if bundle.get("schema_version") == 2
+        else "Earlier route",
     }
     if presentation is not None:
         preview["presentation"] = presentation

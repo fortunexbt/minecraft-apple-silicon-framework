@@ -191,11 +191,24 @@ def parser():
     q = s.add_parser("challenge", help="Optional community evidence and publication")
     sub = q.add_subparsers(dest="action", required=True)
     sub.add_parser("show")
+    sub.add_parser("workload", help="Print the pinned standard benchmark route")
+    a = sub.add_parser(
+        "route-receipt",
+        help="Validate and export the standard adapter's route observations",
+    )
+    a.add_argument("root")
+    a.add_argument("id")
+    a.add_argument("--out", required=True)
     a = sub.add_parser("find", help="Find shared setups for your Mac")
     a.add_argument(
         "--this-mac",
         action="store_true",
         help="Detect this Mac and prefer matching setups",
+    )
+    a.add_argument(
+        "--include-earlier",
+        action="store_true",
+        help="Return earlier-route recipes separately; their FPS is not comparable",
     )
     a.add_argument("--minecraft", help="Only this Minecraft version")
     a.add_argument("--loader", help="Only this loader, e.g. fabric")
@@ -204,7 +217,7 @@ def parser():
     a.add_argument("--ram", type=int, help="Memory in GiB")
     a.add_argument("--sort", choices=("pacing", "fps", "distance"), default="pacing")
     a.add_argument("--limit", type=int, default=5)
-    a = sub.add_parser("prepare")
+    a = sub.add_parser("prepare", help="Build standard-route v2 evidence")
     for field in (
         "baseline_capture",
         "candidate_capture",
@@ -214,6 +227,16 @@ def parser():
     ):
         a.add_argument(field)
     a.add_argument("--out", required=True)
+    a.add_argument(
+        "--baseline-route",
+        required=True,
+        help="JSON route receipt captured with the baseline run",
+    )
+    a.add_argument(
+        "--candidate-route",
+        required=True,
+        help="JSON route receipt captured with the candidate run",
+    )
     for action in ("validate", "submit"):
         a = sub.add_parser(action)
         a.add_argument("bundle")
@@ -263,6 +286,22 @@ def run(args):
     if args.cmd == "challenge":
         if args.action == "show":
             return community.contract()
+        if args.action == "workload":
+            from .workload import contract
+
+            return contract()
+        if args.action == "route-receipt":
+            from .workload import import_route
+
+            if Path(args.out).exists():
+                raise ValueError("Output exists; choose a new path")
+            result = import_route(args.root, args.id)
+            write(args.out, result)
+            return {
+                "path": args.out,
+                "workload_id": result["workload_id"],
+                "status": "route checked; self-reported",
+            }
         if args.action == "find":
             return catalog.find(
                 chip=args.chip,
@@ -271,6 +310,7 @@ def run(args):
                 sort=args.sort,
                 limit=args.limit,
                 this_mac=args.this_mac,
+                include_earlier=args.include_earlier,
                 minecraft=args.minecraft,
                 loader=args.loader,
             )
@@ -283,6 +323,8 @@ def run(args):
                 args.baseline_csv,
                 args.candidate_csv,
                 args.metadata,
+                args.baseline_route,
+                args.candidate_route,
             )
             write(args.out, result)
             return {
@@ -304,6 +346,11 @@ def run(args):
                 "status": "self_reported",
                 "digest": bundle["content_digest"],
             }
+        from .workload import require_standard
+
+        # CLI submit is the new-contribution path. V1 remains readable through
+        # validate and in the public registry, but cannot enter as new evidence.
+        require_standard(bundle)
         if args.publish and not args.presentation:
             raise ValueError(
                 "Add --presentation setup.json with a Minecraft profile, agent credits, screenshot and recipe before publishing"

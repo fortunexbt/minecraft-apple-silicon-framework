@@ -26,6 +26,8 @@ Continue with [try a setup](docs/WORKFLOW.md). Prism has the most direct integra
 
 ## Choose a setup that fits
 
+New challenge submissions use [one shared seeded world and scripted flight](docs/WORKLOAD.md): two 21-second runs, targeting a repeat comparison under five minutes. Earlier-route recipes remain separate.
+
 Each submission has a screenshot, Minecraft skin, hardware, game/mod versions, resolution, view distance, FPS/frame pacing and a reproducible recipe. Filter by Mac and compare the visual tradeoffs before choosing the highest FPS. There is no universal winner.
 
 The first [M4 Wide View recipe](recipes/m4-wide24/README.md) includes its exact configuration, patches, route and observed limitations. The [hardware inventory](docs/HARDWARE.md) covers released Apple Silicon Macs; an inventory entry does not mean that machine has been benchmarked.

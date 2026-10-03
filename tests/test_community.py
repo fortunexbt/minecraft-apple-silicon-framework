@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import test_challenge
 from silicon_shader.community import submit, REPOSITORY
 from silicon_shader.registry import build, validate_entry
+from standard_fixture import standard_bundle
 
 
 class CommunityTests(unittest.TestCase):
@@ -13,7 +14,7 @@ class CommunityTests(unittest.TestCase):
         fixture = test_challenge.ChallengeTests()
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
-        self.bundle = fixture.prepare()
+        self.bundle = standard_bundle(fixture.prepare())
         self.root = fixture.root
         self.presentation = {
             "title": "Example setup",

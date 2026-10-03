@@ -60,7 +60,7 @@
         <div>
           <p class="eyebrow eyebrow-dark">THE COMMUNITY LIBRARY</p>
           <h2 id="library-title">Find your next setup</h2>
-          <p class="section-note">Different resolutions and shader settings can change FPS substantially. Use the details to compare like for like.</p>
+          <p class="section-note">Standard-route results use the same pinned Minecraft scene and movement. Resolution, shaders and hardware still differ, so compare those details too.</p>
           <button class="how-link" type="button" data-dialog="rules">How to use the library ↗</button>
         </div>
         <p id="count" class="setup-count" aria-live="polite">Loading setups…</p>
@@ -89,6 +89,12 @@
       <div id="results" class="setup-grid" aria-live="polite"></div>
       <div id="empty-state" class="empty-state" hidden></div>
 
+      <details id="earlier-routes" class="earlier-routes" hidden>
+        <summary><span>Earlier routes</span><span id="earlier-count"></span></summary>
+        <p>These setups were measured on different routes or before the standard was introduced. Their FPS is not directly comparable with standard-route results.</p>
+        <div id="earlier-results" class="setup-grid"></div>
+      </details>
+
       <aside class="contribute-note">
         <div><span class="eyebrow eyebrow-dark">HAVE A SETUP TO SHARE?</span><p>Useful recipes and honest results help the next player get started.</p></div>
         <button class="button button-dark" type="button" data-dialog="participate">Share or tune a setup <span aria-hidden="true">↗</span></button>
@@ -111,10 +117,10 @@
     <p class="eyebrow eyebrow-dark">START WITH YOUR OWN SETUP</p>
     <h2 id="participate-title">Let your agent help.</h2>
     <p>Give this prompt to Codex, Claude Code, or your preferred coding agent. It starts with your launcher, mods and image-quality preferences.</p>
-    <pre id="agent-prompt">Find and try a Minecraft shader setup that would improve my experience on this Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework. Follow silicon_shader/skills/silicon-shader/SKILL.md. Detect my hardware and existing game, compare suitable shared setups and screenshots, then adapt a compatible recipe in an isolated copy while preserving my worlds and current settings. Use my current image quality as the default floor, measure with an existing harness if available, and stop when the result is useful. Ask only for missing choices or required access, and before publishing anything.</pre>
+    <pre id="agent-prompt">Find and try a Minecraft shader setup that would improve my experience on this Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework. Follow silicon_shader/skills/silicon-shader/SKILL.md. Detect my hardware and existing game, then compare compatible community recipes and screenshots. Adapt a recipe in an isolated copy while preserving my worlds and current settings. Use my current image quality as the default floor. If recording or submitting a performance comparison, first run `silicon-shader challenge workload` and follow its pinned world, route, movement and capture instructions for both baseline and candidate; never use a flat or different route as comparable evidence. Finish setup or tuning without a benchmark when no compatible harness is available. Ask only for missing choices or required access, and before publishing anything.</pre>
     <button id="copy-prompt" class="button button-dark" type="button">Copy agent prompt</button>
     <span id="copy-status" class="copy-status" role="status"></span>
-    <p class="fine">Early access: measurement setup depends on your Minecraft version. Your agent may need to adapt the sampler hook. Sharing results is always optional.</p>
+    <p class="fine">Public comparisons use the pinned standard workload shown by <code>silicon-shader challenge workload</code>. A compatible harness and save may take time to prepare; no performance result is assumed until the route receipt validates.</p>
     <details class="manual-install">
       <summary>Prefer the manual CLI?</summary>
       <p>Requires Python 3.10+ and Minecraft Java. Use a Python environment to avoid changing your system packages.</p>
@@ -135,10 +141,10 @@ python -m pip install .</pre>
     <p>FPS depends on the Mac, shader, scene, resolution and settings. Read the recipe and evidence before comparing two cards.</p>
     <ol class="how-list">
       <li>Filter by your chip family, tier and memory.</li>
-      <li>Compare output and internal resolution, shader settings, view distance and the test scene.</li>
+      <li>Standard-route cards share the pinned test scene and movement. Compare output and internal resolution, shader settings, view distance and hardware too.</li>
       <li>Ask your agent to check compatibility and prepare an isolated copy before trying a change.</li>
     </ol>
-    <p class="fine">The library shows contributor-submitted captures. An image-quality review is not an independent performance reproduction.</p>
+    <p class="fine">Earlier-route setups remain available as recipe ideas; their FPS cannot be compared directly with the standard route. Captures are contributor-submitted, and an image-quality review is not an independent performance reproduction.</p>
   </dialog>
 </body>
 </html>

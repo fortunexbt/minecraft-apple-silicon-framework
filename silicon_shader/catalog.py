@@ -3,6 +3,7 @@
 import json
 from urllib.request import Request, urlopen
 from .discover import hardware_info
+from .workload import WORKLOAD_ID
 
 URL = "https://fortunexbt.github.io/minecraft-apple-silicon-framework/data.json"
 HARDWARE_FIELDS = (
@@ -133,6 +134,7 @@ def find(
     this_mac=False,
     minecraft=None,
     loader=None,
+    include_earlier=False,
 ):
     target = None
     if this_mac:
@@ -154,8 +156,14 @@ def find(
         entries = json.loads(raw)["entries"]
         if not isinstance(entries, list):
             raise ValueError("Invalid public setup index")
-        return select(
-            entries,
+        standard = [
+            entry for entry in entries if entry.get("workload_id") == WORKLOAD_ID
+        ]
+        earlier = [
+            entry for entry in entries if entry.get("workload_id") != WORKLOAD_ID
+        ]
+        result = select(
+            standard,
             chip=chip,
             tier=tier,
             ram=ram,
@@ -165,6 +173,53 @@ def find(
             minecraft=minecraft,
             loader=loader,
         )
+        result["benchmark"] = "Standard route"
+        result["workload_id"] = WORKLOAD_ID
+        for setup in result["setups"]:
+            setup["benchmark"] = "Standard route"
+        if not result["setups"]:
+            if not standard:
+                earlier_note = (
+                    " Earlier or unknown-route recipes can be browsed on the website, but their FPS is not directly comparable."
+                    if earlier
+                    else ""
+                )
+                result["empty_result"] = (
+                    "No setup has a capture on the standard route yet."
+                    + earlier_note
+                    + " For public measurements, run `silicon-shader challenge workload` and follow its pinned instructions."
+                )
+            elif standard:
+                result["empty_result"] = (
+                    "No standard-route setup matches these hardware, Minecraft, or loader filters. Try broader filters; earlier-route FPS remains separate and is not directly comparable."
+                )
+        if include_earlier:
+            older_result = select(
+                earlier,
+                chip=chip,
+                tier=tier,
+                ram=ram,
+                sort=sort,
+                limit=limit,
+                target=target,
+                minecraft=minecraft,
+                loader=loader,
+            )
+            for setup in older_result["setups"]:
+                setup["benchmark"] = (
+                    "Earlier route"
+                    if not setup.get("workload_id")
+                    or setup.get("benchmark") == "Earlier route"
+                    else "Unknown workload"
+                )
+            result["earlier_setups"] = older_result["setups"]
+            result["earlier_matches"] = older_result["matches"]
+            result["earlier_note"] = (
+                "These are recipe leads only. Their FPS was measured on an earlier or unknown route and must not be compared with standard-route results."
+                if older_result["setups"]
+                else None
+            )
+        return result
     except (OSError, KeyError, TypeError, json.JSONDecodeError) as error:
         raise ValueError(
             "Cannot read the public setup index; use the website or retry later"
