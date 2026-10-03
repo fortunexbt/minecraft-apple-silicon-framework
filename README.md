@@ -49,7 +49,7 @@ The search has **at most four trials by default** (hard limit six), stops after 
 
 The reference campaign used a **base M4, 10 CPU/GPU cores, 24 GB**. Quality 75% used native 3024×1898 output, nearest scaling, R12/S8, MakeUp 9.5f and Faithful 32×. Short accepted scene captures averaged **84–119 CPU-produced frames/s**, including the limiter. The largest interval in that narrow set was **30.16 ms**. That is not GPU presentation, input latency, an all-day guarantee, or performance verified on another Mac.
 
-Wide View 20 traded internal resolution for R20/S6. Brief ordinary movement showed approximately **91–105 F3 FPS**; it was not locked at 120. The [experiment digest](docs/EXPERIMENTS.md) and [indexed ledger](evidence/) include losses, invalid runs, and unmeasured ideas as well as winners.
+Wide View 20 traded internal resolution for R20/S6. Brief ordinary movement showed approximately **91–105 F3 FPS**; a separate percentile readout was **69 FPS**. It was not locked at 120. The [experiment digest](docs/EXPERIMENTS.md) and [indexed ledger](evidence/) include losses, invalid runs, and unmeasured ideas as well as winners.
 
 Discovery is designed for M1–M5 families, including Pro/Max/Ultra and MacBooks, iMacs and minis. **Only the named M4 campaign has gameplay evidence.** Start from your own baseline on every other machine. Static scaling is the default; native Metal and dynamic resolution are research paths, not promised upgrades.
 

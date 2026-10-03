@@ -6,7 +6,7 @@ The selected M4 profile used Minecraft 26.3 with Fabric Loader 0.19.5, Iris 1.11
 
 Short CPU frame-production captures measured 92.3 FPS on loaded travel, 88.3 on fresh travel, 84.4 over ocean, 94.9 at a village with entities, 114.9 in open Nether, and 119.4 in the End. The longest interval in those finalist captures was 30.16 ms; none exceeded 33, 50, or 100 ms. A few isolated 23–30 ms intervals stood out against nearby frame times. These samples include the limiter and do not measure GPU presentation or input latency. The 120 FPS value is a cap, not a locked rate or a zero-hitch guarantee.
 
-At 65% internal scale, the same short loaded and fresh travel checks measured 105.6 and 100.2 FPS. That gives more headroom with a softer image. The campaign kept 75% as its quality choice. A separate 20-chunk profile at 60% scale had only a brief ordinary-movement check (91 and 105 FPS snapshots); it has no controlled-route or sustained qualification.
+At 65% internal scale, the same short loaded and fresh travel checks measured 105.6 and 100.2 FPS. That gives more headroom with a softer image. The campaign kept 75% as its quality choice. A separate 20-chunk profile at 60% scale had only a brief ordinary-movement check (91 and 105 FPS snapshots); the handoff also recorded a 69 FPS percentile readout. It has no controlled-route or sustained qualification.
 
 A previous 16-chunk profile showed more distant terrain than R12 and cost roughly 13% in uncapped dense-jungle throughput. It passed a 15-minute 60-cap village run at 59.93 FPS average, with one interval above 33 ms. That is a supported tradeoff, not the current 75% daily profile.
 
