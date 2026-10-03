@@ -30,7 +30,10 @@
     "weather": "clear",
     "time": "noon",
     "power": "AC",
-    "background": "quiet"
+    "background": "quiet",
+    "game_state": "playing",
+    "player_alive": true,
+    "game_mode": null
   },
   "observed": {
     "instance": null,
@@ -57,7 +60,10 @@
     "weather": null,
     "time": null,
     "power": null,
-    "background": null
+    "background": null,
+    "game_state": null,
+    "player_alive": null,
+    "game_mode": null
   },
   "visual": {
     "valid": false,

@@ -1,0 +1,82 @@
+{
+  "hardware": {
+    "family": "M4",
+    "tier": "base",
+    "cpu_cores": 10,
+    "gpu_cores": 10,
+    "memory_gib": 24
+  },
+  "minecraft": "1.21.8",
+  "loader": {
+    "name": "fabric",
+    "version": "0.17.2"
+  },
+  "launcher": "PrismLauncher",
+  "harness": "frame-bench-v2",
+  "interventions": [
+    "scale"
+  ],
+  "baseline": {
+    "mods": {
+      "frame-bench": "2",
+      "iris": "1.9.6",
+      "sodium": "0.6.13"
+    },
+    "shader": {
+      "name": "makeup",
+      "version": "9.3.0"
+    },
+    "settings": {
+      "resolution": [
+        3024,
+        1898
+      ],
+      "scale": 1.0,
+      "render_distance": 12,
+      "simulation_distance": 8,
+      "cap": 120,
+      "filter": "nearest",
+      "visual_properties": {
+        "profile": "high"
+      }
+    }
+  },
+  "candidate": {
+    "mods": {
+      "frame-bench": "2",
+      "iris": "1.9.6",
+      "sodium": "0.6.13"
+    },
+    "shader": {
+      "name": "makeup",
+      "version": "9.3.0"
+    },
+    "settings": {
+      "resolution": [
+        3024,
+        1898
+      ],
+      "scale": 0.75,
+      "render_distance": 12,
+      "simulation_distance": 8,
+      "cap": 120,
+      "filter": "nearest",
+      "visual_properties": {
+        "profile": "high"
+      }
+    }
+  },
+  "quality_review": {
+    "reviewed": true,
+    "baseline_acceptable": true,
+    "candidate_acceptable": true,
+    "artifacts": false,
+    "outcome": "tradeoff"
+  },
+  "runtime": "25-arm64",
+  "workload": {
+    "scene": "loaded",
+    "route": "walk-v1",
+    "terrain": "generated-v1"
+  }
+}

@@ -57,6 +57,8 @@ def managed(path):
 
 
 def game_dir(path):
+    if (path / MARKER).is_file():
+        return contained(path, read(path / MARKER)["game_dir"])
     return path / ".minecraft" if (path / ".minecraft").is_dir() else path / "minecraft"
 
 
@@ -89,33 +91,41 @@ def _clean_cfg(source, dest, name):
     )
 
 
-def isolate(source, destination, acknowledged=False, save=None):
+def isolate(source, destination, acknowledged=False, save=None, game_directory=False):
     source = Path(source).expanduser().resolve()
     destination = Path(destination).expanduser().absolute()
     closed(source, acknowledged)
-    info = instance_info(source)
+    no_links(source)
+    info = {"game_dir": "."} if game_directory else instance_info(source)
+    if game_directory and not (source / "options.txt").is_file():
+        raise ValueError("Select the actual game directory containing options.txt")
     if destination.exists() or destination.is_symlink():
         raise ValueError("Destination must not exist")
     if destination.resolve().is_relative_to(source):
         raise ValueError("Destination cannot be inside source")
     if not destination.parent.is_dir():
         raise ValueError("Destination parent must exist")
-    paths = [
-        "mmc-pack.json",
-        "patches",
-        info["game_dir"] + "/options.txt",
-        info["game_dir"] + "/config",
-        info["game_dir"] + "/mods",
-        info["game_dir"] + "/shaderpacks",
-        info["game_dir"] + "/resourcepacks",
+    prefix = "" if game_directory else info["game_dir"] + "/"
+    paths = [] if game_directory else ["mmc-pack.json", "patches"]
+    paths += [
+        prefix + name
+        for name in (
+            "options.txt",
+            "optionsshaders.txt",
+            "optionsof.txt",
+            "config",
+            "mods",
+            "shaderpacks",
+            "resourcepacks",
+        )
     ]
     if save:
         if Path(save).name != save or save in (".", ".."):
             raise ValueError("Use the exact save folder name")
-        world = contained(source, info["game_dir"] + "/saves/" + save)
+        world = contained(source, prefix + "saves/" + save)
         if not (world / "level.dat").is_file():
             raise ValueError("Save folder has no level.dat")
-        paths.append(info["game_dir"] + "/saves/" + save)
+        paths.append(prefix + "saves/" + save)
     for rel in paths:
         no_links(contained(source, rel))
     tmp = Path(tempfile.mkdtemp(prefix=".isolate-", dir=destination.parent))
@@ -130,7 +140,8 @@ def isolate(source, destination, acknowledged=False, save=None):
                 shutil.copytree(src, dst)
             else:
                 shutil.copy2(src, dst)
-        _clean_cfg(source, tmp, destination.name)
+        if not game_directory:
+            _clean_cfg(source, tmp, destination.name)
         write(
             tmp / MARKER,
             {
@@ -140,6 +151,8 @@ def isolate(source, destination, acknowledged=False, save=None):
                 "game_dir": info["game_dir"],
                 "save_copied": save,
                 "kind": "lab",
+                "layout": "game-directory" if game_directory else "prism",
+                "launcher_cleanup_required": game_directory,
             },
         )
         # Source can be live-changed after acknowledgment: catch process appearance too.
@@ -151,8 +164,8 @@ def isolate(source, destination, acknowledged=False, save=None):
     return destination
 
 
-def current_profile(path):
-    game = game_dir(Path(path))
+def current_profile(path, game_directory=False):
+    game = Path(path) if game_directory else game_dir(Path(path))
     opts = properties(game / "options.txt", ":")
     result = {"options": {}}
     for key in OPTIONS:
@@ -357,8 +370,10 @@ def rollback(path, rid, acknowledged=False):
 
 
 def daily(source, dest, acknowledged=False, save=None):
-    managed(source)
-    result = isolate(source, dest, acknowledged, save)
+    _, source_meta = managed(source)
+    result = isolate(
+        source, dest, acknowledged, save, source_meta.get("layout") == "game-directory"
+    )
     game = game_dir(result)
     removed = []
     for p in (game / "mods").glob("*"):

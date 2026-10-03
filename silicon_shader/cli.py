@@ -15,7 +15,8 @@ from .instances import (
     managed,
     closed,
 )
-from . import capture, loop
+from . import capture, loop, challenge, community
+from .doctor import doctor
 
 
 def emit(value):
@@ -86,6 +87,16 @@ def parser():
     s = p.add_subparsers(dest="cmd", required=True)
     d = s.add_parser("discover", help="Read hardware and Prism metadata")
     d.add_argument("--prism")
+    q = s.add_parser(
+        "doctor",
+        help="Inspect one instance and generate honest observation placeholders",
+    )
+    q.add_argument("instance")
+    q.add_argument(
+        "--game-dir",
+        action="store_true",
+        help="Inspect a launcher-neutral game directory",
+    )
     q = s.add_parser("setup", help="Create Prism metadata, no game downloads or launch")
     q.add_argument("destination")
     q.add_argument("--minecraft", required=True)
@@ -99,6 +110,12 @@ def parser():
         q.add_argument("destination")
         q.add_argument("--closed", action="store_true")
         q.add_argument("--save", help="Exact save folder to copy, while closed")
+        if name == "isolate":
+            q.add_argument(
+                "--game-dir",
+                action="store_true",
+                help="Copy a launcher-neutral game directory",
+            )
         if name == "daily":
             q.add_argument(
                 "--session",
@@ -154,6 +171,13 @@ def parser():
             )
             a.add_argument("--target-fps", type=float, default=85)
             a.add_argument("--max-trials", type=int, default=4)
+            a.add_argument(
+                "--objective", choices=("performance", "quality"), default="performance"
+            )
+            a.add_argument("--max-scale", type=float, default=1.0)
+            a.add_argument("--max-render-distance", type=int, default=24)
+            a.add_argument("--min-scale", type=float, default=0.65)
+            a.add_argument("--min-render-distance", type=int, default=12)
         if action in ("propose", "sync"):
             a.add_argument("instance")
             a.add_argument("--closed", action="store_true")
@@ -161,12 +185,94 @@ def parser():
             a.add_argument("capture")
         if action == "stop":
             a.add_argument("--reason", required=True)
+    q = s.add_parser("challenge", help="Optional community evidence and publication")
+    sub = q.add_subparsers(dest="action", required=True)
+    sub.add_parser("show")
+    a = sub.add_parser("prepare")
+    for field in (
+        "baseline_capture",
+        "candidate_capture",
+        "baseline_csv",
+        "candidate_csv",
+        "metadata",
+    ):
+        a.add_argument(field)
+    a.add_argument("--out", required=True)
+    for action in ("validate", "submit"):
+        a = sub.add_parser(action)
+        a.add_argument("bundle")
+        if action == "submit":
+            a.add_argument("--publish", action="store_true")
+            a.add_argument("--reviewed-digest")
+    a = sub.add_parser("status")
+    a.add_argument("digest")
+    s.add_parser("skill", help="Print the bundled portable agent skill")
+    q = s.add_parser(
+        "install-skill", help="Install skill into an explicit agent skill directory"
+    )
+    q.add_argument("--destination", required=True)
     return p
 
 
 def run(args):
+    if args.cmd in ("skill", "install-skill"):
+        from importlib.resources import files
+
+        text = (
+            files("silicon_shader")
+            .joinpath("skills/silicon-shader/SKILL.md")
+            .read_text()
+        )
+        if args.cmd == "skill":
+            return {"name": "silicon-shader", "markdown": text}
+        destination = Path(args.destination).expanduser().absolute()
+        if any(p.is_symlink() for p in [destination, *destination.parents]):
+            raise ValueError("Skill destination must not traverse a symlink")
+        target = destination / "SKILL.md"
+        if destination.exists():
+            if (
+                target.is_file()
+                and not target.is_symlink()
+                and target.read_text() == text
+            ):
+                return {"path": str(target), "status": "already installed"}
+            raise ValueError("Destination exists; inspect it and choose a new path")
+        destination.mkdir(parents=True)
+        target.write_text(text)
+        return {"path": str(target), "status": "installed"}
+    if args.cmd == "challenge":
+        if args.action == "show":
+            return community.contract()
+        if args.action == "prepare":
+            if Path(args.out).exists():
+                raise ValueError("Bundle output exists; choose a new path")
+            result = challenge.prepare(
+                args.baseline_capture,
+                args.candidate_capture,
+                args.baseline_csv,
+                args.candidate_csv,
+                args.metadata,
+            )
+            write(args.out, result)
+            return {
+                "path": args.out,
+                "digest": result["content_digest"],
+                "status": "self_reported; unpublished",
+            }
+        if args.action == "status":
+            return community.status(args.digest)
+        bundle = community.load_bundle(args.bundle)
+        if args.action == "validate":
+            return {
+                "valid": True,
+                "status": "self_reported",
+                "digest": bundle["content_digest"],
+            }
+        return community.submit(bundle, args.publish, args.reviewed_digest)
     if args.cmd == "discover":
         return discover(args.prism)
+    if args.cmd == "doctor":
+        return doctor(args.instance, args.game_dir)
     if args.cmd == "runtime":
         return inspect_runtime(args.executable, args.minecraft)
     if args.cmd == "setup":
@@ -174,7 +280,9 @@ def run(args):
     if args.cmd == "isolate":
         return {
             "instance": str(
-                isolate(args.source, args.destination, args.closed, args.save)
+                isolate(
+                    args.source, args.destination, args.closed, args.save, args.game_dir
+                )
             ),
             "status": "isolated; unmeasured",
         }
@@ -192,11 +300,14 @@ def run(args):
                 raise ValueError(
                     "Apply retained winner with loop sync before daily copy"
                 )
+        result = daily(args.source, args.destination, args.closed, args.save)
+        _, meta = managed(result)
         return {
-            "instance": str(
-                daily(args.source, args.destination, args.closed, args.save)
-            ),
-            "status": "clean copy; normal gameplay, controls and save/reload remain unverified",
+            "instance": str(result),
+            "launcher_cleanup_required": meta.get("launcher_cleanup_required", False),
+            "status": "copied game files; inspect external launcher JVM arguments and hooks before normal gameplay"
+            if meta.get("launcher_cleanup_required")
+            else "clean copy; normal gameplay, controls and save/reload remain unverified",
         }
     if args.cmd == "profile":
         if args.action == "show":
@@ -231,7 +342,22 @@ def run(args):
                 "irisScale", baseline.get("scale")
             ) != baseline.get("scale"):
                 raise ValueError("Game and Iris scale must match before measurement")
-            state = loop.start(args.scenes, args.target_fps, args.max_trials)
+            state = loop.start(
+                args.scenes,
+                args.target_fps,
+                args.max_trials,
+                args.min_scale,
+                args.min_render_distance,
+                args.objective,
+                args.max_scale,
+                args.max_render_distance,
+            )
+            if (
+                baseline.get("scale", 0) < args.min_scale
+                or baseline["options"].get("renderDistance", 0)
+                < args.min_render_distance
+            ):
+                raise ValueError("Baseline is below your chosen quality floors")
             state.update(
                 instance_id=instance.name,
                 instance_path=str(instance),

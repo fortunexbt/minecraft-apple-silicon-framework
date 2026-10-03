@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "silicon-shader"
-version = "0.1.0"
+version = "0.2.0"
 description = "A bounded, evidence-led Minecraft shader tuning workbench for Apple Silicon"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -20,3 +20,6 @@ packages = ["silicon_shader"]
 [project.urls]
 Repository = "https://github.com/fortunexbt/minecraft-apple-silicon-framework"
 Documentation = "https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKFLOW.md"
+
+[tool.setuptools.package-data]
+silicon_shader = ["skills/*/SKILL.md"]
