@@ -4,11 +4,15 @@
 
 Silicon Shader gives you a Python CLI, a short agent prompt, and an optional Java frame sampler. It helps you find a good visual/performance tradeoff in a handful of useful experiments, then leave the benchmark behind.
 
-Settings and worlds stay in separate Prism instances. Every configuration change has a rollback receipt. Install third-party components from their publishers; the repository distributes original tools, patch recipes and compact evidence.
+Settings and worlds stay in separate lab instances or game directories. Every configuration change has a rollback receipt. Install third-party components from their publishers; the repository distributes original tools, patch recipes and compact evidence.
 
 ### Start here
 
-Requires **Python 3.10+**, [Prism Launcher](https://prismlauncher.org/download/), and your own Minecraft installation. No Python runtime dependencies.
+Requires **Python 3.10+** and your own Minecraft Java installation. [Prism Launcher](https://prismlauncher.org/download/) has the most direct setup path; other launchers can use an explicit game directory. No Python runtime dependencies.
+
+**With an agent:** give it [this short prompt](agents/START.md). It handles setup and walks you through a few useful experiments.
+
+**Manually:** install below, then follow the [workflow](docs/WORKFLOW.md). No agent or API key is required.
 
 ```sh
 git clone https://github.com/fortunexbt/minecraft-apple-silicon-framework.git
@@ -18,8 +22,6 @@ python3 -m venv .venv
 python -m pip install .
 silicon-shader discover
 ```
-
-Then give your coding agent **[this entry prompt](agents/START.md)**, or follow the **[manual guide](docs/WORKFLOW.md)**. The CLI works without an agent or an API key.
 
 To make a lab copy, close the source instance first:
 
@@ -43,7 +45,7 @@ Use the exact **save folder**, not its display name. Omit `--save` to create a f
 | `loop` | Validate a baseline, propose material changes, retain measured winners, stop |
 | `daily` | Create a separate copy without Java agents, launch hooks or Minescript |
 
-The search has **at most four trials by default** (hard limit six), stops after two failed improvements, and stops immediately when the baseline meets your chosen tradeoff. It keeps view distance at least 12 in its generated proposals and avoids scaling below 65%. These are tuning guardrails, not hardware performance claims. Crispness and atmosphere still need your eyes.
+The search has **at most four trials by default** (hard limit six), stops after two failed improvements, and stops immediately when the baseline meets your chosen tradeoff. By default it keeps view distance at least 12 in its generated proposals and avoids scaling below 65%; choose stricter floors with the loop options. These are tuning guardrails, not hardware performance claims. Crispness and atmosphere still need your eyes.
 
 ### Evidence, without the hype
 
@@ -59,7 +61,7 @@ Discovery is designed for M1–M5 families, including Pro/Max/Ultra and MacBooks
 
 ### Scope and status
 
-**0.1 research release.** The CLI is verified on disposable fixtures; the sampler has a synthetic Java smoke test. This repository build did not launch Minecraft or touch the source campaign’s instances. The live sampler hook is version-specific, must be explicitly configured, and has not been newly gameplay-qualified in this release. Unknown mappings fail closed.
+**0.2 early-access challenge.** The CLI is verified on disposable fixtures; the sampler has a synthetic Java smoke test. This repository build did not launch Minecraft or touch the source campaign’s instances. The live sampler hook is version-specific, must be explicitly configured, and has not been newly gameplay-qualified in this release. Unknown mappings fail closed.
 
 - [Manual workflow and capture contract](docs/WORKFLOW.md)
 - [Sampler build and hook setup](sampler/README.md)
@@ -75,7 +77,7 @@ Original framework code is [MIT licensed](LICENSE). Third-party components retai
 
 [Explore the hosted challenge](https://fortunexbt.github.io/minecraft-apple-silicon-framework/) · [Agent skill](silicon_shader/skills/silicon-shader/SKILL.md) · [Rules and optional submission](docs/CHALLENGE.md) · [What we learned from Yukon](docs/YUKON.md)
 
-Version 0.2 adds launcher-neutral game-directory isolation, a read-only setup doctor, user-selected quality floors and an optional quality-first search. Community contributions pair a baseline and candidate, export bounded relative timing evidence, and use an explicit reviewed-digest publication command. The hosted board separates cohorts and labels all initial results self-reported. No community measurements are fabricated to populate it.
+Version 0.2 adds launcher-neutral game-directory isolation, a read-only setup doctor, user-selected quality floors and an optional quality-first search. Community contributions pair a baseline and candidate, export bounded relative timing evidence, and use an explicit opt-in publication command. The hosted board separates cohorts and labels all initial results self-reported. No community measurements are fabricated to populate it.
 
 ```sh
 silicon-shader doctor /path/to/game --game-dir
@@ -85,3 +87,11 @@ silicon-shader install-skill --destination ~/.agents/skills/silicon-shader
 ```
 
 Generic game directories preserve the existing mod/shader stack. Automatic settings edits still require a supported adapter; launcher JVM arguments/hooks remain the operator's responsibility. Any harness can implement the documented [capture protocol](sampler/README.md), but missing focus/completion evidence cannot be invented.
+
+### Ready to contribute?
+
+This is an **early-access challenge**. You can submit matched experiments now; the sampler still needs an exact hook for your Minecraft version. Start with your existing setup and an agent, or use the manual workflow if you already have a compatible harness.
+
+Publishing requires [GitHub CLI](https://cli.github.com/) and your GitHub login. Run `gh auth status --hostname github.com` to check it. [Submission instructions](docs/CHALLENGE.md#cli-and-hosted-board) cover preview, publication and retry. After submission, add enough setup and route detail to the PR for another player to repeat it. A maintainer reviews it before it appears on the board.
+
+The Git repository is the durable source of the site and every accepted contribution. To rebuild the board elsewhere, run `python3 -m silicon_shader.registry contributions site/data.json`, then host `site/` on any static host. No database or private service is required.
