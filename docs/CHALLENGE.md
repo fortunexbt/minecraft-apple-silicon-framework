@@ -1,6 +1,6 @@
 # Community A/B challenge evidence
 
-This optional protocol packages a small same-machine experiment for another person to reproduce. It can accompany a launcher setup, mod change, shader setting, or alternate harness that emits the documented capture and CSV formats. It neither launches Minecraft nor executes submitted code, downloads mods, uploads evidence, or contacts a service. The optional CLI publication flow is documented below.
+This optional protocol packages a small same-machine experiment for another person to reproduce. It can accompany a launcher setup, mod change, shader setting, or alternate harness that emits the documented capture and CSV formats. Preparation and preview stay local. The optional publication command sends the reviewed evidence and your public GitHub handle to the repository. No command launches Minecraft or executes submitted code.
 
 `silicon_shader.challenge.prepare(baseline_capture_path, candidate_capture_path, baseline_csv_path, candidate_csv_path, metadata_path)` returns a JSON-compatible dictionary and raises `ValueError` for rejected input. It reads files without modifying them. `validate_bundle(bundle)` returns a list of errors; an empty list means structurally valid **self-reported** evidence. See `examples/challenge-metadata.json` for the exact metadata shape. These preparation and validation functions do not submit anything.
 
@@ -51,14 +51,16 @@ silicon-shader challenge validate experiment.json
 silicon-shader challenge submit experiment.json
 ```
 
-The final command above is a local preview and makes no network requests. Inspect its bundle, destination and content digest. When you choose to publish:
+The final command above shows a compact local preview: public setup, timing summaries, interval counts and destination. It makes no network requests. The complete relative traces remain in your bundle file and will also be shared. When you choose to publish:
 
 ```sh
-silicon-shader challenge submit experiment.json --publish --reviewed-digest FULL_SHA256_FROM_PREVIEW
-silicon-shader challenge status FULL_SHA256_FROM_PREVIEW
+silicon-shader challenge submit experiment.json --publish
+silicon-shader challenge status experiment.json
 ```
 
-Publication uses an existing authenticated `gh` installation. It publishes your GitHub handle and bundle, may create your fork, creates a deterministic branch and opens one data-only PR. No credential creation, login, automatic telemetry or transcript upload occurs. A fork may take time to become available. After an interrupted or failed request, inspect status and retry the **same bundle and digest**. The command resumes an existing file/PR and refuses to overwrite different content. A closed PR is returned as closed rather than resubmitted. Content changes require a new reviewed digest. No local Git checkout is reset or modified.
+Publication uses an existing authenticated [GitHub CLI (`gh`)](https://cli.github.com/) installation. Check your login with `gh auth status --hostname github.com`. It publishes your GitHub handle and bundle, may create your fork, creates a deterministic branch and opens one data-only PR. No credential creation, login, automatic telemetry or transcript upload occurs. A fork may take time to become available. After an interrupted or failed request, inspect status and retry the **same bundle and digest**. The command resumes an existing file/PR and refuses to overwrite different content. A closed PR is returned as closed rather than resubmitted. Changed content gets a new submission identity. For scripted workflows that must publish exactly the bytes previously reviewed, the optional `--reviewed-digest DIGEST` refuses a changed bundle. Without it, `--publish` authorizes the named file as it exists when the command runs. No local Git checkout is reset or modified.
+
+Add a short reproduction recipe to the PR description: setup/version sources, the exact baseline and candidate settings, how to create the test scene and repeat the route, and what you saw. A label such as `walk-v1` alone is not a usable recipe. Keep private world names and personal paths out of it. If setup or submission gets stuck, [open an issue](https://github.com/fortunexbt/minecraft-apple-silicon-framework/issues) with the error and public version details.
 
 The PR check reads the JSON blob using trusted base-branch code, verifies author identity and recomputes metrics and hashes. Maintainer review is required before merge. The site rebuilds on main; merging self-reported evidence does not upgrade its status. Do not include executable code, archives or private configs. Code/adapter improvements use a separate ordinary PR with tests. A named shader profile or route must point to an available public recipe that a reviewer can actually reproduce; unsupported or private recipes should not be merged.
 

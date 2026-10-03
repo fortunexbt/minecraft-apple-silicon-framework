@@ -21,7 +21,7 @@ function detail(entry) {
 function svgNode(tag, attrs={}, text) { const el=document.createElementNS('http://www.w3.org/2000/svg',tag); for(const [key,value] of Object.entries(attrs)) el.setAttribute(key,value); if(text!==undefined) el.textContent=text; return el; }
 function chart(selected) {
   const target=byId('chart'); target.replaceChildren();
-  if (!selected.length) { const empty=node('div',undefined,{class:'empty'}); empty.append(node('span','+',{class:'cross'}),node('h2','The next point could be yours.'),node('p','No community experiments have been published in this cohort. Start with a baseline and share a result worth repeating.'),node('button','Make a contribution ↗',{'data-dialog':'participate'})); target.append(empty); return; }
+  if (!selected.length) { const empty=node('div',undefined,{class:'empty'}); empty.append(node('span','+',{class:'cross'}),node('h2','The next point could be yours.'),node('p','No community experiments have been published yet. Start with your setup and share a result worth repeating.'),node('button','Start an experiment ↗',{'data-dialog':'participate'})); target.append(empty); return; }
   const svg=svgNode('svg',{viewBox:'0 0 900 330',role:'img','aria-label':view==='pacing'?'Matched baseline and candidate frame pacing':'Candidate improvement over its own baseline'});
   const points=selected.flatMap(e=>['baseline','candidate'].map(run=>({entry:e,run,x:view==='pacing'?e.runs[run].p95_ms:(run==='baseline'?0:(e.runs.candidate.worst_5s_fps/e.runs.baseline.worst_5s_fps-1)*100), y:view==='pacing'?e.runs[run].worst_5s_fps:(run==='baseline'?0:(1-e.runs.candidate.p95_ms/e.runs.baseline.p95_ms)*100)})));
   const xs=points.map(p=>p.x), ys=points.map(p=>p.y); const xmin=Math.min(0,...xs), xmax=Math.max(1,...xs), ymin=Math.min(0,...ys), ymax=Math.max(1,...ys); const xp=x=>75+(x-xmin)/(xmax-xmin)*745, yp=y=>270-(y-ymin)/(ymax-ymin)*220;
@@ -31,10 +31,23 @@ function chart(selected) {
   svg.append(svgNode('text',{x:450,y:320,'text-anchor':'middle'},view==='pacing'?'p95 frame time (ms) · lower is better':'Worst 5s FPS improvement (%)'),svgNode('text',{x:75,y:22},view==='pacing'?'Worst 5s FPS · higher is better':'p95 frame-time reduction (%) · higher is better')); target.append(svg);
 }
 function render() {
+ const hasResults = entries.length > 0;
+ for (const selector of ['.chart-heading', '.filters', '.chart-foot', '.board']) {
+   document.querySelector(selector).hidden = !hasResults;
+ }
  const selected=entries.filter(e=>e.cohort===byId('cohort').value); const body=byId('results'); body.replaceChildren();
  if(!selected.length){const row=node('tr');row.append(node('td','No published community results yet. The first contribution starts here.',{colspan:'6',class:'empty-row'}));body.append(row);}
  for(const e of selected){const row=node('tr'),a=e.runs.baseline,b=e.runs.candidate; for(const value of [e.author,e.metadata.interventions.join(', '),`${number(a.worst_5s_fps)} → ${number(b.worst_5s_fps)}`,`${number(a.p95_ms)} → ${number(b.p95_ms)} ms`,e.metadata.quality_review.outcome]) row.append(node('td',value)); const cell=node('td'),button=node('button','Inspect ↗');button.addEventListener('click',()=>detail(e));cell.append(button);row.append(cell);body.append(row);}
  byId('count').textContent=`${entries.length} experiments · ${new Set(entries.map(e=>e.cohort)).size} cohorts`; chart(selected);
 }
-async function load(){try{const response=await fetch('data.json');if(!response.ok)throw new Error('Data request failed');const data=await response.json();if(!Array.isArray(data.entries))throw new Error('Invalid data');entries=data.entries;const seen=new Set();for(const e of entries){if(!/^[a-f0-9]{64}$/.test(e.digest)||!/^[a-f0-9]{64}$/.test(e.cohort))throw new Error('Invalid identity');if(!seen.has(e.cohort)){seen.add(e.cohort);const m=e.metadata;byId('cohort').append(node('option',`${m.hardware.family} ${m.hardware.tier} · ${m.workload.scene} · ${e.cohort.slice(0,8)}`,{value:e.cohort}));}}if(entries.length){byId('cohort').value=entries[0].cohort;byId('cohort').querySelector('option[value=""]').remove();}render();byId('load-status').textContent='Published after repository review. All current entries remain self-reported.';}catch(error){byId('count').textContent='Evidence unavailable';byId('load-status').textContent='Could not load the public evidence index. Please reload or inspect the GitHub repository.';byId('chart').replaceChildren(node('p','Evidence is unavailable. Reload to retry.'));}}
+async function load(){try{const response=await fetch('data.json');if(!response.ok)throw new Error('Data request failed');const data=await response.json();if(!Array.isArray(data.entries))throw new Error('Invalid data');entries=data.entries;const seen=new Set();for(const e of entries){if(!/^[a-f0-9]{64}$/.test(e.digest)||!/^[a-f0-9]{64}$/.test(e.cohort))throw new Error('Invalid identity');if(!seen.has(e.cohort)){seen.add(e.cohort);const m=e.metadata;byId('cohort').append(node('option',`${m.hardware.family} ${m.hardware.tier} · ${m.workload.scene} · ${e.cohort.slice(0,8)}`,{value:e.cohort}));}}if(entries.length){byId('cohort').value=entries[0].cohort;byId('cohort').querySelector('option[value=""]').remove();}render();byId('load-status').textContent='Published after repository review. All current entries remain self-reported.';}catch(error){for(const selector of ['.chart-heading','.filters','.chart-foot','.table-wrap'])document.querySelector(selector).hidden=true;byId('count').textContent='Evidence unavailable';byId('load-status').textContent='Could not load the public evidence index. Please reload or inspect the GitHub repository.';byId('chart').replaceChildren(node('p','Evidence is unavailable. Reload to retry.'));}}
 load();
+
+byId('copy-prompt').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(byId('agent-prompt').textContent);
+    byId('copy-status').textContent = 'Copied — paste it into your agent.';
+  } catch {
+    byId('copy-status').textContent = 'Select and copy the prompt above.';
+  }
+});
