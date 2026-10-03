@@ -323,9 +323,7 @@ class CommunityTests(unittest.TestCase):
         self.assertNotEqual(check().returncode, 0)
         self.assertEqual(output_file.read_text(), "")
 
-        responses[compare_key]["files"] = [
-            {"filename": "README.md"}
-        ]
+        responses[compare_key]["files"] = [{"filename": "README.md"}]
         responses["repos/owner/repo/pulls/1"]["changed_files"] = 1
         self.assertEqual(check().returncode, 0)
         self.assertEqual(output_file.read_text(), "")
