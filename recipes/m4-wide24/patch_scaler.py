@@ -15,7 +15,8 @@ MEMBER = 'dev/zelo/renderscale/RenderScale.class'
 def main():
     if len(sys.argv) != 5:
         raise SystemExit('usage: patch_scaler.py ORIGINAL.jar ASM_CORE.jar ASM_TREE.jar NEW.jar')
-    original, core, tree, output = (Path(x).resolve() for x in sys.argv[1:])
+    original, core, tree = (Path(x).resolve() for x in sys.argv[1:4])
+    output = Path(sys.argv[4]).absolute()
     inputs = json.loads((HERE / 'shader-inputs.json').read_text())
     if hashlib.sha256(original.read_bytes()).hexdigest() != inputs['renderscale_upstream_sha256']:
         raise SystemExit('Input is not the measured RenderScale 1.4.0-alpha.6 build')
