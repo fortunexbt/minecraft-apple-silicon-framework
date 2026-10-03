@@ -1,0 +1,32 @@
+{
+  "shaders/common/composite_vertex.glsl": {
+    "changes": [
+      {
+        "before": "    exposure = mix(exposure, prev_exposure, exp(-frameTime * 1.25));",
+        "after": "    // Local: zero exposure history denotes a newly cleared render target.\n    if (prev_exposure > 0.0) {\n        exposure = mix(exposure, prev_exposure, exp(-frameTime * 1.25));\n    }"
+      }
+    ],
+    "expected_sha256": "fd8f415ad3995a853a67a5c7e0cf467619cbf6f5e74cb2cabaa295dee6ce1ddd"
+  },
+  "shaders/lib/cas.glsl": {
+    "changes": [
+      {
+        "before": "vec3 CAS(vec2 texcoord) {",
+        "after": "// Local finite-CAS fix: retain the original nine-tap neighborhood.\n// Algebra: -1 / (inversesqrt(a) * peak) = -sqrt(a) / peak for a > 0.\n// At a == 0, use the defined zero weight; guard zero-valued max channels.\nvec3 CAS(vec2 texcoord) {"
+      },
+      {
+        "before": "vec3 rcpMxRGB = vec3(1.0) / mxRGB;",
+        "after": "vec3 rcpMxRGB = vec3(1.0) / max(mxRGB, vec3(1e-8));"
+      },
+      {
+        "before": "ampRGB = inversesqrt(ampRGB);",
+        "after": "ampRGB = sqrt(ampRGB);"
+      },
+      {
+        "before": "vec3 wRGB = -vec3(1.0) / (ampRGB * peak);",
+        "after": "vec3 wRGB = -ampRGB / peak;"
+      }
+    ],
+    "expected_sha256": "3064e3cb5769c6ea938e1cd52b9e6523f55fa96a06084626557404217aa52564"
+  }
+}

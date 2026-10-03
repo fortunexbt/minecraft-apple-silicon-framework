@@ -1,0 +1,13 @@
+{
+  "upstream_sha256": "afbf622b983d29ffa5fe5f15197f321d3921915bd44584d85f14bc11b5e0e5e8",
+  "target_sha256": "b794fe3992614ecb945d5731c1a14c299acd384aee1d80edf5c48ca51ac3188e",
+  "changed_entries": [
+    "shaders/common/composite_vertex.glsl",
+    "shaders/lib/cas.glsl"
+  ],
+  "iris_upstream_sha256": "0fcd6f8858db94ed1f28210005fcff9b9364beaa6eb2a8eccf9449a6f709f14d",
+  "iris_patched_sha256": "141d40c59c116893dfb9f88fb40c853368cfe8a1e965e7eb17161682489ca9be",
+  "renderscale_upstream_sha256": "9e2384d924c098cdf4a5445ab11ea8078067cfce1b4cf991670a0eadc3578b7e",
+  "renderscale_reference_sha256": "8337af211bef89572bf57a2fe5aeeb0e4ab231beda1ac35f450bb1e9901e07e3",
+  "renderscale_class_sha256": "c3babe84ec7e56b33b4ee0f903fae0163bd3f17579d6eb8160ad52d7100b6e24"
+}
