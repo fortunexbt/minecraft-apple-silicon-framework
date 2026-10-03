@@ -1,13 +1,15 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "silicon-shader"
 version = "0.2.0"
-description = "A bounded, evidence-led Minecraft shader tuning workbench for Apple Silicon"
+description = "Find, try and share Minecraft shader setups for Apple Silicon"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
 authors = [{name = "Silicon Shader contributors"}]
 dependencies = []
 
@@ -16,6 +18,7 @@ silicon-shader = "silicon_shader.cli:main"
 
 [tool.setuptools]
 packages = ["silicon_shader"]
+include-package-data = false
 
 [project.urls]
 Repository = "https://github.com/fortunexbt/minecraft-apple-silicon-framework"

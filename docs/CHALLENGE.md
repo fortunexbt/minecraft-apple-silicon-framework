@@ -1,91 +1,61 @@
-# Community A/B challenge evidence
+# Share a setup
 
-**Share a setup someone else can see and use.** Each new submission needs a gameplay screenshot, hardware and timing evidence, and a recipe with the exact settings and installation steps. People can filter by Mac and RAM, compare the pictures and statistics, and ask an agent to try a suitable setup.
+The [community library](https://fortunexbt.github.io/minecraft-apple-silicon-framework/) shows screenshots, Minecraft faces, hardware, settings and measured results. Share a recipe another player can try, with enough evidence to understand its tradeoffs. Publishing is optional.
 
-This optional protocol packages a small same-machine experiment for another person to reproduce. It can accompany a launcher setup, mod change, shader setting, or alternate harness that emits the documented capture and CSV formats. Preparation and preview stay local. The optional publication command sends the reviewed evidence and your public GitHub handle to the repository. No command launches Minecraft or executes submitted code.
+## What to include
 
-`silicon_shader.challenge.prepare(baseline_capture_path, candidate_capture_path, baseline_csv_path, candidate_csv_path, metadata_path)` returns a JSON-compatible dictionary and raises `ValueError` for rejected input. It reads files without modifying them. `validate_bundle(bundle)` returns a list of errors; an empty list means structurally valid **self-reported** evidence. See `examples/challenge-metadata.json` for the exact metadata shape. These preparation and validation functions do not submit anything.
+- A real gameplay screenshot of the candidate setup.
+- Hardware, game/loader, Java, mod and shader versions; resolution and view distance.
+- A public recipe with exact settings, download sources, patches, harness/route and rollback steps.
+- Matched baseline/candidate timings from the same Mac and scene, with a visual review.
+- Your public Minecraft UUID or Java username for the skin face; GitHub identifies the contributor.
 
-## Capture an experiment
-
-Use an isolated managed setup and a representative 20–30 second living-player gameplay route. Capture baseline first, then candidate on the same machine with the same scene, actual save, terrain, route, runtime, display, game mode, focus, fullscreen, and environmental controls. Keep the two durations within one second. A completion overrun up to 31 seconds is accepted. Do not record a menu, death screen, paused state, or black world. Both captures must pass the existing capture validator, including explicit visual approval and a successful sampler completion receipt.
-
-The local importer verifies each original CSV SHA-256 against capture provenance and recomputes every metric. Missing provenance is rejected. Timestamps must be monotonic, indexes consecutive, and intervals consistent with timestamps. Input files and exported bundles are capped at 8 MB, interval arrays at 30,000 entries, and numbers must be finite. This is a short experiment protocol, not a long unattended benchmark or an arbitrary frame quota.
-
-The supported metric is **CPU frame production**. It is not GPU presentation, displayed FPS, generated FPS, or input latency. Threshold `time_ms` measures the full duration of intervals exceeding 33/50/100 ms, separately from local abrupt outliers.
-
-## Public metadata contract
-
-Unknown keys are rejected throughout public metadata. Required fields are:
-
-- `hardware`: observed `family` such as M1–M6 or A18, `tier` base/pro/max/ultra, integer `cpu_cores`, `gpu_cores`, and `memory_gib` (1–2048). Optional `model` (e.g. MacBook Pro) and `model_identifier` (e.g. Mac16,1) preserve chassis context without serial numbers. The hardware reference is not an admission whitelist.
-- `minecraft`, `launcher`, `harness`, `runtime`: short product/version labels. `loader` has `name` and `version`.
-- `workload`: generic public `scene`, `route`, and `terrain` recipe labels, matching capture context exactly. Use reproducible recipe names, never a private world name. Runtime must also match the capture.
-- `baseline` and `candidate`: each has `mods` (1–200 name-to-version entries), `shader` (`name`, `version`), and `settings`.
-- `settings`: output `resolution` (two integers, 320–16384), `scale` (0.5–1), integer `render_distance` and `simulation_distance` (2–64), integer `cap` (0–1000; zero denotes uncapped), `filter` (nearest/linear/off/fsr), and `visual_properties` (up to 100 safe property/value entries, or a named profile). Resolution and all scalar settings are checked against capture context. Shader name must also match the capture.
-- `interventions`: exactly the changed fields from scale/render_distance/simulation_distance/cap/filter/visual_properties/shader/mods. Output resolution is fixed. Changes to shader or mod versions are supported. All undeclared configuration fields must match.
-- `quality_review`: `reviewed`, `baseline_acceptable`, and `candidate_acceptable` must be true; `artifacts` false; `outcome` is improved/equivalent/tradeoff. This is an explicit operator judgment, not a metric-derived quality score.
-
-The capture format has an opaque `versions` context rather than a structured mod inventory. A declared mods intervention permits this context to differ; public structured mod versions, Minecraft/loader versions, chip details, shader version, and visual properties remain operator declarations, not independently detected facts. Keep Minecraft and loader unchanged. Reproduction needs a human audit of the recipe and actual installed versions. A profile label must identify a reproducible public preset; no config file, archive, or executable is embedded.
-
-Labels allow only short ASCII product-style words, dots, plus signs, spaces, underscores and hyphens. Paths, URLs, emails, long opaque token-like strings and recognizable secret labels are rejected. This is a narrow input vocabulary, **not anonymization** or a guarantee that user-entered text cannot contain personal information. Use generic public labels and inspect the exported JSON before sharing. Custom/private dimension identifiers are not accepted.
-
-## Bundle and integrity
-
-Schema version 1 contains `schema_version`, `status`, `metric`, `metadata`, `controls`, `runs`, `cohort_hash`, and `content_digest`. The only allowed status is `self_reported`. Each run contains relative `intervals_ms`, recomputed `metrics`, and original `csv_sha256`. Absolute nanotimes, source paths, capture IDs, reviewer identities, account data, instance names, and save folder identifiers are never exported. Public recipe labels are exported deliberately. Private instance/save context is compared locally and then discarded.
-
-`cohort_hash` covers public workload/hardware/software context, safe gameplay controls, and configuration fields that are not interventions. It does not identify a private world or establish physical machine identity. `content_digest` is SHA-256 over sorted compact JSON of the complete bundle excluding the digest itself. Validation recomputes all metrics, cohort hash, and content digest; it does not mutate the bundle. Reordered JSON object keys preserve the digest. Array order and numeric JSON representation are part of the content identity.
-
-Digests detect inconsistent edits; they are not signatures or proof against fabricated traces. An author can invent raw intervals and recompute hashes. CSV provenance is checked during local preparation, but the public relative trace cannot independently prove the original absolute CSV. Successful validation must never be labeled externally reproduced or verified. Independent reproduction requires a separately recorded same-machine A/B experiment and human assessment; that workflow is not implemented here.
-
-## Compare outcomes
-
-Compare each candidate to its matched baseline. Discuss visual quality, sustained frame production, frame-time tails and abrupt stalls together. A sharper or richer candidate with equal or lower FPS can be a useful quality tradeoff; there is no higher-FPS-only gate. Never build a global raw-FPS ranking across different machines, scenes or software stacks from these bundles. A short accepted segment does not qualify a complete daily gameplay setup.
+Use `discover` to get the active Prism profile automatically. For other launchers, inspect the selected public game profile. Never upload account files, credentials, worlds or raw logs. Keep screenshots free of private chat.
 
 ## CLI and hosted board
 
-The [hosted challenge](https://fortunexbt.github.io/minecraft-apple-silicon-framework/) reads a generated index of reviewed repository contributions. It offers cohort selection, paired pacing/improvement plots and full evidence details. The first version has no remote Minecraft runner or automatic independent-reproduction certification. It starts empty; historical campaign claims are not silently converted into community submissions.
+[Capture a short experiment](reference/BENCHMARKING.md), or use a compatible existing harness. Fill [the metadata template](../examples/challenge-metadata.json), then prepare the evidence:
 
 ```sh
-silicon-shader challenge show
 silicon-shader challenge prepare baseline.json candidate.json baseline.csv candidate.csv metadata.json --out experiment.json
 silicon-shader challenge validate experiment.json
-silicon-shader challenge submit experiment.json --presentation setup.json
 ```
 
-Create `setup.json` beside your evidence bundle:
+Create `setup.json` beside it:
 
 ```json
 {
-  "title": "MakeUp with a wide view on base M4",
+  "title": "My shader setup",
   "minecraft_profile": "YOUR_JAVA_USERNAME_OR_UUID",
-  "screenshot_url": "https://raw.githubusercontent.com/OWNER/REPO/COMMIT/evidence/screenshot.png",
-  "recipe_url": "https://github.com/OWNER/REPO/blob/COMMIT/docs/setup.md"
+  "screenshot_url": "https://raw.githubusercontent.com/OWNER/REPO/FULL_COMMIT_ID/path/gameplay.png",
+  "recipe_url": "https://github.com/OWNER/REPO/blob/FULL_COMMIT_ID/path/recipe.md"
 }
 ```
 
-Replace COMMIT with the full commit ID. The screenshot must be an actual candidate gameplay capture, without private chat/account information. Use PNG, JPEG or WebP at a pinned public GitHub commit; a GitHub `user-attachments/assets/...` image URL also works. Publish the screenshot and Markdown recipe in your own repository or a separate recipe PR first. New evidence PRs require these links; old entries remain readable. The recipe should give exact versions and full settings, compatible installation instructions, the measured route, and how to revert. Do not redistribute third-party binaries without permission.
-
-New submissions include `minecraft_profile`, the contributor's public Java username or UUID, to display their Minecraft skin face. `discover` reads public names/UUIDs from Prism profiles; use the active profile automatically, or the selected launcher's profile when available. UUIDs survive username changes. Review this public identity with the submission preview; never upload account files or credentials. Faces load through [MCHeads](https://mc-heads.net/). GitHub names remain linked for attribution, but GitHub photos are not used. Legacy entries and failed skin requests fall back to a default Minecraft face, then initials. A skin is decoration, not verified account ownership.
-
-The final command above shows a compact local preview: public setup, timing summaries, interval counts and destination. It makes no network requests. The complete relative traces remain in your bundle file and will also be shared. When you choose to publish:
+Use a full 40-character commit ID. Screenshots accept pinned GitHub PNG/JPEG/WebP files or GitHub `user-attachments/assets/...` URLs; recipes must be pinned Markdown files. Publish these files in your repository or a separate recipe PR first. Download links do not grant redistribution rights for third-party binaries.
 
 ```sh
+# Local preview: no network request or upload.
+silicon-shader challenge submit experiment.json --presentation setup.json
+
+# After reviewing the preview and choosing to publish:
+gh auth status --hostname github.com
 silicon-shader challenge submit experiment.json --presentation setup.json --publish
 silicon-shader challenge status experiment.json
 ```
 
-Publication uses an existing authenticated [GitHub CLI (`gh`)](https://cli.github.com/) installation. Check your login with `gh auth status --hostname github.com`. It publishes your GitHub handle and bundle, may create your fork, creates a deterministic branch and opens one data-only PR. No credential creation, login, automatic telemetry or transcript upload occurs. A fork may take time to become available. After an interrupted or failed request, inspect status and retry the **same bundle and digest**. The command resumes an existing file/PR and refuses to overwrite different content. A closed PR is returned as closed rather than resubmitted. Changed content gets a new submission identity. For scripted workflows that must publish exactly the timing bundle previously reviewed, the optional `--reviewed-digest DIGEST` refuses a changed timing bundle; it does not cover the separate presentation file. Review the screenshot and recipe links too. Without it, `--publish` authorizes the named file as it exists when the command runs. No local Git checkout is reset or modified.
+Publication uses existing GitHub CLI authentication, may create your fork, and opens one data-only PR. Maintainer review comes before inclusion on the site. If interrupted, check status and retry the same bundle; do not create duplicates. A closed PR stays closed. A changed timing bundle is a new submission.
 
-Add a short reproduction recipe to the PR description: setup/version sources, the exact baseline and candidate settings, how to create the test scene and repeat the route, and what you saw. A label such as `walk-v1` alone is not a usable recipe. Keep private world names and personal paths out of it. If setup or submission gets stuck, [open an issue](https://github.com/fortunexbt/minecraft-apple-silicon-framework/issues) with the error and public version details.
+The skin loads through [MCHeads](https://mc-heads.net/), using the submitted public identity. UUIDs survive username changes. A default Minecraft face appears for old entries or unavailable skins; GitHub photos are not used. Skin identity is not proof of account ownership.
 
-The PR check reads the JSON blob using trusted base-branch code, verifies author identity and recomputes metrics and hashes. Maintainer review is required before merge. The site rebuilds on main; merging self-reported evidence does not upgrade its status. Do not include executable code, archives or private configs. Code/adapter improvements use a separate ordinary PR with tests. A named shader profile or route must point to an available public recipe that a reviewer can actually reproduce; unsupported or private recipes should not be merged.
+## Corrections and improvements
 
-Install the portable skill into your agent's supported skill directory explicitly:
+To correct a title, skin, screenshot or recipe link, edit only the existing contribution's `presentation` in a PR from the same GitHub author. Keep its author and measured bundle unchanged. The publish command resumes existing submissions; it does not overwrite them.
 
-```sh
-silicon-shader skill
-silicon-shader install-skill --destination ~/.agents/skills/silicon-shader
-```
+Recipe, mod, adapter and harness source improvements use ordinary code PRs, separate from evidence JSON. Include instructions that another player can follow. Report failures with the error and public version details, without private paths or logs.
 
-The installer refuses to overwrite an existing different skill or follow a symlink. Other harnesses can read the same SKILL.md directly. Installing the CLI does not silently modify agent configuration.
+## Reading the evidence
+
+Submissions are **self-reported**. Validation recomputes timing metrics and rejects inconsistent data; it cannot prove that gameplay happened. Screenshots and image-quality judgments remain subjective. CPU frame production is not displayed/generated FPS or input latency, and a short route is not an all-day smoothness guarantee.
+
+[Compare setups for your Mac](FAIRNESS.md) · [Submission format and validation rules](reference/SUBMISSIONS.md) · [Sampler protocol](../sampler/README.md)
