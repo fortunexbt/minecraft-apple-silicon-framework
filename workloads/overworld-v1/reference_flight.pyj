@@ -117,6 +117,8 @@ def scheduled_yaw(tick):
 def check(s, at_start=False):
     if not s['focused'] or s['paused'] or mc.gui.screen() != None or mc.gui.overlay() != None:
         raise Exception('focus lost, paused, or menu/chat open')
+    if str(mc.options.getCameraType()) != 'FIRST_PERSON':
+        raise Exception('reference flight requires first-person camera')
     if s['sprinting']:
         raise Exception('sprinting active')
     if s['mode'].lower() != 'creative' or not s['flying']:
@@ -182,6 +184,7 @@ def observe_world():
     facts = ['observed_minecraft_version=' + str(version.name()),
              'observed_data_version=' + str(version.dataVersion().version()),
              'observed_overworld_biome_source_stable=' + str(generator.getBiomeSource().stable(overworld_biomes)),
+             'observed_camera_type=' + str(mc.options.getCameraType()),
              'observed_fov=' + str(mc.options.fov().get()),
              'observed_fov_effect_scale=' + str(mc.options.fovEffectScale().get()),
              'observed_flying_speed=' + str(mc.player.getAbilities().getFlyingSpeed()),
@@ -258,6 +261,7 @@ def on_tick(event):
             if now - born_ns < 1000000000 or mc.gui.screen() != None or mc.gui.overlay() != None:
                 return
             guard_preparation()
+            mc.options.setCameraType(JavaClass('net.minecraft.client.CameraType').FIRST_PERSON)
             mc.options.fov().set(70)
             mc.options.fovEffectScale().set(0.0)
             execute('gamerule minecraft:advance_time false')

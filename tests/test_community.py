@@ -19,6 +19,7 @@ class CommunityTests(unittest.TestCase):
         self.presentation = {
             "title": "Example setup",
             "minecraft_profile": "ExamplePlayer",
+            "screenshot_view": "overworld-front-v1",
             "agent": {"model": "Example Model 1", "harness": "Example Agent"},
             "screenshot_url": "https://raw.githubusercontent.com/tester/recipe/"
             + "a" * 40
@@ -55,6 +56,17 @@ class CommunityTests(unittest.TestCase):
                     k: v for k, v in self.presentation.items() if k != "agent"
                 },
             )
+        request.assert_not_called()
+
+    def test_standard_showcase_required_before_publication(self):
+        from silicon_shader.presentation import validate_presentation
+
+        legacy = {k: v for k, v in self.presentation.items() if k != "screenshot_view"}
+        self.assertEqual(validate_presentation(legacy), legacy)
+        request = Mock(side_effect=AssertionError("No network"))
+        for shot in (legacy, {**legacy, "screenshot_view": "another-spot"}):
+            with self.assertRaisesRegex(ValueError, "standard front-facing"):
+                submit(self.bundle, True, request=request, presentation=shot)
         request.assert_not_called()
 
     def test_agent_labels_preserve_legacy_and_reject_invalid_attribution(self):
@@ -222,6 +234,7 @@ class CommunityTests(unittest.TestCase):
                             "presentation": {
                                 "title": "Example setup",
                                 "minecraft_profile": "ExamplePlayer",
+                                "screenshot_view": "overworld-front-v1",
                                 "agent": {
                                     "model": "Example Model 1",
                                     "harness": "Example Agent",

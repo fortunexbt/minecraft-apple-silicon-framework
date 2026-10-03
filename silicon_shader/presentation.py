@@ -4,12 +4,15 @@ import re
 from urllib.parse import urlsplit
 
 
-def validate_presentation(value, *, for_submission=False):
+SHOWCASE_VIEW = "overworld-front-v1"
+
+
+def validate_presentation(value, *, for_submission=False, require_showcase=False):
     required = {"title", "screenshot_url", "recipe_url"}
     if (
         not isinstance(value, dict)
         or not required <= set(value)
-        or set(value) - required - {"minecraft_profile", "agent"}
+        or set(value) - required - {"minecraft_profile", "agent", "screenshot_view"}
     ):
         raise ValueError("Setup details need title, screenshot_url and recipe_url")
     if for_submission and not value.get("minecraft_profile"):
@@ -17,6 +20,13 @@ def validate_presentation(value, *, for_submission=False):
     if for_submission and "agent" not in value:
         raise ValueError(
             "Add agent.model and agent.harness to setup.json before publishing"
+        )
+    if (require_showcase or "screenshot_view" in value) and value.get(
+        "screenshot_view"
+    ) != SHOWCASE_VIEW:
+        raise ValueError(
+            "Capture the standard front-facing showcase and add "
+            "screenshot_view: overworld-front-v1 before publishing"
         )
     if "agent" in value:
         agent = value["agent"]
