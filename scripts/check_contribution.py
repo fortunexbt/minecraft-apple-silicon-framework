@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from silicon_shader.challenge import MAX_BYTES
 from silicon_shader.registry import validate_entry
+from silicon_shader.presentation import validate_presentation
 
 
 def api(endpoint):
@@ -52,10 +53,7 @@ if blob["size"] > MAX_BYTES or blob.get("encoding") != "base64":
 entry = validate_entry(
     json.loads(base64.b64decode(blob["content"])), Path(f["filename"]).name
 )
-if "presentation" not in entry or not entry["presentation"].get("minecraft_profile"):
-    raise SystemExit(
-        "Include setup title, Minecraft profile, gameplay screenshot and a pinned Markdown recipe in presentation"
-    )
+validate_presentation(entry.get("presentation"), for_submission=True)
 if entry["author"].lower() != pr["user"]["login"].lower():
     raise SystemExit("Public author must match the submitting GitHub account")
 if f["status"] == "modified":

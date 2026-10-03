@@ -8,6 +8,10 @@ ECDSA.fail's Participate dialog offers CLI installation, API-key login, clone, l
 
 The installed CLI packages only manifest-authorized paths, limits compressed archives to 25 MiB, and supplies a submission idempotency key. Submission and promotion are distinct states. Schema 2 assigns separate editable paths to tracks sharing one repository. A successful track promotion preserves other tracks. Local runs are useful feedback; server evaluation decides acceptance. These implementation observations are version-specific, not a promise about every deployment. Do not copy the CLI's account setup or transcript collection into this project: local tuning should need no account, and publishing evidence must be optional.
 
+## Model and agent credits
+
+The installed `yukon submit --help` requires separate `--model` and `--harness` labels. The model is the underlying version; the harness is the coding agent (Codex, Claude Code, OpenCode, etc.). The model appears on the leaderboard and the harness on the solver profile. Silicon Shader records both in `presentation.agent`, separately from its Minecraft capture harness. Missing historical attribution stays unknown; no transcripts are required.
+
 ## The trusted boundary
 
 The ECDSA manifest defines the metric direction, editable directory, setup command, benchmark command, score path and runner. Its workflow independently checks the submission diff before setup, uses read-only credentials, pins actions and prevents submission branches from saving shared caches. [Manifest](https://github.com/Layr-Labs/ecdsafail-challenge/blob/main/benchmark.json), [workflow](https://github.com/Layr-Labs/ecdsafail-challenge/blob/main/.github/workflows/benchmark.yml)

@@ -224,7 +224,8 @@ function detailsFor(entry) {
     ['Measurement', 'CPU frame production; not displayed or generated FPS'],
     ['Minecraft', asText(metadata.minecraft, 'Not recorded')],
     ['Launcher and loader', [asText(metadata.launcher, 'Launcher not recorded'), metadata.loader ? titleCase(asText(metadata.loader.name, '')) + (metadata.loader.version ? ' ' + metadata.loader.version : '') : ''].filter(Boolean).join(' · ')],
-    ['Runtime and harness', [asText(metadata.runtime), asText(metadata.harness)].filter(Boolean).join(' · ') || 'Not recorded'],
+    ['Java runtime', asText(metadata.runtime, 'Not recorded')],
+    ['Capture harness', asText(metadata.harness, 'Not recorded')],
     ['Test scene', [asText(workload.scene), asText(workload.route), asText(workload.terrain)].filter(Boolean).join(' · ') || 'Not recorded'],
     ['Candidate worst 5 sec FPS', worstFps(entry) === null ? 'Not recorded' : formatNumber(worstFps(entry))],
     ['Candidate p95 / p99 frame time', formatNumber(candidate.p95_ms) + ' / ' + formatNumber(candidate.p99_ms) + ' ms'],
@@ -273,6 +274,8 @@ function createCard(entry) {
   titleBlock.append(node('p', shaderName(entry), { class: 'eyebrow eyebrow-dark shader-kicker' }), node('h3', title));
   top.append(titleBlock, githubProfile(entry.author, (entry.presentation || {}).minecraft_profile));
   body.append(top);
+  const agent = (entry.presentation || {}).agent || {};
+  body.append(node('p', 'Agent: ' + asText(agent.harness, 'Not recorded') + ' · Model: ' + asText(agent.model, 'Not recorded'), { class: 'agent-credit' }));
 
   const hardwareLine = node('div', undefined, { class: 'hardware-line' });
   hardwareLine.append(node('span', chipLabel(entry), { class: 'hardware-chip' }));
