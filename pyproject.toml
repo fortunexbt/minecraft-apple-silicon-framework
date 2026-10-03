@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "silicon-shader"
+version = "0.1.0"
+description = "A bounded, evidence-led Minecraft shader tuning workbench for Apple Silicon"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Silicon Shader contributors"}]
+dependencies = []
+
+[project.scripts]
+silicon-shader = "silicon_shader.cli:main"
+
+[tool.setuptools]
+packages = ["silicon_shader"]

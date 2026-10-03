@@ -1,0 +1,10 @@
+{
+  "options": {
+    "renderDistance": 12,
+    "simulationDistance": 8,
+    "maxFps": 120,
+    "enableVsync": false,
+    "fullscreen": true
+  },
+  "scale": 0.75
+}

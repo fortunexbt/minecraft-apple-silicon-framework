@@ -1,0 +1,68 @@
+{
+  "expected": {
+    "instance": "lab",
+    "save": "test",
+    "dimension": "overworld",
+    "scene": "loaded",
+    "route": "walk-v1",
+    "terrain": "generated-v1",
+    "hardware": "M4-24GB",
+    "runtime": "25-arm64",
+    "versions": "fixture-v1",
+    "shader": "makeup",
+    "framebuffer": [
+      3024,
+      1898
+    ],
+    "scale": 0.75,
+    "render_distance": 12,
+    "simulation_distance": 8,
+    "native_framebuffer": [
+      3024,
+      1898
+    ],
+    "filter": "nearest",
+    "cap": 120,
+    "vsync": false,
+    "fullscreen": true,
+    "focused": true,
+    "throttled": false,
+    "weather": "clear",
+    "time": "noon",
+    "power": "AC",
+    "background": "quiet"
+  },
+  "observed": {
+    "instance": null,
+    "save": null,
+    "dimension": null,
+    "scene": null,
+    "route": null,
+    "terrain": null,
+    "hardware": null,
+    "runtime": null,
+    "versions": null,
+    "shader": null,
+    "framebuffer": null,
+    "scale": null,
+    "render_distance": null,
+    "simulation_distance": null,
+    "native_framebuffer": null,
+    "filter": null,
+    "cap": null,
+    "vsync": null,
+    "fullscreen": null,
+    "focused": null,
+    "throttled": null,
+    "weather": null,
+    "time": null,
+    "power": null,
+    "background": null
+  },
+  "visual": {
+    "valid": false,
+    "artifacts": null,
+    "reviewer": null,
+    "acceptable_quality": false
+  }
+}
