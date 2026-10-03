@@ -75,6 +75,8 @@ Original framework code is [MIT licensed](LICENSE). Third-party components retai
 
 ## Open community challenge
 
+**Share a setup now. Compete on a fixed workload when the ranked track opens.** Current submissions are unranked, self-reported experiments. [Fair-winner rules](docs/FAIRNESS.md) lock the required image and workload, compare repeated runs on the same evaluator hardware, and require independent reproduction. Beauty, raw FPS across different Macs, and GitHub popularity do not determine a winner.
+
 [Explore the hosted challenge](https://fortunexbt.github.io/minecraft-apple-silicon-framework/) · [Agent skill](silicon_shader/skills/silicon-shader/SKILL.md) · [Rules and optional submission](docs/CHALLENGE.md) · [What we learned from Yukon](docs/YUKON.md)
 
 Version 0.2 adds launcher-neutral game-directory isolation, a read-only setup doctor, user-selected quality floors and an optional quality-first search. Community contributions pair a baseline and candidate, export bounded relative timing evidence, and use an explicit opt-in publication command. The hosted board separates cohorts and labels all initial results self-reported. No community measurements are fabricated to populate it.

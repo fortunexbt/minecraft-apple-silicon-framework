@@ -21,7 +21,11 @@ def contract():
         "leaderboard": "https://fortunexbt.github.io/minecraft-apple-silicon-framework/",
         "submission": "Optional data-only pull request; maintainer review before publication on the board",
         "eligibility": "Matched same-machine 20–30 second living gameplay, explicit controls and visual review",
-        "ranking": "Compatible cohort only; inspect pacing and quality tradeoffs, no global raw-FPS rank",
+        "ranking": "Unranked setup showcase; official fixed-preset ranking awaits a qualified reference workload and independent replay",
+        "ranking_status": "not_open",
+        "fairness_rules": "https://github.com/"
+        + REPOSITORY
+        + "/blob/main/docs/FAIRNESS.md",
         "verification": "Trace consistency is self-reported evidence, not independent reproduction",
         "rules": "https://github.com/" + REPOSITORY + "/blob/main/docs/CHALLENGE.md",
         "editable_submission_paths": ["contributions/<content_digest>.json"],

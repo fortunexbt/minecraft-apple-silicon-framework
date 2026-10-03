@@ -25,7 +25,7 @@ Reject death/menu/paused/black-world readings, wrong saves/scenes, focus loss, t
 
 ## Optional community contribution
 
-Read `silicon-shader challenge show` and `docs/CHALLENGE.md`. Inspect existing evidence before repeating work. Prepare a matched bundle using `challenge prepare`; validate and review the exact public JSON before sharing. Public labels must describe reproducible recipes, not private save names or paths. Include declared interventions and an honest visual verdict. Human contributors need no invented model attribution.
+Read `silicon-shader challenge show` and `docs/CHALLENGE.md`. Current entries are unranked showcases. Read `docs/FAIRNESS.md` before making any competitive claim; no official ranked workload is active yet. Inspect existing evidence before repeating work. Prepare a matched bundle using `challenge prepare`; validate and review the exact public JSON before sharing. Public labels must describe reproducible recipes, not private save names or paths. Include declared interventions and an honest visual verdict. Human contributors need no invented model attribution.
 
 Publishing requires the user's opt-in for the reviewed bundle and destination. `challenge submit BUNDLE` shows a compact preview; after the user opts in, `challenge submit BUNDLE --publish` publishes that file using existing GitHub authentication. Add `--reviewed-digest` only when a scripted workflow needs an exact previously reviewed content guard. Never create credentials or accept terms on the user's behalf. If a request times out, inspect `challenge status BUNDLE` and retry the same bundle; do not create a new identity to bypass a rejection.
 
