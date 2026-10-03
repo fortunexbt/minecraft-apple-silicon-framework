@@ -7,6 +7,9 @@ import statistics
 from .common import identifier
 
 CONTEXT = (
+    "game_state",
+    "player_alive",
+    "game_mode",
     "instance",
     "save",
     "dimension",
@@ -110,10 +113,15 @@ def read_csv(path):
     last = None
     count = 0
     with Path(path).open(newline="") as f:
-        for row in csv.DictReader(f):
+        reader = csv.DictReader(f)
+        if reader.fieldnames != ["frame", "nanotime", "interval_ns"]:
+            raise ValueError("Unexpected frame CSV header")
+        for row in reader:
             count += 1
             if count > 100000:
                 raise ValueError("Capture exceeds 100,000 frames; use short segments")
+            if int(row["frame"]) != count - 1:
+                raise ValueError("Frame indexes must be consecutive from zero")
             stamp = int(row["nanotime"])
             interval = int(row["interval_ns"])
             if last is None:
@@ -129,6 +137,11 @@ def read_csv(path):
 
 def validate(capture):
     errors = []
+    if not isinstance(capture, dict):
+        return ["capture must be an object"]
+    for section in ("expected", "observed", "visual", "completion", "metrics"):
+        if not isinstance(capture.get(section), dict):
+            return ["missing or invalid section: " + section]
     try:
         identifier(capture.get("id", ""))
     except (ValueError, TypeError):
@@ -146,6 +159,20 @@ def validate(capture):
             errors.append("context mismatch: " + key)
         elif expected[key] is None or expected[key] == "":
             errors.append("empty context: " + key)
+    if (
+        observed.get("game_state") != "playing"
+        or observed.get("player_alive") is not True
+    ):
+        errors.append(
+            "capture is not living-player gameplay (menu, pause or death state)"
+        )
+    if observed.get("game_mode") not in (
+        "creative",
+        "survival",
+        "adventure",
+        "spectator",
+    ):
+        errors.append("unknown game mode")
     if observed.get("focused") is not True or observed.get("throttled") is not False:
         errors.append("focus/throttle gate failed")
     if observed.get("fullscreen") is not True:
@@ -201,7 +228,11 @@ def validate(capture):
             errors.append("invalid metric: " + name)
     for name in ("over_33", "over_50", "over_100", "local_outliers"):
         entry = metrics.get(name, {})
-        if type(entry.get("count")) is not int or entry["count"] < 0:
+        if (
+            not isinstance(entry, dict)
+            or type(entry.get("count")) is not int
+            or entry["count"] < 0
+        ):
             errors.append("invalid count: " + name)
     return errors
 
