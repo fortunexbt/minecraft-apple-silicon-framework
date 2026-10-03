@@ -36,10 +36,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, summary:focus-visib
 }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 750; letter-spacing: -.5px; }
 .brand:hover { text-decoration: none; }
-.brand-mark {
-  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px;
-  background: var(--green); color: var(--moss); font: 17px var(--serif); font-style: italic;
-}
+.brand-mark { display: block; width: 36px; height: 36px; border-radius: 10px; object-fit: contain; }
 .brand-light { font-weight: 400; color: var(--muted); }
 .site-header nav, .site-footer nav { display: flex; align-items: center; gap: 26px; }
 .site-header nav { font-size: 12px; color: #56675a; }
@@ -78,15 +75,7 @@ h1 em { color: var(--lime); font-family: var(--serif); font-weight: 400; letter-
 .hero-orbit { position: absolute; z-index: -1; border: 1px solid #e4efdc1c; border-radius: 50%; pointer-events: none; }
 .orbit-one { width: 510px; height: 510px; right: -84px; top: -186px; }
 .orbit-two { width: 390px; height: 390px; right: -24px; top: -125px; border-color: #e4efdc17; }
-.hero-stamp {
-  position: absolute; right: 9%; top: 50%; transform: translateY(-50%) rotate(7deg);
-  width: 180px; height: 180px; border: 1px solid #e4efdc47; border-radius: 50%;
-  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px;
-  color: #cbdabbab; text-align: center;
-}
-.hero-stamp span { font: 8px ui-monospace, monospace; letter-spacing: 1.9px; }
-.hero-stamp strong { font: 17px/1.05 var(--serif); letter-spacing: .5px; font-weight: 400; }
-.hero-stamp i { position: absolute; right: 23px; bottom: 22px; font: 20px var(--serif); color: var(--lime); }
+.hero-logo { position: absolute; right: 5%; top: 50%; transform: translateY(-50%); width: 29%; max-width: 320px; height: auto; filter: drop-shadow(0 16px 22px #071a1650); pointer-events: none; }
 .library { padding: 70px 0 0; }
 .library-heading { display: flex; align-items: end; justify-content: space-between; gap: 28px; }
 .eyebrow-dark { color: var(--muted); }
@@ -200,8 +189,8 @@ dialog a { color: #365f42; text-decoration: underline; text-underline-offset: 2p
 .how-list li { padding: 5px 0 5px 4px; font-size: 12px; line-height: 1.55; }
 @media (max-width: 1050px) {
   .setup-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .hero-stamp { right: 6%; width: 150px; height: 150px; }
-  .hero-copy { max-width: 610px; }
+  .hero-logo { width: 24%; right: 3%; opacity: .8; }
+  .hero-copy { max-width: 70%; }
   .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
@@ -212,8 +201,9 @@ dialog a { color: #365f42; text-decoration: underline; text-underline-offset: 2p
   h1 { font-size: clamp(47px, 10vw, 64px); letter-spacing: -2.8px; }
   h1 em { letter-spacing: -2.3px; }
   .hero-description { max-width: 480px; font-size: 13px; }
-  .hero-stamp { right: -47px; top: 25%; width: 140px; height: 140px; opacity: .5; }
-  .hero-stamp strong { font-size: 14px; }
+  .hero-logo { position: static; transform: none; width: 110px; margin-bottom: 22px; opacity: 1; order: -1; }
+  .hero { flex-direction: column; align-items: flex-start; }
+  .hero-copy { max-width: 100%; }
   .hero-orbit.orbit-one { right: -240px; }
   .hero-orbit.orbit-two { right: -180px; }
   .library { padding-top: 52px; }
@@ -236,7 +226,7 @@ dialog a { color: #365f42; text-decoration: underline; text-underline-offset: 2p
 @media (max-width: 480px) {
   .site-header nav a:first-child { display: none; }
   .hero { min-height: 390px; padding: 39px 7%; }
-  .hero-stamp { right: -72px; top: 11%; opacity: .32; }
+  .hero-logo { width: 96px; margin-bottom: 18px; }
   .hero-copy { max-width: 100%; }
   .hero .eyebrow { font-size: 8px; letter-spacing: 1.2px; }
   .hero-description { max-width: 95%; }
