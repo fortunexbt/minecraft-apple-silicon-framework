@@ -1,5 +1,7 @@
 # Community A/B challenge evidence
 
+**Current submissions enter the unranked setup showcase.** Visual preferences are subjective; neither a higher FPS number nor maintainer acceptance makes a setup the overall winner. Read [how the fixed-preset ranked challenge will work](FAIRNESS.md).
+
 This optional protocol packages a small same-machine experiment for another person to reproduce. It can accompany a launcher setup, mod change, shader setting, or alternate harness that emits the documented capture and CSV formats. Preparation and preview stay local. The optional publication command sends the reviewed evidence and your public GitHub handle to the repository. No command launches Minecraft or executes submitted code.
 
 `silicon_shader.challenge.prepare(baseline_capture_path, candidate_capture_path, baseline_csv_path, candidate_csv_path, metadata_path)` returns a JSON-compatible dictionary and raises `ValueError` for rejected input. It reads files without modifying them. `validate_bundle(bundle)` returns a list of errors; an empty list means structurally valid **self-reported** evidence. See `examples/challenge-metadata.json` for the exact metadata shape. These preparation and validation functions do not submit anything.
