@@ -2,7 +2,13 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from silicon_shader.instances import isolate, apply_profile, rollback, daily
+from silicon_shader.instances import (
+    isolate,
+    apply_profile,
+    rollback,
+    daily,
+    current_profile,
+)
 from silicon_shader.measure import analyze, validate
 from silicon_shader.loop import start, submit, propose
 
@@ -109,6 +115,125 @@ class Workflow(unittest.TestCase):
             root = Path(t)
             with self.assertRaises(ValueError):
                 isolate(fixture(root), root / "lab", False)
+
+    def test_full_shader_profile_and_correctness_fix_preserved(self):
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            src = fixture(root)
+            game = src / ".minecraft"
+            (game / "config/iris.properties").write_text("shaderPack=example.zip\n")
+            (game / "shaderpacks").mkdir()
+            shader = game / "shaderpacks/example.zip.txt"
+            shader.write_text("CLOUD_SAMPLES=10\nBLOOM=5\n")
+            (game / "mods/iris-correctness-fix.jar").write_bytes(
+                b"fixture correctness fix"
+            )
+            with zipfile.ZipFile(game / "mods/renamed.jar", "w") as archive:
+                archive.writestr("fabric.mod.json", json.dumps({"id": "minescript"}))
+            lab = isolate(src, root / "lab", True)
+            with self.assertRaises(ValueError):
+                apply_profile(lab, {"shader_properties": {"CLOUD_SAMPLES": 7}}, True)
+            apply_profile(
+                lab, {"shader_properties": {"CLOUD_SAMPLES": 7, "BLOOM": 5}}, True
+            )
+            out = daily(lab, root / "daily", True)
+            self.assertFalse((out / ".minecraft/mods/renamed.jar").exists())
+            self.assertEqual(
+                (out / ".minecraft/mods/iris-correctness-fix.jar").read_bytes(),
+                b"fixture correctness fix",
+            )
+            self.assertIn(
+                "BLOOM=5", (out / ".minecraft/shaderpacks/example.zip.txt").read_text()
+            )
+            self.assertEqual(shader.read_text(), "CLOUD_SAMPLES=10\nBLOOM=5\n")
+
+    def test_interrupted_rollback_can_resume(self):
+        from unittest.mock import patch
+        import shutil
+
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            src = fixture(root)
+            lab = isolate(src, root / "lab", True)
+            receipt = apply_profile(
+                lab, {"options": {"renderDistance": 16}, "scale": 0.7}, True
+            )
+            original_copy = shutil.copy2
+
+            def fail_second(source, destination, *args, **kwargs):
+                if (
+                    Path(source).name == "renderscale.json5"
+                    and "history" in Path(source).parts
+                ):
+                    raise OSError("simulated disk interruption")
+                return original_copy(source, destination, *args, **kwargs)
+
+            with patch(
+                "silicon_shader.instances.shutil.copy2", side_effect=fail_second
+            ):
+                with self.assertRaises(OSError):
+                    rollback(lab, receipt["id"], True)
+            rollback(lab, receipt["id"], True)
+            self.assertEqual(
+                (lab / ".minecraft/options.txt").read_bytes(),
+                (src / ".minecraft/options.txt").read_bytes(),
+            )
+            self.assertEqual(
+                (lab / ".minecraft/config/renderscale.json5").read_bytes(),
+                (src / ".minecraft/config/renderscale.json5").read_bytes(),
+            )
+
+    def test_profile_preserves_scaler_controls(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            src = fixture(root)
+            config = src / ".minecraft/config/renderscale.json5"
+            config.write_text(
+                json.dumps(
+                    {
+                        "scale": 0.75,
+                        "irisScale": 0.75,
+                        "forceLinear": True,
+                        "fsr": True,
+                        "targetFrameRate": 0,
+                    }
+                )
+            )
+            lab = isolate(src, root / "lab", True)
+            profile = current_profile(lab)
+            profile["options"]["simulationDistance"] = 6
+            apply_profile(lab, profile, True)
+            actual = json.loads(
+                (lab / ".minecraft/config/renderscale.json5").read_text()
+            )
+            self.assertTrue(actual["forceLinear"])
+            self.assertTrue(actual["fsr"])
+
+    def test_winning_scale_step_can_be_refined(self):
+        state = start(["loaded"], target_fps=120, max_trials=3)
+        baseline = capture(80)
+        baseline["observed"]["simulation_distance"] = baseline["expected"][
+            "simulation_distance"
+        ] = 6
+        submit(state, baseline)
+        first = propose(
+            state,
+            {"options": {"renderDistance": 12, "simulationDistance": 6}, "scale": 0.75},
+        )
+        winner = capture(95, profile=first["id"])
+        winner["id"] = "win"
+        winner["observed"]["simulation_distance"] = winner["expected"][
+            "simulation_distance"
+        ] = 6
+        winner["observed"]["scale"] = winner["expected"]["scale"] = first["profile"][
+            "scale"
+        ]
+        submit(state, winner)
+        second = propose(state, first["profile"])
+        self.assertIsNotNone(second)
+        self.assertEqual(second["profile"]["scale"], 0.65)
 
     def test_measure_interval_semantics(self):
         a = analyze([10] * 1000 + [60] + [10] * 1000)

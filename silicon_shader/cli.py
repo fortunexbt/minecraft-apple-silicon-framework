@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import sys
 from .common import read, write
-from .discover import discover, java_requirement
+from .discover import discover, java_requirement, inspect_runtime
 from .instances import (
     isolate,
     daily,
@@ -90,6 +90,9 @@ def parser():
     q.add_argument("destination")
     q.add_argument("--minecraft", required=True)
     q.add_argument("--fabric", required=True)
+    q = s.add_parser("runtime", help="Verify an explicitly selected Java executable")
+    q.add_argument("executable")
+    q.add_argument("--minecraft", required=True)
     for name in ("isolate", "daily"):
         q = s.add_parser(name, help="Create a new copy without modifying the source")
         q.add_argument("source")
@@ -123,6 +126,12 @@ def parser():
         a.add_argument("id")
         if action == "request":
             a.add_argument("--seconds", type=int, default=20)
+            a.add_argument(
+                "--delay",
+                type=float,
+                default=0,
+                help="Wait 0–10 seconds before requesting; return focus to the game",
+            )
         if action == "status":
             a.add_argument("--wait", type=int, default=0)
         if action == "import":
@@ -158,6 +167,8 @@ def parser():
 def run(args):
     if args.cmd == "discover":
         return discover(args.prism)
+    if args.cmd == "runtime":
+        return inspect_runtime(args.executable, args.minecraft)
     if args.cmd == "setup":
         return setup(args.destination, args.minecraft, args.fabric)
     if args.cmd == "isolate":
@@ -170,6 +181,10 @@ def run(args):
     if args.cmd == "daily":
         if args.session:
             state = read(args.session)
+            if str(Path(args.source).resolve()) != state.get("instance_path"):
+                raise ValueError(
+                    "Daily source differs from the measured session instance"
+                )
             if not state["stopped"] or not loop.get_suite(state, state["winner"]):
                 raise ValueError("Session is not finished with a validated winner")
             profile = state.get("winner_profile", state.get("baseline_profile"))
@@ -191,7 +206,7 @@ def run(args):
         return rollback(args.instance, args.receipt, args.closed)
     if args.cmd == "capture":
         if args.action == "request":
-            return capture.request(args.root, args.id, args.seconds)
+            return capture.request(args.root, args.id, args.seconds, args.delay)
         if args.action == "status":
             return capture.status(args.root, args.id, args.wait)
         if Path(args.out).exists():
@@ -207,11 +222,20 @@ def run(args):
             if p.exists():
                 raise ValueError("Session already exists")
             instance, _ = managed(args.instance)
+            baseline = current_profile(instance)
+            if baseline.get("scale_options", {}).get("targetFrameRate") != 0:
+                raise ValueError(
+                    "Verify static scaling (targetFrameRate=0) before starting a session"
+                )
+            if baseline.get("scale_options", {}).get(
+                "irisScale", baseline.get("scale")
+            ) != baseline.get("scale"):
+                raise ValueError("Game and Iris scale must match before measurement")
             state = loop.start(args.scenes, args.target_fps, args.max_trials)
             state.update(
                 instance_id=instance.name,
                 instance_path=str(instance),
-                baseline_profile=current_profile(instance),
+                baseline_profile=baseline,
             )
             write(p, state)
             return state

@@ -163,14 +163,20 @@ def current_profile(path):
     scale = game / "config/renderscale.json5"
     if scale.exists():
         try:
-            result["scale"] = read(scale)["scale"]
+            data = read(scale)
+            result["scale"] = data["scale"]
+            result["scale_options"] = {
+                k: data[k]
+                for k in ("irisScale", "forceLinear", "fsr", "targetFrameRate")
+                if k in data
+            }
         except (ValueError, KeyError):
             result["scale"] = None
     return result
 
 
 def profile_changes(path, profile):
-    if set(profile) - {"options", "scale", "shader_properties"}:
+    if set(profile) - {"options", "scale", "scale_options", "shader_properties"}:
         raise ValueError("Unknown profile fields")
     changes = {}
     game = game_dir(path)
@@ -189,6 +195,8 @@ def profile_changes(path, profile):
             opts[key] = str(value)
     if opts:
         changes[game / "options.txt"] = ("properties", opts, ":")
+    if "scale_options" in profile and "scale" not in profile:
+        raise ValueError("Scaler controls require an explicit scale")
     if "scale" in profile:
         scale = profile["scale"]
         if (
@@ -208,13 +216,27 @@ def profile_changes(path, profile):
             raise ValueError(
                 "RenderScale JSON5 contains comments/extended syntax; normalize a copy to JSON first"
             )
-        data.update(
-            scale=scale,
-            irisScale=scale,
-            forceLinear=False,
-            fsr=False,
-            targetFrameRate=0,
-        )
+        controls = profile.get("scale_options", {})
+        if not isinstance(controls, dict) or set(controls) - {
+            "irisScale",
+            "forceLinear",
+            "fsr",
+            "targetFrameRate",
+        }:
+            raise ValueError("Unknown scaler controls")
+        for key, value in controls.items():
+            if key in ("forceLinear", "fsr") and type(value) is not bool:
+                raise ValueError(key + " must be boolean")
+            if key == "targetFrameRate" and (type(value) is not int or value != 0):
+                raise ValueError(
+                    "Only static scaling is supported; targetFrameRate must be zero"
+                )
+            if key == "irisScale" and (
+                type(value) not in (int, float) or not 0.5 <= value <= 1
+            ):
+                raise ValueError("irisScale must be 0.5–1.0")
+        data.update(scale=scale, irisScale=scale)
+        data.update(controls)
         changes[f] = ("json", data, None)
     if "shader_properties" in profile:
         # Full profiles only: never reset all properties while changing one option.
@@ -279,6 +301,19 @@ def apply_profile(path, profile, acknowledged=False):
     return receipt
 
 
+def _restore_file(saved, destination, expected_hash):
+    fd, temporary = tempfile.mkstemp(prefix=".restore-", dir=destination.parent)
+    os.close(fd)
+    temporary = Path(temporary)
+    try:
+        shutil.copy2(saved, temporary)
+        if digest(temporary) != expected_hash:
+            raise ValueError("Backup hash mismatch")
+        os.replace(temporary, destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def rollback(path, rid, acknowledged=False):
     from .common import identifier
 
@@ -287,29 +322,35 @@ def rollback(path, rid, acknowledged=False):
     identifier(rid)
     backup = path / ".silicon-shader/history" / rid
     receipt = read(backup / "receipt.json")
-    if receipt["state"] != "applied":
-        raise ValueError("Receipt is not an applied change")
+    if receipt["state"] not in ("applied", "rolling-back"):
+        raise ValueError("Receipt is not an applied or interrupted rollback")
+    resuming = receipt["state"] == "rolling-back"
     for rel, entry in receipt["files"].items():
-        f = contained(path, rel)
-        if not f.exists() or digest(f) != entry["after"]:
+        target = contained(path, rel)
+        actual = digest(target) if target.exists() else None
+        allowed = {entry["after"], entry["before"]} if resuming else {entry["after"]}
+        if actual not in allowed:
             raise ValueError(
                 "Settings changed since application; refusing to overwrite"
             )
-    for rel, entry in receipt["files"].items():
         if (
             entry["before"] is not None
             and digest(contained(backup, rel)) != entry["before"]
         ):
             raise ValueError("Backup hash mismatch")
+    # Durable state allows a retry to recognize files already restored. Each copy is
+    # atomic, so interruption never leaves a partly overwritten configuration file.
+    receipt["state"] = "rolling-back"
+    write(backup / "receipt.json", receipt)
     for rel, entry in receipt["files"].items():
-        f = contained(path, rel)
+        target = contained(path, rel)
+        actual = digest(target) if target.exists() else None
+        if actual == entry["before"]:
+            continue
         if entry["before"] is None:
-            f.unlink()
+            target.unlink(missing_ok=True)
         else:
-            saved = contained(backup, rel)
-            if digest(saved) != entry["before"]:
-                raise ValueError("Backup hash mismatch")
-            shutil.copy2(saved, f)
+            _restore_file(contained(backup, rel), target, entry["before"])
     receipt["state"] = "rolled-back"
     write(backup / "receipt.json", receipt)
     return receipt

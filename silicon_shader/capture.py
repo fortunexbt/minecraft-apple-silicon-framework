@@ -43,7 +43,11 @@ def _request(root, run_id, seconds=20):
     }
 
 
-def request(root, run_id, seconds=20):
+def request(root, run_id, seconds=20, delay=0):
+    if not 0 <= delay <= 10:
+        raise ValueError("Request delay must be 0–10 seconds")
+    if delay:
+        time.sleep(delay)
     root = Path(root)
     if not root.is_dir():
         raise ValueError("Create a dedicated sampler control directory first")

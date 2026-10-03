@@ -4,7 +4,7 @@
 
 Silicon Shader gives you a Python CLI, a short agent prompt, and an optional Java frame sampler. It helps you find a good visual/performance tradeoff in a handful of useful experiments, then leave the benchmark behind.
 
-**No magic FPS preset. No launcher replacement. No endless tuning loop.** Settings and your worlds stay in separate Prism instances. Every change has a rollback receipt. No game, world, mod, shader, texture pack or Java runtime is redistributed.
+Settings and worlds stay in separate Prism instances. Every configuration change has a rollback receipt. Install third-party components from their publishers; the repository distributes original tools, patch recipes and compact evidence.
 
 ### Start here
 
@@ -36,7 +36,7 @@ Use the exact **save folder**, not its display name. Omit `--save` to create a f
 
 | Tool | Purpose |
 | --- | --- |
-| `discover` / `setup` | Inspect hardware, Prism, game version and Java needs; create new instance metadata |
+| `discover` / `setup` / `runtime` | Inspect hardware, Prism, game version and Java needs; create new instance metadata |
 | `isolate` | Copy only selected game/configuration content into a new lab |
 | `profile` | Apply reversible settings; preserve the complete shader property set |
 | `capture` | Request 20–30 seconds, inspect explicit status, reject partial or invalid output |
@@ -52,6 +52,10 @@ The reference campaign used a **base M4, 10 CPU/GPU cores, 24 GB**. Quality 75% 
 Wide View 20 traded internal resolution for R20/S6. Brief ordinary movement showed approximately **91–105 F3 FPS**; it was not locked at 120. The [experiment digest](docs/EXPERIMENTS.md) and [indexed ledger](evidence/) include losses, invalid runs, and unmeasured ideas as well as winners.
 
 Discovery is designed for M1–M5 families, including Pro/Max/Ultra and MacBooks, iMacs and minis. **Only the named M4 campaign has gameplay evidence.** Start from your own baseline on every other machine. Static scaling is the default; native Metal and dynamic resolution are research paths, not promised upgrades.
+
+![MakeUp and Faithful village, historical visual reference](evidence/images/makeup-faithful-village.png)
+
+<sub>Historical 52.5% nearest-scale visual reference, not the final 75% benchmark. MakeUp Ultra Fast by [javiergcim](https://github.com/javiergcim/MakeUpUltraFast); textures by [Faithful](https://faithfulpack.net/).</sub>
 
 ### Scope and status
 

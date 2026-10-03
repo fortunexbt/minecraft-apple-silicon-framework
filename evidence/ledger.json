@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "campaign": {
+    "id": "base-m4-minecraft-shader-campaign",
+    "date_scope": "2026-09-29 through 2026-10-03",
+    "machine": {"model": "Base Apple M4 MacBook Pro", "cpu_cores": 10, "gpu_cores": 10, "memory_gib": 24},
+    "verified_hardware": ["Base M4 MacBook Pro, 10 CPU cores, 10 GPU cores, 24 GiB memory"],
+    "unverified_hardware": ["M1/M2/M3/M4 Pro/Max/Ultra/M5, iMac, Mac mini, and other configurations"],
+    "claim_boundary": "These are measurements from one base M4 MacBook Pro and the listed software. They do not predict performance on another Mac."
+  },
+  "measurement": {
+    "metric": "CPU frame production at Minecraft.renderFrame(boolean) return; each interval includes the frame limiter.",
+    "not_measured": ["GPU completion or presentation", "input-to-display latency", "displayed frame rate"],
+    "interval_fields": {
+      "intervals_gt_ms": "Count of complete sampled intervals longer than the threshold.",
+      "sum_of_complete_intervals_gt_ms": "Sum of whole interval durations over the threshold, in milliseconds; not time in excess of the threshold."
+    },
+    "relative_outliers": "Local abrupt intervals versus nearby frame-time baseline are separate from fixed 33/50/100 ms counts."
+  },
+  "source_scan": {
+    "frame_summary_json_files": 391,
+    "summary_files_with_fps": 367,
+    "summary_files_without_fps_or_incomplete": 2,
+    "metadata_or_other_summary_files": 22,
+    "decision_and_artifact_json_files": {"ham_extension_root": 293, "ham_extension_cloud_work_elimination": 10, "pareto_extension": 8},
+    "method": "Reviewed compact summary and decision JSON. Large raw frame CSVs, unrelated logs, JARs, shader/resource-pack archives, world saves, and runtimes are excluded.",
+    "removed_personal_data": ["absolute local paths", "world seeds and coordinates", "PIDs and window IDs", "account names and UUIDs"]
+  },
+  "profiles": [
+    {
+      "id": "quality-75",
+      "status": "Selected clean daily profile in the campaign receipt",
+      "settings": {
+        "minecraft": "26.3", "fabric_loader": "0.19.5", "output": "native fullscreen 3024x1898", "internal_scale": 0.75,
+        "filter": "nearest", "render_distance_chunks": 12, "simulation_distance_chunks": 8,
+        "shader": "MakeUp Ultra Fast 9.5f", "resource_pack": "Faithful 32x September 2026",
+        "volumetric_clouds": "enabled, 10 samples", "fps_cap": 120, "vsync": false,
+        "java": "ARM64 Java 25, G1, 512 MiB initial / 4 GiB max heap", "benchmark_only_agent": false, "minescript": false
+      },
+      "samples": [
+        {"scene":"loaded overworld travel","duration_s":30,"avg_cpu_fps":92.3298,"p95_ms":12.7954,"max_interval_ms":24.9725,"intervals_gt_ms":{"33":0,"50":0,"100":0},"source":"campaign:ham-extension/quality-h310-317-decision.json#h316"},
+        {"scene":"fresh overworld travel","duration_s":30,"avg_cpu_fps":88.3356,"p95_ms":13.566,"max_interval_ms":30.1645,"intervals_gt_ms":{"33":0,"50":0,"100":0},"source":"campaign:ham-extension/quality-h310-317-decision.json#h317"},
+        {"scene":"ocean","duration_s":20,"avg_cpu_fps":84.3893,"p95_ms":12.8161,"max_interval_ms":23.8237,"sum_of_complete_intervals_gt_ms":{"16.667":23.824},"intervals_gt_ms":{"33":0,"50":0,"100":0},"source":"campaign:ham-extension/quality-h319-323-scene-qualification.json#h319"},
+        {"scene":"village with entities","duration_s":20,"avg_cpu_fps":94.8648,"p95_ms":11.261,"max_interval_ms":17.753,"sum_of_complete_intervals_gt_ms":{"16.667":34.496},"intervals_gt_ms":{"33":0,"50":0,"100":0},"source":"campaign:ham-extension/quality-h319-323-scene-qualification.json#h320"},
+        {"scene":"open Nether","duration_s":20,"avg_cpu_fps":114.9049,"p95_ms":9.471,"max_interval_ms":15.7781,"sum_of_complete_intervals_gt_ms":{"16.667":0.0},"intervals_gt_ms":{"33":0,"50":0,"100":0},"source":"campaign:ham-extension/quality-h319-323-scene-qualification.json#h322"},
+        {"scene":"End","duration_s":20,"avg_cpu_fps":119.3845,"p95_ms":8.6155,"max_interval_ms":17.5556,"sum_of_complete_intervals_gt_ms":{"16.667":17.556},"intervals_gt_ms":{"33":0,"50":0,"100":0},"source":"campaign:ham-extension/quality-h319-323-scene-qualification.json#h323"}
+      ],
+      "receipt": {
+        "max_interval_ms": 30.1645, "intervals_gt_ms": {"33":0,"50":0,"100":0},
+        "relative_outlier_note": "Short isolated 23-30 ms intervals remain; the receipt does not quantify a separate local-outlier count.",
+        "gameplay_checks": ["walking, strafing, jumping, mouse look", "inventory", "block placement", "save/reload", "water", "village/entities", "open Nether", "End"],
+        "clean_launch_at_title_screen": true
+      },
+      "interpretation": "120 FPS is a cap, not a locked rate. Short captures support about 84-119 CPU FPS across the tested scenes; they do not establish zero hitches or presentation latency.",
+      "sources": ["campaign:ham-extension/daily-quality75-final-state.json", "campaign:ham-extension/quality-h310-317-decision.json", "campaign:ham-extension/quality-h319-323-scene-qualification.json"]
+    },
+    {
+      "id":"quality-65","status":"Measured faster visual fallback; not final selected profile",
+      "settings_delta":{"internal_scale":0.65,"other_settings":"Same tested profile as Quality 75"},
+      "samples":[
+        {"scene":"loaded overworld travel","duration_s":30,"avg_cpu_fps":105.56,"p95_ms":11.3339,"max_interval_ms":26.6051,"intervals_gt_ms":{"33":0,"50":0,"100":0},"source":"campaign:ham-extension/quality-h310-317-decision.json#h314"},
+        {"scene":"fresh overworld travel","duration_s":30,"avg_cpu_fps":100.15,"p95_ms":12.0997,"max_interval_ms":27.8095,"intervals_gt_ms":{"33":0,"50":0,"100":0},"source":"campaign:ham-extension/quality-h310-317-decision.json#h315"}
+      ],
+      "interpretation":"Higher measured CPU throughput at a softer internal resolution. The campaign preferred 75% for clarity and accepted 70-90 FPS travel."
+    },
+    {
+      "id":"wide-view-20","status":"Configured and briefly movement-checked; not a sustained route qualification",
+      "settings":{"render_distance_chunks":20,"simulation_distance_chunks":6,"internal_scale":0.60,"filter":"nearest","output":"native fullscreen","cap":120,"vsync":false,"shader":"MakeUp Ultra Fast 9.5f","resource_pack":"Faithful 32x","volumetric_clouds":"10 samples"},
+      "movement_fps_snapshots":[91,105],"recent_chart_windows_ms":[{"average":11,"max":23},{"average":10,"max":15}],
+      "interpretation":"Brief ordinary walk/strafe/jump/look only; 120 is a cap. No controlled route or long-run qualification.",
+      "source":"campaign:ham-extension/wide20-settings.json"
+    },
+    {
+      "id":"quality-60-render-distance-16","status":"Previously validated tradeoff; historical evidence",
+      "settings":{"render_distance_chunks":16,"simulation_distance_chunks":12,"output":"1920x1200","cap":60,"vsync":true,"shader":"MakeUp Ultra Fast","resource_pack":"Faithful 32x"},
+      "uncapped_dense_jungle_repeat_fps":[72.18,70.42,70.47],
+      "sustained_village":{"duration_s":900,"avg_cpu_fps":59.93,"p95_ms":16.6691,"p99_ms":17.1026,"one_percent_low_fps":54.95,"intervals_gt_ms":{"33":1,"50":0,"100":0}},
+      "interpretation":"R16 showed more distant terrain with about 13% lower uncapped jungle throughput than R12. It passed the 15-minute 60-cap test, with one interval above 33 ms.",
+      "source":"campaign:pareto-extension/experiment-log.json#r16"
+    }
+  ],
+  "experiment_families": [
+    {"id":"shader-screen","status":"Measured screens, not same-quality rankings","scope":"About 60 s savanna captures at 1920x1200 output; CPU frame-production metric.","results":[{"name":"MakeUp Ultra Fast 9.5f","avg_cpu_fps":103.78,"source":"campaign:ledger.json#makeup-default-full1920-savanna-01"},{"name":"BSL 10.1.8 High","avg_cpu_fps":71.84,"intervals_gt_ms":{"33":33,"50":1,"100":0}},{"name":"Complementary Unbound r5.9.3 High","avg_cpu_fps":57.08},{"name":"Bliss 2.1.2","avg_cpu_fps":47.82,"intervals_gt_ms":{"33":37,"50":0,"100":0}},{"name":"Sildur's Vibrant 2.02 High","avg_cpu_fps":70.40},{"name":"Complementary Reimagined r5.9.3 Medium, 1024 internal","avg_cpu_fps":69.01}],"interpretation":"Presets and internal resolution differ. These only screened candidates; they are not visual-quality-normalized comparisons."},
+    {"id":"faithful-texture-pack","status":"Retained","comparison":{"vanilla_texture_jungle_fps":79.73,"faithful_32x_jungle_fps":81.04,"vanilla_texture_river_fps":97.07,"faithful_32x_river_fps":97.36,"uncertainty":"Small single-screen differences; not a causal or general performance claim."},"source":"campaign:ledger.json#faithful-32x"},
+    {"id":"java-collector","status":"G1 retained; ZGC advantage not established","matched_fresh_route_cpu_fps":{"G1_cold":69.34,"ZGC_cold":69.47,"G1_warm":70.90},"interpretation":"Differences are small and order/thermal uncertainty remains; campaign kept ARM64 Java 25 G1 and 512 MiB/4 GiB heap."},
+    {"id":"render-distance-and-simulation","status":"Tradeoff screens","findings":["R16 showed more nearby terrain and lower dense-jungle throughput.","R12/S8 kept simulation active in the selected 75% profile.","R20/S6 received only a brief movement check.","Longer shadows reduced dense-jungle headroom in one tested profile; no global optimum claimed."],"source":"campaign:pareto-extension/experiment-log.json; campaign:ham-extension/quality-h310-317-decision.json; campaign:ham-extension/wide20-settings.json"},
+    {"id":"cloud-and-scale","status":"Challengers not promoted","findings":["Cloud-work elimination was slower by about 1.3% in matched ocean and 0.9% in a cloud-heavy sky sample.","Turning cloud reflections off raised one sample from 85.11 to 89.54 CPU FPS but reduced desired atmosphere.","An 80% internal-scale profile measured 79.72 ocean and 83.58 travel FPS versus 85.05 and 90.93 for repeated 75% controls."],"source":"campaign:ham-extension/cloud-work-elimination/decision.json; campaign:ham-extension/cloud-work-elimination/results.json"},
+    {"id":"dynamic-scale","status":"Not promoted","findings":["First dynamic version produced a near-black daylight scene during resize and was rejected.","An exposure-history initialization guard fixed that visible reset in short checks.","Adaptive prototype lacked an in-route scale trace and quality preference; low-floor scale looked softer. Static 75% remained supported."],"source":"campaign:ham-extension/quality-h267-270-decision.json; campaign:ham-extension/quality-h271-272-decision.json; campaign:ham-extension/quality-h274-278-decision.json"},
+    {"id":"metal-renderer-trials","status":"No renderer replacement promoted","findings":["Complemetal 0.4.1 kept Iris/OpenGL as the visible shader renderer; no material shader-frame Metal ownership was demonstrated.","Its shaderless hybrid showed Metal presentations but was not shader gameplay.","A Prisma 26.3 preview hotfix measured 18.26 CPU FPS at native output in a short village screen.","Rockstar Shaders 1.0.0 measured 24.66 FPS at High/native scale and 25.63 FPS at Medium/0.58 scale in tested Overworld scenes; it did not pass the balanced profile gate.","MetalMC research did not yield a validated shader-quality replacement for the daily profile."],"source":"campaign:ledger.json#other_renderer_research; campaign:ham-extension/cloud-work-elimination/prisma-hotfix-test.json; campaign:ham-extension/complemetal-mc-releases.json; campaign:ham-extension/MetalMC-commit.json"},
+    {"id":"distant-horizons-and-solas","status":"No valid timing result","findings":["Distant Horizons rendered after a generation-off retry, but render errors and clean-gate failures blocked performance timing.","Solas pipeline initialization failed on tested macOS OpenGL 4.1 at a missing clear-texture function."],"source":"campaign:ledger.json#candidates.distanthorizons; campaign:ledger.json#candidates.solas-shader"}
+  ],
+  "correctness_patches": {
+    "iris_depth_identity_v3":{"base_component":"Iris 1.11.6+26.3-fabric","source_class":"net/irisshaders/iris/targets/RenderTargets.class","input_jar_sha256":"0fcd6f8858db94ed1f28210005fcff9b9364beaa6eb2a8eccf9449a6f709f14d","reference_output_jar_sha256":"141d40c59c116893dfb9f88fb40c853368cfe8a1e965e7eb17161682489ca9be","status":"Source recipe provided; campaign runtime identity checks passed Overworld/Nether/End.","source":"campaign:ham-extension/quality-h84-depth-fix.json"},
+    "makeup_exposure_init":{"base_component":"MakeUp Ultra Fast 9.5f","input_zip_sha256":"afbf622b983d29ffa5fe5f15197f321d3921915bd44584d85f14bc11b5e0e5e8","reference_output_zip_sha256":"3ff5d3b3a8b47e4743f3d90e77faf6ca8d89e97f2f5989694f28bc9ad753b922","changed_member":"shaders/common/composite_vertex.glsl","change":"Use calculated exposure unchanged when previous exposure history is zero/nonpositive; keep temporal smoothing for positive previous exposure.","status":"Modified pack used in selected profile; source patch provided, binary shader pack not included.","source":"campaign:ham-extension/quality-h271-exposure-init-artifact.json"}
+  },
+  "integrity_filters": {
+    "invalid":{"ids":["o329-water-reflectoff","o330-cloudreflectoff"],"reason":"A one-option GUI action reset other shader options, leaving settings mismatched; excluded from comparisons.","source":"campaign:ham-extension/cloud-work-elimination/excluded.json"},
+    "prepared_but_unmeasured":{"ids":["bloom5-kernel"],"reason":"Kernel existed locally but had no valid gameplay performance or visual acceptance run; no gain claim.","source":"campaign:ham-extension/cloud-work-elimination/bloom5-experiment.json"},
+    "stopping_rule":"Reuse valid evidence. Reject incomplete, invalid, visually incorrect, or materially incomparable captures; stop after one visually acceptable profile passes representative scenes and clean handoff."
+  }
+}

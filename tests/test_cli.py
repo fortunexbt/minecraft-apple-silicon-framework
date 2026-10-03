@@ -36,6 +36,16 @@ class Commands(unittest.TestCase):
             stopped = self.cli("loop", "submit", state, file)
             self.assertTrue(stopped["stopped"])
             self.cli("loop", "sync", state, lab, "--closed")
+            self.cli("isolate", src, root / "other", "--closed")
+            self.cli(
+                "daily",
+                root / "other",
+                root / "wrong-daily",
+                "--closed",
+                "--session",
+                state,
+                ok=False,
+            )
             result = self.cli(
                 "daily", lab, root / "daily", "--closed", "--session", state
             )

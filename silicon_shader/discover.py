@@ -125,3 +125,41 @@ def discover(prism=None):
         java_homes=command(["/usr/libexec/java_home", "-V"]),
         performance="Unmeasured on this machine; do not infer FPS from chip family",
     )
+
+
+def inspect_runtime(executable, minecraft):
+    """Invoke only the Java executable explicitly selected by the operator."""
+    executable = Path(executable).expanduser().resolve()
+    if not executable.is_file():
+        raise ValueError("Java executable does not exist")
+    try:
+        p = subprocess.run(
+            [str(executable), "-XshowSettings:properties", "-version"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except subprocess.TimeoutExpired:
+        raise ValueError("Java version probe timed out; runtime remains unverified")
+    data = {}
+    for line in (p.stdout + "\n" + p.stderr).splitlines():
+        if "=" in line:
+            key, value = line.split("=", 1)
+            if key.strip() in ("java.version", "java.home", "os.arch"):
+                data[key.strip()] = value.strip()
+    version = data.get("java.version", "")
+    match = re.match(r"(?:1\.)?(\d+)", version)
+    major = int(match[1]) if match else None
+    required = java_requirement(minecraft)
+    arm64 = data.get("os.arch") in ("aarch64", "arm64")
+    return {
+        "executable": str(executable),
+        "minecraft": minecraft,
+        "required_major": required,
+        "observed": data,
+        "compatible": p.returncode == 0
+        and required is not None
+        and major == required
+        and arm64,
+        "note": "Exact required Java major and ARM64 checked; no game launch or JVM performance claim",
+    }

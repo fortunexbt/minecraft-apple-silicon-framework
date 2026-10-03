@@ -52,6 +52,9 @@ def submit(state, capture):
     errors = validate(capture)
     if errors:
         raise ValueError("; ".join(errors))
+    distance = capture["observed"].get("render_distance")
+    if type(distance) is not int or distance < 12:
+        raise ValueError("Optimization requires verified render distance at least 12")
     profile = capture.get("profile", "baseline")
     scene = capture["observed"]["scene"]
     if (
@@ -189,11 +192,13 @@ def propose(state, base_profile):
     if profile["scale"] > 0.65:
         p = copy.deepcopy(profile)
         p["scale"] = round(max(0.65, profile["scale"] - 0.05), 2)
+        if "irisScale" in p.get("scale_options", {}):
+            p["scale_options"]["irisScale"] = p["scale"]
         candidates.append(
             ("Try five percentage points less internal resolution; review crispness", p)
         )
-    used = [d.get("hypothesis") for d in state["decisions"]]
-    remaining = [c for c in candidates if c[0] not in used]
+    used = [d.get("profile_settings") for d in state["decisions"]]
+    remaining = [c for c in candidates if c[1] not in used]
     if not remaining:
         state.update(
             stopped=True,
@@ -209,6 +214,11 @@ def propose(state, base_profile):
     }
     state["pending"] = pending
     state["decisions"].append(
-        {"profile": pending["id"], "decision": "proposed", "hypothesis": reason}
+        {
+            "profile": pending["id"],
+            "decision": "proposed",
+            "hypothesis": reason,
+            "profile_settings": copy.deepcopy(profile),
+        }
     )
     return pending

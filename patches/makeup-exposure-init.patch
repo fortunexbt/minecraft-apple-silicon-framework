@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: LGPL-3.0-only
+# Derived from MakeUp Ultra Fast 9.5f, KDXavier.
+# Source: https://github.com/javiergcim/MakeUpUltraFast/blob/master/shaders/common/composite_vertex.glsl
+# A separate-local-copy recipe; do not apply to other MakeUp versions without rechecking.
+--- shaders/common/composite_vertex.glsl
++++ shaders/common/composite_vertex.glsl
+@@
+-exposure = mix(exposure, prev_exposure, exp(-frameTime * 1.25));
++if (prev_exposure > 0.0) {
++    exposure = mix(exposure, prev_exposure, exp(-frameTime * 1.25));
++}

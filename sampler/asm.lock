@@ -1,0 +1,6 @@
+coordinate=org.ow2.asm:asm:9.10.1
+version=9.10.1
+url=https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.10.1/asm-9.10.1.jar
+sha256=ed825d10ab1399c8c0cb669e688cf0c8c82629b4c8399b58352b68e92ca10fcb
+license=BSD-3-Clause
+license_url=https://asm.ow2.io/license.html

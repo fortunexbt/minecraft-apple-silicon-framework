@@ -6,5 +6,11 @@
     "enableVsync": false,
     "fullscreen": true
   },
-  "scale": 0.75
+  "scale": 0.75,
+  "scale_options": {
+    "irisScale": 0.75,
+    "forceLinear": false,
+    "fsr": false,
+    "targetFrameRate": 0
+  }
 }

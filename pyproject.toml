@@ -16,3 +16,7 @@ silicon-shader = "silicon_shader.cli:main"
 
 [tool.setuptools]
 packages = ["silicon_shader"]
+
+[project.urls]
+Repository = "https://github.com/fortunexbt/minecraft-apple-silicon-framework"
+Documentation = "https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKFLOW.md"
