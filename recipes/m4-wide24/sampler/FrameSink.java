@@ -13,16 +13,20 @@ public final class FrameSink {
     public static volatile int unfocusedFrames;
     public static volatile String error = "";
 
+    /** End on the next observed frame, retaining the interval that finishes the route. */
+    public static void requestStop() { deadline = System.nanoTime(); }
+
     public static void frame(Object mc) {
         client = mc;
         if (!recording) return;
         long now = System.nanoTime();
-        if (now > deadline || count >= times.length) { recording = false; return; }
+        if (count >= times.length) { recording = false; return; }
         try {
             if (focusMethod == null) focusMethod = mc.getClass().getMethod("isWindowActive");
             if (!Boolean.TRUE.equals(focusMethod.invoke(mc))) unfocusedFrames++;
         } catch (Throwable e) { error = e.toString(); recording = false; return; }
         times[count] = now;
         count++;
+        if (now >= deadline) recording = false;
     }
 }

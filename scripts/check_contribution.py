@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from silicon_shader.challenge import MAX_BYTES
 from silicon_shader.registry import validate_entry
 from silicon_shader.presentation import validate_presentation
+from silicon_shader.workload import require_standard
 
 
 def api(endpoint):
@@ -74,4 +75,11 @@ if f["status"] == "modified":
         raise SystemExit(
             "Existing submissions may update presentation only; preserve author and evidence"
         )
+    # Old v1 entries may receive presentation-only fixes, but they remain
+    # historical. Any changed or newly added evidence must meet the current
+    # standard workload contract.
+    if old["bundle"].get("schema_version") == 2:
+        require_standard(entry["bundle"])
+else:
+    require_standard(entry["bundle"])
 print("Consistent self-reported evidence. Human recipe/visual review still required.")

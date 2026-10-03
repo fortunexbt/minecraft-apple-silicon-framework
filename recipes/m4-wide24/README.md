@@ -46,7 +46,7 @@ Create your own disposable default-generation Minecraft 26.3 world, seed **20260
 
 At `-121.3 69 438.7`, set yaw 180 degrees and pitch 5 degrees. Inspect the village, cactus, hills and sky before measuring. If the generated scene, camera, visible world or player state differs, label it a new workload rather than claiming the same cohort. The camera stays fixed; the player must be alive and unpaused. Entities and clouds continue normal simulation, so their exact pose is not frozen.
 
-The original campaign sampler sources and route are in [sampler/](sampler/). They are a scoped alternate harness, not a change to the main framework sampler. This preserves the exact recorded hook and text completion format without manufacturing a modern status receipt:
+The original campaign sampler sources and route are in [sampler/](sampler/). They are a scoped alternate harness, not a change to the main framework sampler. This preserves the recorded hook and text completion format without manufacturing a modern status receipt. The shared flight adapter now requests a stop after its last movement tick; the sampler retains the first post-stop frame so a final stall is measured. Existing historical captures remain unchanged:
 
 ```sh
 recipes/m4-wide24/sampler/build.sh asm-9.10.1.jar asm-tree-9.10.1.jar campaign-sampler-build

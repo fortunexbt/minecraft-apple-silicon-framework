@@ -25,4 +25,4 @@ Repository = "https://github.com/fortunexbt/minecraft-apple-silicon-framework"
 Documentation = "https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKFLOW.md"
 
 [tool.setuptools.package-data]
-silicon_shader = ["skills/*/SKILL.md"]
+silicon_shader = ["skills/*/SKILL.md", "workloads/*.json"]

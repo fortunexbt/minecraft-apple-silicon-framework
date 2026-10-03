@@ -2,6 +2,7 @@
 
 const byId = id => document.getElementById(id);
 const repo = 'https://github.com/fortunexbt/minecraft-apple-silicon-framework';
+const standardWorkloadId = 'silicon-shader-overworld-v1';
 let entries = [];
 let loadFailed = false;
 
@@ -31,6 +32,24 @@ function titleCase(value) {
 
 function hardware(entry) {
   return entry.metadata && entry.metadata.hardware ? entry.metadata.hardware : {};
+}
+
+function isStandardEntry(entry) {
+  return entry.workload_id === standardWorkloadId;
+}
+
+function workloadLabel(entry) {
+  if (isStandardEntry(entry)) return 'Standard route';
+  if (entry.benchmark === 'Earlier route' || !entry.workload_id) return 'Earlier route · not comparable';
+  return 'Unknown route · not comparable';
+}
+
+function standardEntries() {
+  return entries.filter(isStandardEntry);
+}
+
+function earlierEntries() {
+  return entries.filter(entry => !isStandardEntry(entry));
 }
 
 function settings(entry, phase = 'candidate') {
@@ -170,9 +189,10 @@ function makeFilterOptions(id, values, placeholder, label) {
 }
 
 function populateFilters() {
-  const families = [...new Set(entries.map(entry => asText(hardware(entry).family)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-  const tiers = [...new Set(entries.map(entry => asText(hardware(entry).tier)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-  const memories = [...new Set(entries.map(entry => finite(hardware(entry).memory_gib)).filter(value => value !== null))].sort((a, b) => a - b);
+  const current = standardEntries();
+  const families = [...new Set(current.map(entry => asText(hardware(entry).family)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const tiers = [...new Set(current.map(entry => asText(hardware(entry).tier)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const memories = [...new Set(current.map(entry => finite(hardware(entry).memory_gib)).filter(value => value !== null))].sort((a, b) => a - b);
   makeFilterOptions('filter-family', families, 'All families', value => value);
   makeFilterOptions('filter-tier', tiers, 'All tiers', titleCase);
   makeFilterOptions('filter-memory', memories, 'Any memory', value => formatNumber(value, 0) + ' GB');
@@ -226,6 +246,7 @@ function detailsFor(entry) {
     ['Launcher and loader', [asText(metadata.launcher, 'Launcher not recorded'), metadata.loader ? titleCase(asText(metadata.loader.name, '')) + (metadata.loader.version ? ' ' + metadata.loader.version : '') : ''].filter(Boolean).join(' · ')],
     ['Java runtime', asText(metadata.runtime, 'Not recorded')],
     ['Capture harness', asText(metadata.harness, 'Not recorded')],
+    ['Challenge route', isStandardEntry(entry) ? 'Standard route · ' + standardWorkloadId : workloadLabel(entry)],
     ['Test scene', [asText(workload.scene), asText(workload.route), asText(workload.terrain)].filter(Boolean).join(' · ') || 'Not recorded'],
     ['Candidate worst 5 sec FPS', worstFps(entry) === null ? 'Not recorded' : formatNumber(worstFps(entry))],
     ['Candidate p95 / p99 frame time', formatNumber(candidate.p95_ms) + ' / ' + formatNumber(candidate.p99_ms) + ' ms'],
@@ -253,13 +274,17 @@ function detailsFor(entry) {
 function setupPrompt(entry) {
   const recipe = recipeUrl(entry);
   const evidence = evidenceUrl(entry);
+  const routeNote = isStandardEntry(entry)
+    ? 'This evidence uses the current standard route. If measuring an adapted setup, use the exact same pinned workload for both baseline and candidate.'
+    : 'This evidence used an earlier or unknown route; its FPS is not directly comparable with standard-route results. Treat it only as a recipe lead.';
   return [
     'Check whether this shared shader setup suits my Mac, then try it in an isolated copy of my game.',
     '',
     'Recipe: ' + recipe,
     'Performance evidence: ' + evidence,
+    routeNote,
     '',
-    'Inspect the actual shader, mod versions, Minecraft version, launcher, hardware, resolution, view distance, test scene, and quality notes in these links. Check compatibility with my installed game and explain any differences or tradeoffs before changing anything. Prepare and verify the setup in an isolated copy of my instance, preserve my worlds and current settings, and confirm the scene renders correctly. Never blindly apply the recipe to my live game or replace mods or versions without explaining the change to me.'
+    'Inspect the actual shader, mod versions, Minecraft version, launcher, hardware, resolution, view distance, test scene, and quality notes in these links. Check compatibility with my installed game and explain any differences or tradeoffs before changing anything. Prepare and verify the setup in an isolated copy of my instance, preserve my worlds and current settings, and confirm the scene renders correctly. If recording or submitting a public performance comparison, first run `silicon-shader challenge workload` and follow its pinned world, route, movement and capture instructions for both baseline and candidate. Never substitute a flat world, another route, or unvalidated timing. Finish setup without measurements if the standard harness is unavailable. Never blindly apply the recipe to my live game or replace mods or versions without explaining the change to me.'
   ].join('\n');
 }
 
@@ -278,6 +303,9 @@ function createCard(entry) {
   body.append(node('p', 'Agent: ' + asText(agent.harness, 'Not recorded') + ' · Model: ' + asText(agent.model, 'Not recorded'), { class: 'agent-credit' }));
 
   const hardwareLine = node('div', undefined, { class: 'hardware-line' });
+  hardwareLine.append(node('span', workloadLabel(entry), {
+    class: 'hardware-chip workload-chip ' + (isStandardEntry(entry) ? 'standard-workload' : 'earlier-workload')
+  }));
   hardwareLine.append(node('span', chipLabel(entry), { class: 'hardware-chip' }));
   const gpuCores = finite(hardware(entry).gpu_cores);
   if (gpuCores !== null) hardwareLine.append(node('span', formatNumber(gpuCores, 0) + ' GPU cores', { class: 'hardware-chip secondary-chip' }));
@@ -338,7 +366,7 @@ function matchingEntries() {
   const family = byId('filter-family').value;
   const tier = byId('filter-tier').value;
   const memory = byId('filter-memory').value;
-  return entries.filter(entry => {
+  return standardEntries().filter(entry => {
     const chip = hardware(entry);
     return (!family || asText(chip.family) === family)
       && (!tier || asText(chip.tier) === tier)
@@ -387,9 +415,19 @@ function render() {
   const results = byId('results');
   const empty = byId('empty-state');
   const filters = byId('filters');
+  const earlierDetails = byId('earlier-routes');
+  const earlierResults = byId('earlier-results');
   results.replaceChildren();
+  earlierResults.replaceChildren();
   empty.hidden = true;
-  filters.hidden = entries.length === 0 || loadFailed;
+  const current = standardEntries();
+  const previous = earlierEntries();
+  filters.hidden = current.length === 0 || loadFailed;
+  earlierDetails.hidden = previous.length === 0 || loadFailed;
+  byId('earlier-count').textContent = previous.length + (previous.length === 1 ? ' setup' : ' setups');
+  const earlierFragment = document.createDocumentFragment();
+  for (const entry of previous.slice().sort((a, b) => setupTitle(a).localeCompare(setupTitle(b)))) earlierFragment.append(createCard(entry));
+  earlierResults.append(earlierFragment);
 
   if (loadFailed) {
     byId('count').textContent = 'Library unavailable';
@@ -397,16 +435,16 @@ function render() {
     return;
   }
 
-  if (entries.length === 0) {
-    byId('count').textContent = 'No setups yet';
-    byId('load-status').textContent = 'No community setups have been published yet.';
-    showEmpty('The first setup could be yours.', 'There are no community setup cards yet. Tune your own game with an agent, or share a recipe that another player can try.', 'Start with your setup ↗', 'dialog');
+  if (current.length === 0) {
+    byId('count').textContent = 'No standard-route setups yet';
+    byId('load-status').textContent = 'No standard-route setup has been published yet.';
+    showEmpty('The first standard run could be yours.', 'There are no captures on the pinned challenge route yet. Ask your agent to run `silicon-shader challenge workload`, follow its instructions, then share a setup measured on that same route.', 'Start with the standard route ↗', 'dialog');
     return;
   }
 
   const selected = sortEntries(matchingEntries());
-  byId('count').textContent = selected.length + (selected.length === 1 ? ' setup' : ' setups');
-  byId('load-status').textContent = selected.length + (selected.length === 1 ? ' setup shown.' : ' setups shown.');
+  byId('count').textContent = selected.length + (selected.length === 1 ? ' standard-route setup' : ' standard-route setups');
+  byId('load-status').textContent = selected.length + (selected.length === 1 ? ' standard-route setup shown.' : ' standard-route setups shown.');
   if (selected.length === 0) {
     showEmpty('No setups match those filters.', 'Try another chip family, tier, or memory size.', 'Clear filters', 'clear');
     return;

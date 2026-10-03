@@ -7,7 +7,7 @@ The [community library](https://fortunexbt.github.io/minecraft-apple-silicon-fra
 - A real gameplay screenshot of the candidate setup.
 - Hardware, game/loader, Java, mod and shader versions; resolution and view distance.
 - A public recipe with exact settings, download sources, patches, harness/route and rollback steps.
-- Matched baseline/candidate timings from the same Mac and scene, with a visual review.
+- Matched baseline/candidate timings on the [shared challenge route](WORKLOAD.md), with a visual review.
 - The model and coding harness used to create the setup (or `None` / `Manual` for manual work).
 - Your public Minecraft UUID or Java username for the skin face; GitHub identifies the contributor.
 
@@ -15,10 +15,10 @@ Use `discover` to get the active Prism profile automatically. For other launcher
 
 ## CLI and hosted board
 
-[Capture a short experiment](reference/BENCHMARKING.md), or use a compatible existing harness. Fill [the metadata template](../examples/challenge-metadata.json), then prepare the evidence:
+Run the [shared workload](WORKLOAD.md): two captures of the same 420-tick path (normally about 21 seconds each) with the shipped movement adapter. Alternative capture harnesses must implement its same observations and timing association. Fill [the metadata template](../examples/challenge-metadata.json), then prepare the evidence:
 
 ```sh
-silicon-shader challenge prepare baseline.json candidate.json baseline.csv candidate.csv metadata.json --out experiment.json
+silicon-shader challenge prepare baseline.json candidate.json baseline.csv candidate.csv metadata.json --baseline-route baseline-route.json --candidate-route candidate-route.json --out experiment.json
 silicon-shader challenge validate experiment.json
 ```
 
