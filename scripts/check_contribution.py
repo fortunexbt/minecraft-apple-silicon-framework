@@ -60,6 +60,10 @@ if entry["author"].lower() != pr["user"]["login"].lower():
     raise SystemExit("Public author must match the submitting GitHub account")
 if f["status"] == "modified":
     previous = api(f"repos/{repo}/contents/{f['filename']}?ref={pr['base']['sha']}")
+    if previous.get("encoding") == "none" and re.fullmatch(
+        r"[a-f0-9]{40,64}", previous.get("sha", "")
+    ):
+        previous = api(f"repos/{repo}/git/blobs/{previous['sha']}")
     if (
         previous.get("size", MAX_BYTES + 1) > MAX_BYTES
         or previous.get("encoding") != "base64"

@@ -15,6 +15,16 @@ class CommunityTests(unittest.TestCase):
         self.addCleanup(fixture.doCleanups)
         self.bundle = fixture.prepare()
         self.root = fixture.root
+        self.presentation = {
+            "title": "Example setup",
+            "minecraft_profile": "ExamplePlayer",
+            "screenshot_url": "https://raw.githubusercontent.com/tester/recipe/"
+            + "a" * 40
+            + "/shot.png",
+            "recipe_url": "https://github.com/tester/recipe/blob/"
+            + "a" * 40
+            + "/setup.md",
+        }
 
     def test_preview_and_wrong_digest_never_contact_github(self):
         request = Mock(side_effect=AssertionError("No network"))
@@ -23,6 +33,17 @@ class CommunityTests(unittest.TestCase):
         self.assertNotIn("intervals_ms", json.dumps(preview))
         with self.assertRaises(ValueError):
             submit(self.bundle, True, "wrong", request)
+        with self.assertRaisesRegex(ValueError, "minecraft_profile"):
+            submit(
+                self.bundle,
+                True,
+                request=request,
+                presentation={
+                    k: v
+                    for k, v in self.presentation.items()
+                    if k != "minecraft_profile"
+                },
+            )
         request.assert_not_called()
 
     def test_existing_pr_does_not_publish_again(self):
@@ -32,7 +53,13 @@ class CommunityTests(unittest.TestCase):
                 [{"html_url": "https://github.com/example/pull/1", "state": "open"}],
             ]
         )
-        result = submit(self.bundle, True, self.bundle["content_digest"], request)
+        result = submit(
+            self.bundle,
+            True,
+            self.bundle["content_digest"],
+            request,
+            presentation=self.presentation,
+        )
         self.assertTrue(result["resumed"])
         self.assertEqual(request.call_count, 2)
 
@@ -40,7 +67,11 @@ class CommunityTests(unittest.TestCase):
         digest = self.bundle["content_digest"]
         path = "contributions/" + digest + ".json"
         branch = "challenge/" + digest
-        entry = {"author": "fortunexbt", "bundle": self.bundle}
+        entry = {
+            "author": "fortunexbt",
+            "bundle": self.bundle,
+            "presentation": self.presentation,
+        }
         for resumed in [False, True]:
             calls = []
 
@@ -83,7 +114,9 @@ class CommunityTests(unittest.TestCase):
                     }
                 raise AssertionError(endpoint)
 
-            result = submit(self.bundle, True, request=request)
+            result = submit(
+                self.bundle, True, request=request, presentation=self.presentation
+            )
             self.assertEqual(result["state"], "open")
             writes = [c for c in calls if "/contents/" in c[0]]
             self.assertEqual(len(writes), 0 if resumed else 1)
@@ -114,7 +147,13 @@ class CommunityTests(unittest.TestCase):
             ]
         )
         with self.assertRaisesRegex(ValueError, "not a fork"):
-            submit(self.bundle, True, self.bundle["content_digest"], request)
+            submit(
+                self.bundle,
+                True,
+                self.bundle["content_digest"],
+                request,
+                presentation=self.presentation,
+            )
 
     def test_skill_install_is_explicit_and_preserves_existing(self):
         from silicon_shader.cli import parser, run
@@ -203,6 +242,15 @@ class CommunityTests(unittest.TestCase):
             responses["repos/owner/repo/git/blobs/" + "a" * 40]
         )
         self.assertEqual(check().returncode, 0)
+        original_previous = responses[previous_key]
+        responses[previous_key] = {
+            "encoding": "none",
+            "size": 1_100_000,
+            "sha": "c" * 40,
+        }
+        responses["repos/owner/repo/git/blobs/" + "c" * 40] = original_previous
+        self.assertEqual(check().returncode, 0)
+        responses[previous_key] = original_previous
         previous = json.loads(base64.b64decode(responses[previous_key]["content"]))
         previous["author"] = "someone-else"
         responses[previous_key]["content"] = base64.b64encode(
