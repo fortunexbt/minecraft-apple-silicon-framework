@@ -24,6 +24,9 @@ def any_true(values):
 run = str(sys.argv[1]) if len(sys.argv) > 1 else 'owv1-' + str(UUID.randomUUID())
 if not run or len(run) > 100 or any_true([c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-' for c in run]):
     raise Exception('Run ID must be 1-100 ASCII letters, digits, _ or -')
+phase = str(sys.argv[2]) if len(sys.argv) > 2 else 'profile'
+if phase not in ['baseline', 'candidate', 'profile']:
+    raise Exception('Phase must be baseline, candidate or profile')
 root = System.getenv('MCBENCH_EVIDENCE')
 if not root:
     root = 'minescript/bench-output'
@@ -117,6 +120,8 @@ def scheduled_yaw(tick):
 def check(s, at_start=False):
     if not s['focused'] or s['paused'] or mc.gui.screen() != None or mc.gui.overlay() != None:
         raise Exception('focus lost, paused, or menu/chat open')
+    if str(mc.options.getCameraType()) != 'FIRST_PERSON':
+        raise Exception('reference flight requires first-person camera')
     if s['sprinting']:
         raise Exception('sprinting active')
     if s['mode'].lower() != 'creative' or not s['flying']:
@@ -182,6 +187,7 @@ def observe_world():
     facts = ['observed_minecraft_version=' + str(version.name()),
              'observed_data_version=' + str(version.dataVersion().version()),
              'observed_overworld_biome_source_stable=' + str(generator.getBiomeSource().stable(overworld_biomes)),
+             'observed_camera_type=' + str(mc.options.getCameraType()),
              'observed_fov=' + str(mc.options.fov().get()),
              'observed_fov_effect_scale=' + str(mc.options.fovEffectScale().get()),
              'observed_flying_speed=' + str(mc.player.getAbilities().getFlyingSpeed()),
@@ -214,6 +220,11 @@ def finish(status, reason):
         return
     state = 'finished'
     release()
+    if status == 'rejected' and start_file.exists() and not done_file.exists():
+        try:
+            JavaClass('m4peak.FrameSink').requestStop()
+        except Exception:
+            reason = reason + '; stop request failed, sampler safety timeout remains active'
     write_text(samples_file, '\n'.join(rows) + '\n')
     write_text(warmup_file, '\n'.join(warmup_rows) + '\n')
     fields = ['workload=silicon-shader-overworld-v1', 'run_id=' + run,
@@ -238,7 +249,10 @@ def finish(status, reason):
         fields.append(str(Files.readString(done_file.java_path)).strip())
         fields.append('observed_completion_end')
     write_text(receipt_file, '\n'.join(fields) + '\n')
-    echo('Reference flight ' + run + ': ' + status + ' (' + reason + ')')
+    if status == 'recorded':
+        echo('[Silicon Shader] ' + phase + ' flight captured. Checking frame pacing next; no screenshot was taken during measurement.')
+    else:
+        echo('[Silicon Shader] Run stopped: ' + reason + '. This run is not submission evidence.')
     # Removing the final listener may destroy the Pyjinn Java handle table.
     # Keep ALL Java operations above these final two calls.
     if listener_tick >= 0:
@@ -258,6 +272,10 @@ def on_tick(event):
             if now - born_ns < 1000000000 or mc.gui.screen() != None or mc.gui.overlay() != None:
                 return
             guard_preparation()
+            mc.options.setCameraType(JavaClass('net.minecraft.client.CameraType').FIRST_PERSON)
+            if mc.gui.hud.isHidden():
+                mc.gui.hud.toggle()
+            echo('[Silicon Shader] Preparing ' + phase + ': same world, path and camera. Leave movement and chat controls alone.')
             mc.options.fov().set(70)
             mc.options.fovEffectScale().set(0.0)
             execute('gamerule minecraft:advance_time false')
@@ -285,6 +303,7 @@ def on_tick(event):
                 warmup_ticks = 0
                 sample(s, now, True)
                 state = 'warming'
+                echo('[Silicon Shader] Warming ' + phase + ' for 30 seconds, then an automatic 21-second flight. Chat stays quiet while frames are measured.')
         elif state == 'warming':
             release()
             s = snapshot()
@@ -355,7 +374,7 @@ def on_render(event):
                 raise Exception('420-tick route outside 20.8-to-30-second safety range')
             if tick_count < 420 or len(rows) < 23:
                 raise Exception('requires all 420 ticks and all 22 pose samples')
-            finish('calibration_required', '420 input ticks complete; actual sampler files present')
+            finish('recorded', '420 input ticks complete; actual sampler files present')
         elif state in ['arming', 'preparing'] and now - born_ns > 5000000000:
             raise Exception('5-second preparation timeout; check chat closure and native flight')
         elif state == 'waiting_start' and now - requested_ns > 10000000000:
@@ -368,4 +387,4 @@ def on_render(event):
 
 listener_tick = add_event_listener('tick', on_tick)
 listener_render = add_event_listener('render', on_render)
-echo('Reference flight armed: ' + run)
+echo('[Silicon Shader] ' + phase + ' queued: ' + run)

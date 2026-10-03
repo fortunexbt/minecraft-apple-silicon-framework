@@ -1,14 +1,18 @@
 name: Challenge evidence
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
 permissions:
   contents: read
   pull-requests: read
 jobs:
-  evidence:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      eligible: ${{ steps.gate.outputs.eligible }}
+      base_sha: ${{ steps.gate.outputs.base_sha }}
+      head_sha: ${{ steps.gate.outputs.head_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,8 +22,65 @@ jobs:
         with:
           python-version: '3.13'
       - name: Validate data with trusted base code
+        id: gate
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.number }}
         run: python3 scripts/check_contribution.py
+
+  merge:
+    needs: validate
+    if: needs.validate.outputs.eligible == 'true' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Merge only the validated head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.number }}
+          VALIDATED_BASE_SHA: ${{ needs.validate.outputs.base_sha }}
+          VALIDATED_HEAD_SHA: ${{ needs.validate.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$GH_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]
+          [[ "$VALIDATED_BASE_SHA" =~ ^[a-f0-9]{40,64}$ ]]
+          [[ "$VALIDATED_HEAD_SHA" =~ ^[a-f0-9]{40,64}$ ]]
+
+          current="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER" --jq '.base.sha + " " + .head.sha + " " + (.draft | tostring) + " " + .state')"
+          read -r current_base_sha current_sha is_draft state <<< "$current"
+          if [[ "$current_base_sha" != "$VALIDATED_BASE_SHA" ]]; then
+            echo "The PR base moved after validation. Update your contribution branch from main, then retry." >&2
+            exit 1
+          fi
+          [[ "$current_sha" == "$VALIDATED_HEAD_SHA" ]]
+          [[ "$is_draft" == "false" && "$state" == "open" ]]
+
+          merged="$(gh api --method PUT "repos/$GH_REPO/pulls/$PR_NUMBER/merge" \
+            -f sha="$VALIDATED_HEAD_SHA" \
+            -f merge_method=squash \
+            --jq '.merged')"
+          [[ "$merged" == "true" ]]
+
+  dispatch_pages:
+    needs: merge
+    if: needs.merge.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      actions: write
+    steps:
+      - name: Publish the merged contribution to GitHub Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [[ "$GH_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
+          gh api --method POST "repos/$GH_REPO/actions/workflows/pages.yml/dispatches" \
+            -f ref=main

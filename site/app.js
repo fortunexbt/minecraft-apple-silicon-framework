@@ -3,8 +3,11 @@
 const byId = id => document.getElementById(id);
 const repo = 'https://github.com/fortunexbt/minecraft-apple-silicon-framework';
 const standardWorkloadId = 'silicon-shader-overworld-v1';
+const pageSize = 24;
 let entries = [];
 let loadFailed = false;
+let visibleStandardCount = pageSize;
+let visibleEarlierCount = pageSize;
 
 function node(tag, text, attrs = {}) {
   const el = document.createElement(tag);
@@ -207,9 +210,11 @@ function createCover(entry, title) {
   const screenshot = safeScreenshotUrl((entry.presentation || {}).screenshot_url);
   if (screenshot) {
     const image = node('img', undefined, { class: 'setup-image', src: screenshot, alt: title, loading: 'lazy', decoding: 'async' });
+    const fullImage = node('a', undefined, { class: 'screenshot-link', href: screenshot, target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Open full screenshot: ' + title });
     image.addEventListener('load', () => { fallback.hidden = true; });
-    image.addEventListener('error', () => image.remove());
-    cover.append(image);
+    image.addEventListener('error', () => fullImage.remove());
+    fullImage.append(image);
+    cover.append(fullImage);
   }
 
   const fps = average(entry);
@@ -217,6 +222,30 @@ function createCover(entry, title) {
   performance.append(node('strong', fps === null ? '—' : formatNumber(fps)), node('span', 'avg FPS'));
   cover.append(performance);
   return cover;
+}
+
+function imageCaption(entry) {
+  const caption = node('div', undefined, { class: 'image-caption' });
+  const route = isStandardEntry(entry) ? 'Standard · seed 20260929' : workloadLabel(entry);
+  caption.append(node('span', route, { class: 'image-context' }));
+
+  const candidate = entry.runs && entry.runs.candidate ? entry.runs.candidate : {};
+  const p99 = finite(candidate.p99_ms);
+  caption.append(node('span', p99 === null ? 'p99 —' : 'p99 ' + formatNumber(p99) + ' ms', {
+    class: 'image-pacing',
+    title: '99th-percentile CPU frame production interval'
+  }));
+
+  const digest = /^[a-f0-9]{64}$/.test(entry.digest || '') ? entry.digest : null;
+  const evidence = node('a', digest ? digest.slice(0, 12) : 'Evidence ↗', {
+    class: 'image-evidence',
+    href: evidenceUrl(entry),
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    title: 'Open the submission evidence'
+  });
+  caption.append(evidence);
+  return caption;
 }
 
 function dataRow(label, value, note) {
@@ -247,6 +276,7 @@ function detailsFor(entry) {
     ['Java runtime', asText(metadata.runtime, 'Not recorded')],
     ['Capture harness', asText(metadata.harness, 'Not recorded')],
     ['Challenge route', isStandardEntry(entry) ? 'Standard route · ' + standardWorkloadId : workloadLabel(entry)],
+    ['Screenshot', (entry.presentation || {}).screenshot_view === 'overworld-front-v1' ? 'Standard front-facing portrait · 16:9' : 'Earlier screenshot framing'],
     ['Test scene', [asText(workload.scene), asText(workload.route), asText(workload.terrain)].filter(Boolean).join(' · ') || 'Not recorded'],
     ['Candidate worst 5 sec FPS', worstFps(entry) === null ? 'Not recorded' : formatNumber(worstFps(entry))],
     ['Candidate p95 / p99 frame time', formatNumber(candidate.p95_ms) + ' / ' + formatNumber(candidate.p99_ms) + ' ms'],
@@ -291,7 +321,7 @@ function setupPrompt(entry) {
 function createCard(entry) {
   const title = setupTitle(entry);
   const card = node('article', undefined, { class: 'setup-card' });
-  card.append(createCover(entry, title));
+  card.append(createCover(entry, title), imageCaption(entry));
 
   const body = node('div', undefined, { class: 'card-body' });
   const top = node('div', undefined, { class: 'card-top' });
@@ -401,6 +431,8 @@ function showEmpty(title, message, actionLabel, action) {
       byId('filter-family').value = '';
       byId('filter-tier').value = '';
       byId('filter-memory').value = '';
+      visibleStandardCount = pageSize;
+      visibleEarlierCount = pageSize;
       render();
     });
     empty.append(clear);
@@ -417,6 +449,8 @@ function render() {
   const filters = byId('filters');
   const earlierDetails = byId('earlier-routes');
   const earlierResults = byId('earlier-results');
+  const showMore = byId('show-more');
+  const showMoreEarlier = byId('show-more-earlier');
   results.replaceChildren();
   earlierResults.replaceChildren();
   empty.hidden = true;
@@ -424,9 +458,13 @@ function render() {
   const previous = earlierEntries();
   filters.hidden = current.length === 0 || loadFailed;
   earlierDetails.hidden = previous.length === 0 || loadFailed;
-  byId('earlier-count').textContent = previous.length + (previous.length === 1 ? ' setup' : ' setups');
+  const sortedEarlier = previous.slice().sort((a, b) => setupTitle(a).localeCompare(setupTitle(b)));
+  const earlierVisible = sortedEarlier.slice(0, visibleEarlierCount);
+  byId('earlier-count').textContent = 'Showing ' + earlierVisible.length + ' of ' + previous.length;
+  showMoreEarlier.hidden = earlierVisible.length >= sortedEarlier.length;
+  if (!showMoreEarlier.hidden) showMoreEarlier.textContent = 'Show ' + Math.min(pageSize, sortedEarlier.length - earlierVisible.length) + ' more earlier routes';
   const earlierFragment = document.createDocumentFragment();
-  for (const entry of previous.slice().sort((a, b) => setupTitle(a).localeCompare(setupTitle(b)))) earlierFragment.append(createCard(entry));
+  for (const entry of earlierVisible) earlierFragment.append(createCard(entry));
   earlierResults.append(earlierFragment);
 
   if (loadFailed) {
@@ -443,14 +481,17 @@ function render() {
   }
 
   const selected = sortEntries(matchingEntries());
-  byId('count').textContent = selected.length + (selected.length === 1 ? ' standard-route setup' : ' standard-route setups');
-  byId('load-status').textContent = selected.length + (selected.length === 1 ? ' standard-route setup shown.' : ' standard-route setups shown.');
+  const shown = Math.min(visibleStandardCount, selected.length);
+  byId('count').textContent = 'Showing ' + shown + ' of ' + selected.length + ' standard-route ' + (selected.length === 1 ? 'setup' : 'setups');
+  byId('load-status').textContent = 'Showing ' + shown + ' of ' + selected.length + ' standard-route ' + (selected.length === 1 ? 'setup.' : 'setups.');
+  showMore.hidden = shown >= selected.length;
+  if (!showMore.hidden) showMore.textContent = 'Show ' + Math.min(pageSize, selected.length - shown) + ' more setups';
   if (selected.length === 0) {
     showEmpty('No setups match those filters.', 'Try another chip family, tier, or memory size.', 'Clear filters', 'clear');
     return;
   }
   const fragment = document.createDocumentFragment();
-  for (const entry of selected) fragment.append(createCard(entry));
+  for (const entry of selected.slice(0, visibleStandardCount)) fragment.append(createCard(entry));
   results.append(fragment);
 }
 
@@ -467,7 +508,19 @@ document.querySelectorAll('dialog .close').forEach(button => button.addEventList
 document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', event => {
   if (event.target === dialog) dialog.close();
 }));
-['filter-family', 'filter-tier', 'filter-memory', 'sort-by'].forEach(id => byId(id).addEventListener('change', render));
+['filter-family', 'filter-tier', 'filter-memory', 'sort-by'].forEach(id => byId(id).addEventListener('change', () => {
+  visibleStandardCount = pageSize;
+  visibleEarlierCount = pageSize;
+  render();
+}));
+byId('show-more').addEventListener('click', () => {
+  visibleStandardCount += pageSize;
+  render();
+});
+byId('show-more-earlier').addEventListener('click', () => {
+  visibleEarlierCount += pageSize;
+  render();
+});
 
 async function load() {
   try {

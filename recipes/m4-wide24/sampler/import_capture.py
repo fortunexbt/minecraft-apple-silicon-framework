@@ -20,7 +20,14 @@ def main():
     completion_path = root / (run + '-done.txt')
     completion = properties(completion_path)
     start = properties(root / (run + '-start.txt'))
-    route = json.loads((root / (run + '-route.json')).read_text())
+    if (root / (run + '-route.txt')).exists():
+        from silicon_shader.workload import import_route
+        receipt = import_route(root, run)
+        if receipt['samples'][0]['framebuffer'] != manifest['observed']['framebuffer']:
+            raise SystemExit('Observed framebuffer differs from standard route')
+        route = None
+    else:
+        route = json.loads((root / (run + '-route.json')).read_text())
     csv_path = root / (run + '-frames.csv')
     values, count = read_csv(csv_path)
     if (completion.get('frames') != str(count) or completion.get('unfocused_frames') != '0'
@@ -29,11 +36,11 @@ def main():
     if (start.get('live_inactivity_policy') != 'MINIMIZED' or start.get('live_throttle_reason') != 'NONE'
         or start.get('live_frame_limit') != str(manifest['observed']['cap'])):
         raise SystemExit('Live sampler policy/cap differs from operator manifest')
-    if not 20 <= route['seconds'] <= 31 or 'normal world simulation' not in route['kind']:
+    if route is not None and (not 20 <= route['seconds'] <= 31 or 'normal world simulation' not in route['kind']):
         raise SystemExit('Incomplete or incompatible route')
     if completion.get('hook') != 'Minecraft.renderFrame(boolean) return; CPU frame-production interval, including limiter':
         raise SystemExit('Unsupported campaign hook')
-    result = dict(id=run, profile='showcase', status='done', metric='cpu_frame_production',
+    result = dict(id=run, profile='standard-flight' if route is None else 'historical-showcase', status='done', metric='cpu_frame_production',
         expected=manifest['expected'], observed=manifest['observed'], visual=manifest['visual'],
         completion=dict(unfocused_frames=0, buffer_full=False, error=''), metrics=analyze(values),
         provenance=dict(csv_sha256=hashlib.sha256(csv_path.read_bytes()).hexdigest(),

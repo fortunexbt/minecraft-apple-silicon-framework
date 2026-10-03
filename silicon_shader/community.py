@@ -27,7 +27,7 @@ def contract():
         + "/blob/main/docs/WORKLOAD.md",
         "repository": REPOSITORY,
         "leaderboard": "https://fortunexbt.github.io/minecraft-apple-silicon-framework/",
-        "submission": "Optional data-only pull request; maintainer review before publication on the board",
+        "submission": "Optional data-only pull request; trusted automatic checks publish valid current-workload entries",
         "eligibility": "New evidence uses the pinned standard route with matching baseline and candidate receipts, same-machine captures, and a visual review",
         "comparison": "Compare route-matched captures; browse screenshots and setups by hardware, resolution, shader and view distance",
         "verification": "Trace consistency is self-reported evidence, not independent reproduction",
@@ -122,7 +122,9 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api, presentatio
         require_standard(bundle)
     digest = _digest(bundle["content_digest"])
     if publish or presentation is not None:
-        validate_presentation(presentation, for_submission=publish)
+        validate_presentation(
+            presentation, for_submission=publish, require_showcase=publish
+        )
     preview = {
         "digest": digest,
         "workload_id": bundle.get("workload_id"),

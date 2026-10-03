@@ -1,4 +1,4 @@
-"""Build a public data index from reviewed, bounded, data-only contributions."""
+"""Build a public data index from validated, bounded, self-reported contributions."""
 
 import json
 from pathlib import Path
@@ -32,10 +32,11 @@ def validate_entry(entry, filename):
 def build(source, destination):
     root = Path(source)
     entries = []
+    configuration = contract()
     files = sorted(root.glob("*.json"))
-    if len(files) > 500:
+    if len(files) > 2000:
         raise ValueError(
-            "Registry exceeds initial 500-entry bound; paginate before expanding"
+            "Registry exceeds the 2000-entry static-index bound; archive or shard before expanding"
         )
     for path in files:
         if path.is_symlink() or path.stat().st_size > MAX_BYTES:
@@ -58,13 +59,16 @@ def build(source, destination):
                 "metadata": bundle["metadata"],
                 "runs": {k: v["metrics"] for k, v in bundle["runs"].items()},
                 "evidence": "https://github.com/"
-                + contract()["repository"]
+                + configuration["repository"]
                 + "/blob/main/contributions/"
                 + path.name,
             }
         )
     Path(destination).write_text(
-        json.dumps({"contract": contract(), "entries": entries}, indent=2) + "\n"
+        json.dumps(
+            {"contract": configuration, "entries": entries}, separators=(",", ":")
+        )
+        + "\n"
     )
     return {"entries": len(entries), "output": str(destination)}
 
