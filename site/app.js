@@ -1,67 +1,447 @@
 'use strict';
+
 const byId = id => document.getElementById(id);
-let entries = [], view = 'pacing';
-function node(tag, text, attrs = {}) { const el = document.createElement(tag); if (text !== undefined) el.textContent = text; for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v); return el; }
-function contributor(author, large = false) {
-  // Handles are validated by the registry. Never accept a submitted image URL.
-  const handle = /^[A-Za-z0-9-]{1,39}$/.test(author) ? author : 'unknown';
-  const link = node('a', undefined, {class: large ? 'contributor large' : 'contributor', href: `https://github.com/${encodeURIComponent(handle)}`});
-  const avatar = node('span', handle.slice(0, 2).toUpperCase(), {class: 'avatar', 'aria-hidden': 'true'});
-  const image = node('img', undefined, {src: `https://github.com/${encodeURIComponent(handle)}.png?size=96`, alt: '', loading: 'lazy', decoding: 'async', referrerpolicy: 'no-referrer', width: '40', height: '40'});
+const repo = 'https://github.com/fortunexbt/minecraft-apple-silicon-framework';
+let entries = [];
+let loadFailed = false;
+
+function node(tag, text, attrs = {}) {
+  const el = document.createElement(tag);
+  if (text !== undefined) el.textContent = text;
+  for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value);
+  return el;
+}
+
+function asText(value, fallback = '') {
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+}
+
+function finite(value) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function formatNumber(value, digits = 1) {
+  const parsed = finite(value);
+  return parsed === null ? '—' : parsed.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: digits });
+}
+
+function titleCase(value) {
+  return asText(value, 'Unknown').replace(/[_-]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+function hardware(entry) {
+  return entry.metadata && entry.metadata.hardware ? entry.metadata.hardware : {};
+}
+
+function settings(entry, phase = 'candidate') {
+  const metadata = entry.metadata || {};
+  const config = metadata[phase] || {};
+  return config.settings || {};
+}
+
+function shaderName(entry) {
+  const shader = (entry.metadata && entry.metadata.candidate && entry.metadata.candidate.shader) || {};
+  const name = titleCase(asText(shader.name, 'Shader setup'));
+  const version = asText(shader.version);
+  return version ? name + ' ' + version : name;
+}
+
+function setupTitle(entry) {
+  const presentation = entry.presentation || {};
+  if (typeof presentation.title === 'string' && presentation.title.trim()) return presentation.title.trim();
+  const chip = hardware(entry);
+  return shaderName(entry) + ' · ' + titleCase(asText(chip.family, 'Apple Silicon')) + ' ' + titleCase(asText(chip.tier, ''));
+}
+
+function githubProfile(handle) {
+  const safeHandle = /^[A-Za-z0-9-]{1,39}$/.test(handle || '') ? handle : 'unknown';
+  const link = node('a', undefined, {
+    class: 'contributor',
+    href: 'https://github.com/' + encodeURIComponent(safeHandle),
+    target: '_blank',
+    rel: 'noopener noreferrer'
+  });
+  const avatar = node('span', safeHandle.slice(0, 2).toUpperCase(), { class: 'avatar', 'aria-hidden': 'true' });
+  const image = node('img', undefined, {
+    src: 'https://github.com/' + encodeURIComponent(safeHandle) + '.png?size=96',
+    alt: '',
+    loading: 'lazy',
+    decoding: 'async',
+    referrerpolicy: 'no-referrer',
+    width: '38',
+    height: '38'
+  });
   image.addEventListener('error', () => image.remove());
   avatar.append(image);
-  link.append(avatar, node('span', `@${handle}`));
+  link.append(avatar, node('span', '@' + safeHandle));
   return link;
 }
-function openDialog(id) { byId(id).showModal(); }
-document.addEventListener('click', event => { const button = event.target.closest('[data-dialog]'); if (button) openDialog(button.dataset.dialog); });
-document.querySelectorAll('dialog .close').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
-document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => { view = button.dataset.view; document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b === button))); render(); }));
-byId('cohort').addEventListener('change', render);
-const number = value => Number.isFinite(value) ? value.toFixed(1) : '—';
-function detail(entry) {
-  const target = byId('detail-content'); target.replaceChildren();
-  target.append(node('span', 'UNRANKED SHOWCASE · SELF-REPORTED', {class:'eyebrow'}), contributor(entry.author, true), node('p', 'Matched baseline → candidate. This is a shared configuration experiment, not an official ranking. Timings are recomputed; setup and visual claims remain operator declarations.'));
-  const m = entry.metadata, a = entry.runs.baseline, b = entry.runs.candidate;
-  const rows = [ ['Hardware', `${m.hardware.family} ${m.hardware.tier} · ${m.hardware.gpu_cores} GPU cores · ${m.hardware.memory_gib} GiB`], ['Workload', `${m.workload.scene} / ${m.workload.route} / ${m.workload.terrain}`], ['Setup', `${m.launcher} · ${m.minecraft} · ${m.loader.name} ${m.loader.version}`], ['Harness', m.harness], ['Changed fields', m.interventions.join(', ')], ['Quality review', m.quality_review.outcome], ['Average FPS', `${number(a.average_fps)} → ${number(b.average_fps)}`], ['Worst 5s FPS', `${number(a.worst_5s_fps)} → ${number(b.worst_5s_fps)}`], ['p95 / p99 candidate', `${number(b.p95_ms)} / ${number(b.p99_ms)} ms`], ['Intervals over 33 / 50 / 100 ms', `${b.over_33.count} / ${b.over_50.count} / ${b.over_100.count}`], ['Local outliers', `${a.local_outliers.count} → ${b.local_outliers.count}`] ];
-  const list = node('dl'); for (const [label,value] of rows) { list.append(node('dt', label), node('dd', value)); } target.append(list);
-  const url = `https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/contributions/${entry.digest}.json`;
-  target.append(node('a','Inspect full recipe and relative traces ↗',{href:url}));
-  const settings = node('details');
-  settings.append(node('summary', 'Full baseline and candidate settings'), node('pre',JSON.stringify({baseline:m.baseline,candidate:m.candidate},null,2)));
-  target.append(settings);
-  openDialog('detail');
+
+function safeScreenshotUrl(value) {
+  if (typeof value !== 'string') return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password) return null;
+    if (url.hostname === 'raw.githubusercontent.com' && url.pathname.length > 1) return url.href;
+    if (url.hostname === 'github.com' && url.pathname.startsWith('/user-attachments/')) return url.href;
+  } catch {}
+  return null;
 }
-function svgNode(tag, attrs={}, text) { const el=document.createElementNS('http://www.w3.org/2000/svg',tag); for(const [key,value] of Object.entries(attrs)) el.setAttribute(key,value); if(text!==undefined) el.textContent=text; return el; }
-function chart(selected) {
-  const target=byId('chart'); target.replaceChildren();
-  if (!selected.length) { const empty=node('div',undefined,{class:'empty'}); empty.append(node('span','+',{class:'cross'}),node('h2','The next point could be yours.'),node('p','No community experiments have been published yet. Start with your setup and share a result worth repeating.'),node('button','Start an experiment ↗',{'data-dialog':'participate'})); target.append(empty); return; }
-  const svg=svgNode('svg',{viewBox:'0 0 900 330',role:'img','aria-label':view==='pacing'?'Matched baseline and candidate frame pacing':'Candidate improvement over its own baseline'});
-  const points=selected.flatMap(e=>['baseline','candidate'].map(run=>({entry:e,run,x:view==='pacing'?e.runs[run].p95_ms:(run==='baseline'?0:(e.runs.candidate.worst_5s_fps/e.runs.baseline.worst_5s_fps-1)*100), y:view==='pacing'?e.runs[run].worst_5s_fps:(run==='baseline'?0:(1-e.runs.candidate.p95_ms/e.runs.baseline.p95_ms)*100)})));
-  const xs=points.map(p=>p.x), ys=points.map(p=>p.y); const xmin=Math.min(0,...xs), xmax=Math.max(1,...xs), ymin=Math.min(0,...ys), ymax=Math.max(1,...ys); const xp=x=>75+(x-xmin)/(xmax-xmin)*745, yp=y=>270-(y-ymin)/(ymax-ymin)*220;
-  for(let i=0;i<5;i++){ const x=xmin+(xmax-xmin)*i/4,y=ymin+(ymax-ymin)*i/4; svg.append(svgNode('line',{x1:75,x2:820,y1:yp(y),y2:yp(y),stroke:'#c6d9b72a','stroke-dasharray':'3 5'}),svgNode('text',{x:62,y:yp(y)+4,'text-anchor':'end'},number(y)),svgNode('text',{x:xp(x),y:290,'text-anchor':'middle'},number(x))); }
-  selected.forEach(entry=>{const pair=points.filter(p=>p.entry===entry); svg.append(svgNode('line',{x1:xp(pair[0].x),y1:yp(pair[0].y),x2:xp(pair[1].x),y2:yp(pair[1].y),stroke:'#daca86',opacity:'.7'}));});
-  points.forEach(p=>{const dot=svgNode('circle',{cx:xp(p.x),cy:yp(p.y),r:p.run==='baseline'?5:7,class:p.run==='baseline'?'baseline':'point',tabindex:0,role:'button','aria-label':`${p.entry.author} ${p.run}: open evidence`}); dot.append(svgNode('title',{},`${p.entry.author} · ${p.run}`)); dot.addEventListener('click',()=>detail(p.entry)); dot.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();detail(p.entry);}}); svg.append(dot); });
-  svg.append(svgNode('text',{x:450,y:320,'text-anchor':'middle'},view==='pacing'?'p95 frame time (ms) · lower is better':'Worst 5s FPS improvement (%)'),svgNode('text',{x:75,y:22},view==='pacing'?'Worst 5s FPS · higher is better':'p95 frame-time reduction (%) · higher is better')); target.append(svg);
+
+function safeRecipeUrl(value) {
+  if (typeof value !== 'string') return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol === 'https:' && url.hostname === 'github.com' && !url.username && !url.password) return url.href;
+  } catch {}
+  return null;
 }
+
+function evidenceUrl(entry) {
+  const provided = safeRecipeUrl(entry.evidence);
+  if (provided) return provided;
+  if (/^[a-f0-9]{64}$/.test(entry.digest || '')) {
+    return repo + '/blob/main/contributions/' + entry.digest + '.json';
+  }
+  return repo + '/tree/main/contributions';
+}
+
+function recipeUrl(entry) {
+  const presentation = entry.presentation || {};
+  return safeRecipeUrl(presentation.recipe_url) || evidenceUrl(entry);
+}
+
+function outputResolution(value) {
+  if (!Array.isArray(value) || value.length !== 2) return null;
+  const width = finite(value[0]);
+  const height = finite(value[1]);
+  if (width === null || height === null || width <= 0 || height <= 0) return null;
+  return [Math.round(width), Math.round(height)];
+}
+
+function resolutionInfo(entry) {
+  const config = settings(entry);
+  const output = outputResolution(config.resolution);
+  const scale = finite(config.scale);
+  if (!output) return { output: 'Not recorded', internal: null, scale: scale };
+  const outputLabel = output[0] + ' × ' + output[1];
+  if (scale === null || scale <= 0) return { output: outputLabel, internal: null, scale: null };
+  const internal = [Math.round(output[0] * scale), Math.round(output[1] * scale)];
+  return { output: outputLabel, internal: '≈' + internal[0] + ' × ' + internal[1], scale: scale };
+}
+
+function average(entry, run = 'candidate') {
+  const metrics = entry.runs && entry.runs[run] ? entry.runs[run] : {};
+  return finite(metrics.average_fps);
+}
+
+function worstFps(entry, run = 'candidate') {
+  const metrics = entry.runs && entry.runs[run] ? entry.runs[run] : {};
+  return finite(metrics.worst_5s_fps);
+}
+
+function renderDistance(entry) {
+  return finite(settings(entry).render_distance);
+}
+
+function chipLabel(entry) {
+  const chip = hardware(entry);
+  return titleCase(asText(chip.family, 'Apple Silicon')) + ' · ' + titleCase(asText(chip.tier, 'Unknown tier'));
+}
+
+function memoryLabel(entry) {
+  const gib = finite(hardware(entry).memory_gib);
+  return gib === null ? 'Memory not recorded' : formatNumber(gib, 0) + ' GB RAM';
+}
+
+function makeFilterOptions(id, values, placeholder, label) {
+  const select = byId(id);
+  const selected = select.value;
+  select.replaceChildren(node('option', placeholder, { value: '' }));
+  for (const value of values) select.append(node('option', label(value), { value: String(value) }));
+  if (values.some(value => String(value) === selected)) select.value = selected;
+}
+
+function populateFilters() {
+  const families = [...new Set(entries.map(entry => asText(hardware(entry).family)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const tiers = [...new Set(entries.map(entry => asText(hardware(entry).tier)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const memories = [...new Set(entries.map(entry => finite(hardware(entry).memory_gib)).filter(value => value !== null))].sort((a, b) => a - b);
+  makeFilterOptions('filter-family', families, 'All families', value => value);
+  makeFilterOptions('filter-tier', tiers, 'All tiers', titleCase);
+  makeFilterOptions('filter-memory', memories, 'Any memory', value => formatNumber(value, 0) + ' GB');
+}
+
+function createCover(entry, title) {
+  const cover = node('div', undefined, { class: 'setup-cover' });
+  const fallback = node('div', undefined, { class: 'cover-placeholder', role: 'img', 'aria-label': 'Screenshot unavailable for this setup' });
+  fallback.append(node('span', 'SCREENSHOT UNAVAILABLE', { class: 'placeholder-kicker' }), node('strong', 'Recipe first.', { class: 'placeholder-title' }), node('span', 'View the recipe and evidence', { class: 'placeholder-note' }));
+  cover.append(fallback);
+
+  const screenshot = safeScreenshotUrl((entry.presentation || {}).screenshot_url);
+  if (screenshot) {
+    const image = node('img', undefined, { class: 'setup-image', src: screenshot, alt: title, loading: 'lazy', decoding: 'async' });
+    image.addEventListener('load', () => { fallback.hidden = true; });
+    image.addEventListener('error', () => image.remove());
+    cover.append(image);
+  }
+
+  const fps = average(entry);
+  const performance = node('div', undefined, { class: 'performance-badge', 'aria-label': fps === null ? 'Candidate average FPS not recorded' : 'Candidate average FPS ' + formatNumber(fps) });
+  performance.append(node('strong', fps === null ? '—' : formatNumber(fps)), node('span', 'avg FPS'));
+  cover.append(performance);
+  return cover;
+}
+
+function dataRow(label, value, note) {
+  const cell = node('div', undefined, { class: 'spec-item' });
+  cell.append(node('span', label, { class: 'spec-label' }), node('strong', value, { class: 'spec-value' }));
+  if (note) cell.append(node('small', note, { class: 'spec-note' }));
+  return cell;
+}
+
+function countMetric(value) {
+  if (value && typeof value === 'object') return finite(value.count);
+  return finite(value);
+}
+
+function detailsFor(entry) {
+  const details = node('details', undefined, { class: 'advanced-details' });
+  details.append(node('summary', 'More setup and performance details'));
+  const metadata = entry.metadata || {};
+  const candidate = entry.runs && entry.runs.candidate ? entry.runs.candidate : {};
+  const baseline = entry.runs && entry.runs.baseline ? entry.runs.baseline : {};
+  const workload = metadata.workload || {};
+  const quality = metadata.quality_review || {};
+  const rows = [
+    ['Measurement', 'CPU frame production; not displayed or generated FPS'],
+    ['Minecraft', asText(metadata.minecraft, 'Not recorded')],
+    ['Launcher and loader', [asText(metadata.launcher, 'Launcher not recorded'), metadata.loader ? titleCase(asText(metadata.loader.name, '')) + (metadata.loader.version ? ' ' + metadata.loader.version : '') : ''].filter(Boolean).join(' · ')],
+    ['Runtime and harness', [asText(metadata.runtime), asText(metadata.harness)].filter(Boolean).join(' · ') || 'Not recorded'],
+    ['Test scene', [asText(workload.scene), asText(workload.route), asText(workload.terrain)].filter(Boolean).join(' · ') || 'Not recorded'],
+    ['Candidate worst 5 sec FPS', worstFps(entry) === null ? 'Not recorded' : formatNumber(worstFps(entry))],
+    ['Candidate p95 / p99 frame time', formatNumber(candidate.p95_ms) + ' / ' + formatNumber(candidate.p99_ms) + ' ms'],
+    ['Intervals over 33 / 50 / 100 ms', [countMetric(candidate.over_33), countMetric(candidate.over_50), countMetric(candidate.over_100)].map(value => value === null ? '—' : String(value)).join(' / ')],
+    ['Local outliers, baseline → candidate', [countMetric(baseline.local_outliers), countMetric(candidate.local_outliers)].map(value => value === null ? '—' : String(value)).join(' → ')],
+    ['Image review', asText(quality.outcome, 'Not recorded')]
+  ];
+  const list = node('dl');
+  for (const [label, value] of rows) list.append(node('dt', label), node('dd', value));
+  details.append(list);
+
+  const setupDetails = node('details', undefined, { class: 'settings-details' });
+  setupDetails.append(node('summary', 'Baseline and candidate settings'));
+  setupDetails.append(node('pre', JSON.stringify({
+    baseline: metadata.baseline || {},
+    candidate: metadata.candidate || {}
+  }, null, 2)));
+  details.append(setupDetails);
+
+  const fullEvidence = safeRecipeUrl(entry.evidence) || evidenceUrl(entry);
+  details.append(node('a', 'Open full recipe and evidence ↗', { href: fullEvidence, target: '_blank', rel: 'noopener noreferrer', class: 'evidence-link' }));
+  return details;
+}
+
+function setupPrompt(entry) {
+  const recipe = recipeUrl(entry);
+  const evidence = evidenceUrl(entry);
+  return [
+    'Check whether this shared shader setup suits my Mac, then try it in an isolated copy of my game.',
+    '',
+    'Recipe: ' + recipe,
+    'Performance evidence: ' + evidence,
+    '',
+    'Inspect the actual shader, mod versions, Minecraft version, launcher, hardware, resolution, view distance, test scene, and quality notes in these links. Check compatibility with my installed game and explain any differences or tradeoffs before changing anything. Prepare and verify the setup in an isolated copy of my instance, preserve my worlds and current settings, and confirm the scene renders correctly. Never blindly apply the recipe to my live game or replace mods or versions without explaining the change to me.'
+  ].join('\n');
+}
+
+function createCard(entry) {
+  const title = setupTitle(entry);
+  const card = node('article', undefined, { class: 'setup-card' });
+  card.append(createCover(entry, title));
+
+  const body = node('div', undefined, { class: 'card-body' });
+  const top = node('div', undefined, { class: 'card-top' });
+  const titleBlock = node('div', undefined, { class: 'card-title-block' });
+  titleBlock.append(node('p', shaderName(entry), { class: 'eyebrow eyebrow-dark shader-kicker' }), node('h3', title));
+  top.append(titleBlock, githubProfile(entry.author));
+  body.append(top);
+
+  const hardwareLine = node('div', undefined, { class: 'hardware-line' });
+  hardwareLine.append(node('span', chipLabel(entry), { class: 'hardware-chip' }));
+  const gpuCores = finite(hardware(entry).gpu_cores);
+  if (gpuCores !== null) hardwareLine.append(node('span', formatNumber(gpuCores, 0) + ' GPU cores', { class: 'hardware-chip secondary-chip' }));
+  hardwareLine.append(node('span', memoryLabel(entry), { class: 'hardware-chip secondary-chip' }));
+  body.append(hardwareLine);
+
+  const resolution = resolutionInfo(entry);
+  const scaleNote = resolution.scale === null ? 'Internal resolution not recorded' : resolution.internal + ' internal · ' + formatNumber(resolution.scale * 100, 0) + '% scale';
+  const viewDistance = renderDistance(entry);
+  const specs = node('div', undefined, { class: 'setup-specs' });
+  specs.append(
+    dataRow('Output resolution', resolution.output, scaleNote),
+    dataRow('View distance', viewDistance === null ? 'Not recorded' : formatNumber(viewDistance, 0) + ' chunks')
+  );
+  body.append(specs);
+
+  const lower = worstFps(entry);
+  body.append(node('p', lower === null ? 'Community performance capture' : 'Worst 5 sec: ' + formatNumber(lower) + ' FPS', { class: 'stability-note' }));
+  body.append(detailsFor(entry));
+
+  const actions = node('div', undefined, { class: 'card-actions' });
+  const recipe = recipeUrl(entry);
+  actions.append(node('a', 'Open recipe ↗', { href: recipe, target: '_blank', rel: 'noopener noreferrer', class: 'recipe-link' }));
+  const copy = node('button', 'Ask my agent to try this', { type: 'button', class: 'copy-setup' });
+  const status = node('span', '', { class: 'card-copy-status', role: 'status' });
+  copy.addEventListener('click', async () => {
+    try {
+      await copyText(setupPrompt(entry));
+      status.textContent = 'Prompt copied. Paste it into your agent.';
+    } catch {
+      status.textContent = 'Copy failed. Open the recipe link and try again.';
+    }
+  });
+  actions.append(copy, status);
+  body.append(actions);
+  card.append(body);
+  return card;
+}
+
+function copyText(value) {
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(value);
+  return new Promise((resolve, reject) => {
+    const field = node('textarea');
+    field.value = value;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    document.body.append(field);
+    field.select();
+    const copied = document.execCommand('copy');
+    field.remove();
+    if (copied) resolve();
+    else reject(new Error('Clipboard copy failed'));
+  });
+}
+
+function matchingEntries() {
+  const family = byId('filter-family').value;
+  const tier = byId('filter-tier').value;
+  const memory = byId('filter-memory').value;
+  return entries.filter(entry => {
+    const chip = hardware(entry);
+    return (!family || asText(chip.family) === family)
+      && (!tier || asText(chip.tier) === tier)
+      && (!memory || String(finite(chip.memory_gib)) === memory);
+  });
+}
+
+function sortEntries(list) {
+  const sort = byId('sort-by').value;
+  const score = entry => {
+    if (sort === 'worst') return worstFps(entry);
+    if (sort === 'distance') return renderDistance(entry);
+    return average(entry);
+  };
+  return list.slice().sort((a, b) => {
+    const left = score(a);
+    const right = score(b);
+    if (left === null && right !== null) return 1;
+    if (right === null && left !== null) return -1;
+    if (left !== right) return (right || 0) - (left || 0);
+    return setupTitle(a).localeCompare(setupTitle(b));
+  });
+}
+
+function showEmpty(title, message, actionLabel, action) {
+  const empty = byId('empty-state');
+  empty.replaceChildren(node('span', '✳', { class: 'empty-mark', 'aria-hidden': 'true' }), node('h3', title), node('p', message));
+  if (action === 'dialog') empty.append(node('button', actionLabel, { type: 'button', class: 'button button-dark', 'data-dialog': 'participate' }));
+  if (action === 'clear') {
+    const clear = node('button', actionLabel, { type: 'button', class: 'button button-dark' });
+    clear.addEventListener('click', () => {
+      byId('filter-family').value = '';
+      byId('filter-tier').value = '';
+      byId('filter-memory').value = '';
+      render();
+    });
+    empty.append(clear);
+  }
+  if (action === 'repository') {
+    empty.append(node('a', actionLabel, { href: repo, target: '_blank', rel: 'noopener noreferrer', class: 'button button-dark' }));
+  }
+  empty.hidden = false;
+}
+
 function render() {
- const hasResults = entries.length > 0;
- for (const selector of ['.chart-heading', '.filters', '.chart-foot', '.board']) {
-   document.querySelector(selector).hidden = !hasResults;
- }
- const selected=entries.filter(e=>e.cohort===byId('cohort').value); const body=byId('results'); body.replaceChildren();
- if(!selected.length){const row=node('tr');row.append(node('td','No published community results yet. The first contribution starts here.',{colspan:'6',class:'empty-row'}));body.append(row);}
- for(const e of selected){const row=node('tr'),a=e.runs.baseline,b=e.runs.candidate; const person=node('td');person.append(contributor(e.author));row.append(person); for(const value of [e.metadata.interventions.join(', '),`${number(a.worst_5s_fps)} → ${number(b.worst_5s_fps)}`,`${number(a.p95_ms)} → ${number(b.p95_ms)} ms`,e.metadata.quality_review.outcome]) row.append(node('td',value)); const cell=node('td'),button=node('button','Inspect ↗');button.addEventListener('click',()=>detail(e));cell.append(button);row.append(cell);body.append(row);}
- byId('count').textContent=`${entries.length} experiments · ${new Set(entries.map(e=>e.cohort)).size} cohorts`; chart(selected);
+  const results = byId('results');
+  const empty = byId('empty-state');
+  const filters = byId('filters');
+  results.replaceChildren();
+  empty.hidden = true;
+  filters.hidden = entries.length === 0 || loadFailed;
+
+  if (loadFailed) {
+    byId('count').textContent = 'Library unavailable';
+    showEmpty('Could not load the setup library.', 'Reload this page or open the project repository to inspect the published data.', 'Open GitHub ↗', 'repository');
+    return;
+  }
+
+  if (entries.length === 0) {
+    byId('count').textContent = 'No setups yet';
+    byId('load-status').textContent = 'No community setups have been published yet.';
+    showEmpty('The first setup could be yours.', 'There are no community setup cards yet. Tune your own game with an agent, or share a recipe that another player can try.', 'Start with your setup ↗', 'dialog');
+    return;
+  }
+
+  const selected = sortEntries(matchingEntries());
+  byId('count').textContent = selected.length + (selected.length === 1 ? ' setup' : ' setups');
+  byId('load-status').textContent = selected.length + ' setups shown.';
+  if (selected.length === 0) {
+    showEmpty('No setups match those filters.', 'Try another chip family, tier, or memory size.', 'Clear filters', 'clear');
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  for (const entry of selected) fragment.append(createCard(entry));
+  results.append(fragment);
 }
-async function load(){try{const response=await fetch('data.json');if(!response.ok)throw new Error('Data request failed');const data=await response.json();if(!Array.isArray(data.entries))throw new Error('Invalid data');entries=data.entries;const seen=new Set();for(const e of entries){if(!/^[a-f0-9]{64}$/.test(e.digest)||!/^[a-f0-9]{64}$/.test(e.cohort))throw new Error('Invalid identity');if(!seen.has(e.cohort)){seen.add(e.cohort);const m=e.metadata;byId('cohort').append(node('option',`${m.hardware.family} ${m.hardware.tier} · ${m.workload.scene} · ${e.cohort.slice(0,8)}`,{value:e.cohort}));}}if(entries.length){byId('cohort').value=entries[0].cohort;byId('cohort').querySelector('option[value=""]').remove();}render();byId('load-status').textContent='Unranked showcases · reviewed for publication, not independently reproduced. Table order does not identify a winner.';}catch(error){for(const selector of ['.chart-heading','.filters','.chart-foot','.table-wrap'])document.querySelector(selector).hidden=true;byId('count').textContent='Evidence unavailable';byId('load-status').textContent='Could not load the public evidence index. Please reload or inspect the GitHub repository.';byId('chart').replaceChildren(node('p','Evidence is unavailable. Reload to retry.'));}}
-load();
+
+function openDialog(id) {
+  const dialog = byId(id);
+  if (dialog && !dialog.open) dialog.showModal();
+}
+
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-dialog]');
+  if (button) openDialog(button.dataset.dialog);
+});
+document.querySelectorAll('dialog .close').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
+document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', event => {
+  if (event.target === dialog) dialog.close();
+}));
+['filter-family', 'filter-tier', 'filter-memory', 'sort-by'].forEach(id => byId(id).addEventListener('change', render));
+
+async function load() {
+  try {
+    const response = await fetch('data.json');
+    if (!response.ok) throw new Error('Data request failed');
+    const data = await response.json();
+    if (!Array.isArray(data.entries)) throw new Error('Invalid evidence index');
+    entries = data.entries.filter(entry => entry && entry.metadata && entry.runs);
+    populateFilters();
+    render();
+  } catch {
+    loadFailed = true;
+    byId('load-status').textContent = 'Could not load the setup library.';
+    render();
+  }
+}
 
 byId('copy-prompt').addEventListener('click', async () => {
   try {
-    await navigator.clipboard.writeText(byId('agent-prompt').textContent);
+    await copyText(byId('agent-prompt').textContent);
     byId('copy-status').textContent = 'Copied — paste it into your agent.';
   } catch {
     byId('copy-status').textContent = 'Select and copy the prompt above.';
   }
 });
+load();

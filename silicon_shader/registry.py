@@ -6,11 +6,17 @@ import re
 
 from .challenge import MAX_BYTES, validate_bundle
 from .community import contract
+from .presentation import validate_presentation
 
 
 def validate_entry(entry, filename):
-    if not isinstance(entry, dict) or set(entry) != {"author", "bundle"}:
-        raise ValueError("Contribution needs exactly author and bundle")
+    if not isinstance(entry, dict) or set(entry) not in (
+        {"author", "bundle"},
+        {"author", "bundle", "presentation"},
+    ):
+        raise ValueError("Contribution needs author, bundle and optional presentation")
+    if "presentation" in entry:
+        validate_presentation(entry["presentation"])
     if not isinstance(entry["author"], str) or not re.fullmatch(
         r"[A-Za-z0-9-]{1,39}", entry["author"]
     ):
@@ -40,6 +46,7 @@ def build(source, destination):
         entries.append(
             {
                 "author": entry["author"],
+                "presentation": entry.get("presentation"),
                 "digest": bundle["content_digest"],
                 "cohort": bundle["cohort_hash"],
                 "status": bundle["status"],
