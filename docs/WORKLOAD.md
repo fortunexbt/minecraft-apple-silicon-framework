@@ -31,7 +31,7 @@ Hardware and the shader/configuration being tested can differ. Keep resolution a
 1. Inspect the Mac and existing game; prepare the isolated reference instance once.
 2. Apply the baseline, reset the route and run the shipped adapter. Let it warm up, move and finish without human input.
 3. Apply one material candidate and repeat that same run. Keep the baseline if the change is not useful.
-4. Review the screenshot and recorded results, export the observed route receipts, then prepare the submission with both receipts:
+4. After measurement, capture the [standard front-facing portrait](../workloads/overworld-v1/README.md#submission-screenshot) with the candidate settings. This short, separate step shows the player’s skin without changing the timed camera. Review the saved image and recorded results, export the observed route receipts, then prepare the submission with both receipts:
 
 ```sh
 silicon-shader challenge route-receipt CONTROL BASELINE_RUN --out baseline-route.json

@@ -207,9 +207,11 @@ function createCover(entry, title) {
   const screenshot = safeScreenshotUrl((entry.presentation || {}).screenshot_url);
   if (screenshot) {
     const image = node('img', undefined, { class: 'setup-image', src: screenshot, alt: title, loading: 'lazy', decoding: 'async' });
+    const fullImage = node('a', undefined, { class: 'screenshot-link', href: screenshot, target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Open full screenshot: ' + title });
     image.addEventListener('load', () => { fallback.hidden = true; });
-    image.addEventListener('error', () => image.remove());
-    cover.append(image);
+    image.addEventListener('error', () => fullImage.remove());
+    fullImage.append(image);
+    cover.append(fullImage);
   }
 
   const fps = average(entry);
@@ -247,6 +249,7 @@ function detailsFor(entry) {
     ['Java runtime', asText(metadata.runtime, 'Not recorded')],
     ['Capture harness', asText(metadata.harness, 'Not recorded')],
     ['Challenge route', isStandardEntry(entry) ? 'Standard route · ' + standardWorkloadId : workloadLabel(entry)],
+    ['Screenshot', (entry.presentation || {}).screenshot_view === 'overworld-front-v1' ? 'Standard front-facing portrait · 16:9' : 'Earlier screenshot framing'],
     ['Test scene', [asText(workload.scene), asText(workload.route), asText(workload.terrain)].filter(Boolean).join(' · ') || 'Not recorded'],
     ['Candidate worst 5 sec FPS', worstFps(entry) === null ? 'Not recorded' : formatNumber(worstFps(entry))],
     ['Candidate p95 / p99 frame time', formatNumber(candidate.p95_ms) + ' / ' + formatNumber(candidate.p99_ms) + ' ms'],

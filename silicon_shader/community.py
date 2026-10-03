@@ -122,7 +122,9 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api, presentatio
         require_standard(bundle)
     digest = _digest(bundle["content_digest"])
     if publish or presentation is not None:
-        validate_presentation(presentation, for_submission=publish)
+        validate_presentation(
+            presentation, for_submission=publish, require_showcase=publish
+        )
     preview = {
         "digest": digest,
         "workload_id": bundle.get("workload_id"),

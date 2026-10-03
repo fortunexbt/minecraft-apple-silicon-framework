@@ -54,7 +54,11 @@ if blob["size"] > MAX_BYTES or blob.get("encoding") != "base64":
 entry = validate_entry(
     json.loads(base64.b64decode(blob["content"])), Path(f["filename"]).name
 )
-validate_presentation(entry.get("presentation"), for_submission=True)
+validate_presentation(
+    entry.get("presentation"),
+    for_submission=True,
+    require_showcase=entry["bundle"]["schema_version"] == 2,
+)
 if entry["author"].lower() != pr["user"]["login"].lower():
     raise SystemExit("Public author must match the submitting GitHub account")
 if f["status"] == "modified":

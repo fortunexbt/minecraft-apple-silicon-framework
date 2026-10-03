@@ -95,7 +95,7 @@ h1 em { color: var(--lime); font-family: var(--serif); font-weight: 400; letter-
 }
 .setup-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 20px; }
 .setup-card { min-width: 0; overflow: hidden; border: 1px solid #d8ded1; border-radius: 13px; background: var(--surface); box-shadow: 0 7px 20px #253e2b0a; }
-.setup-cover { position: relative; aspect-ratio: 1.75 / 1; overflow: hidden; background: #dfe5d7; }
+.setup-cover { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #dfe5d7; }
 .cover-placeholder {
   position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
   gap: 7px; color: #31533e; background: radial-gradient(ellipse at 50% 65%, #d3e0c8, transparent 56%), linear-gradient(135deg, #e8ecde, #dce5d4);
@@ -106,7 +106,8 @@ h1 em { color: var(--lime); font-family: var(--serif); font-weight: 400; letter-
 .placeholder-kicker { font: 8px ui-monospace, monospace; letter-spacing: 1.3px; color: #718674; }
 .placeholder-title { font: 24px var(--serif); font-weight: 400; }
 .placeholder-note { font-size: 10px; color: #718174; }
-.setup-image { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.setup-image { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.screenshot-link { position: absolute; inset: 0; display: block; }
 .performance-badge {
   position: absolute; right: 12px; bottom: 12px; min-width: 111px; padding: 9px 12px;
   display: flex; align-items: baseline; justify-content: center; gap: 7px; border: 1px solid #f4f5eb8a;
@@ -249,7 +250,6 @@ dialog a { color: #365f42; text-decoration: underline; text-underline-offset: 2p
   .filters label { font-size: 8px; }
   .filters select { padding-left: 7px; font-size: 10px; }
   .setup-grid { grid-template-columns: 1fr; gap: 15px; }
-  .setup-cover { aspect-ratio: 1.8 / 1; }
   .card-body { padding: 16px; }
   .card-top h3 { font-size: 17px; }
   .setup-specs { grid-template-columns: 1.35fr .8fr; }

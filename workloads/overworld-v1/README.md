@@ -33,3 +33,25 @@ Only this validation establishes that the observations match the standard. A scr
 A fresh default world on the base M4 produced the pinned terrain probes. Runs `owv1cal8` and `owv1cal9` took 30.045/30.004 seconds of warmup and 20.996/21.004 seconds of flight. All 22 recorded positions and yaw samples matched exactly. The second run exercised automatic preparation. Both sampler completions had no focus loss or sink errors. The final sampler-stop implementation was then exercised in `owv1stop1`: 30.055 seconds of warmup, 21.035 seconds of captured frames, and the closing frame retained after the route ended at 21.025 seconds relative to frame zero. That run passed the CLI route validator; the built sampler matched the shipped sources.
 
 The source records `calibration_required` for a completed capture: raw output always needs independent validation. Frame and route timestamps come from the same JVM clock, with a small allowed startup offset. These are self-reported development observations, not remote anti-cheat proof or a new performance submission. Prepared terrain keeps world generation out of the timed comparison. This short flight does not establish all-day gameplay stability.
+
+## Submission screenshot
+
+After measuring the candidate, take its portrait in the same world. The `showcase` section of `silicon-shader challenge workload` pins the location and camera: player position **-109.5, 70, 438.5**, yaw **0**, pitch **0**, overlooking the village bay. Every new submission uses front-facing third person (the second F5 view), FOV 70, clear noon, a hidden HUD and a **1920×1080** framebuffer. Keep the candidate's shaders, resource packs and visual settings. The player’s own skin is part of the picture.
+
+Copy `showcase.pyj` into the instance’s `minescript/` directory, then let the agent run:
+
+```text
+\showcase prepare
+```
+
+It selects the front camera explicitly, moves to the fixed spot, sets the viewport and lets exposure settle. Once it reports ready, the agent presses **F2** through its existing game controls to save a normal Minecraft screenshot. This runs outside the render callback so it captures a completed scene. Inspect the saved PNG: the face, backdrop, framing and dimensions must match the reference below. Then run:
+
+```text
+\showcase restore
+```
+
+This restores the prior pose, FOV, HUD and window settings and returns to first person. The timed flight also explicitly selects and checks first person. The portrait is a separate short step, never part of the frame-time measurement.
+
+Keep the complete image without cropping or retouching. Add `"screenshot_view": "overworld-front-v1"` to the submission presentation only after checking it. The screenshot resolution is standardized separately from the benchmark resolution shown on the card.
+
+![Reference front-facing composition with Cyclo’s skin](showcase.png)
