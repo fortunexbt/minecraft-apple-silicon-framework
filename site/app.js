@@ -245,7 +245,7 @@ function setupPrompt(entry) {
   const recipe = recipeUrl(entry);
   const evidence = evidenceUrl(entry);
   return [
-    'Find a suitable setup and try it on my game.',
+    'Check whether this shared shader setup suits my Mac, then try it in an isolated copy of my game.',
     '',
     'Recipe: ' + recipe,
     'Performance evidence: ' + evidence,
