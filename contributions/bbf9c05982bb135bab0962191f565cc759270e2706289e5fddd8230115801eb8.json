@@ -4258,5 +4258,10 @@
     },
     "cohort_hash": "f0f8bcb11d80cda3b1119b61a32e8e6b8c471110fa690a4036f4d9b61b095b44",
     "content_digest": "bbf9c05982bb135bab0962191f565cc759270e2706289e5fddd8230115801eb8"
+  },
+  "presentation": {
+    "title": "M4 Wide View - MakeUp Ultra Fast",
+    "screenshot_url": "https://raw.githubusercontent.com/fortunexbt/minecraft-apple-silicon-framework/dc1656654b6a2a30009a27fda33d52aa01cb0d80/recipes/m4-wide24/gameplay.png",
+    "recipe_url": "https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/dc1656654b6a2a30009a27fda33d52aa01cb0d80/recipes/m4-wide24/README.md"
   }
 }
