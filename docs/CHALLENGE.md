@@ -1,6 +1,6 @@
 # Community A/B challenge evidence
 
-**Current submissions enter the unranked setup showcase.** Visual preferences are subjective; neither a higher FPS number nor maintainer acceptance makes a setup the overall winner. Read [how the fixed-preset ranked challenge will work](FAIRNESS.md).
+**Share a setup someone else can see and use.** Each new submission needs a gameplay screenshot, hardware and timing evidence, and a recipe with the exact settings and installation steps. People can filter by Mac and RAM, compare the pictures and statistics, and ask an agent to try a suitable setup.
 
 This optional protocol packages a small same-machine experiment for another person to reproduce. It can accompany a launcher setup, mod change, shader setting, or alternate harness that emits the documented capture and CSV formats. Preparation and preview stay local. The optional publication command sends the reviewed evidence and your public GitHub handle to the repository. No command launches Minecraft or executes submitted code.
 
@@ -50,17 +50,29 @@ The [hosted challenge](https://fortunexbt.github.io/minecraft-apple-silicon-fram
 silicon-shader challenge show
 silicon-shader challenge prepare baseline.json candidate.json baseline.csv candidate.csv metadata.json --out experiment.json
 silicon-shader challenge validate experiment.json
-silicon-shader challenge submit experiment.json
+silicon-shader challenge submit experiment.json --presentation setup.json
 ```
+
+Create `setup.json` beside your evidence bundle:
+
+```json
+{
+  "title": "MakeUp with a wide view on base M4",
+  "screenshot_url": "https://raw.githubusercontent.com/OWNER/REPO/COMMIT/evidence/screenshot.png",
+  "recipe_url": "https://github.com/OWNER/REPO/blob/COMMIT/docs/setup.md"
+}
+```
+
+Replace COMMIT with the full commit ID. The screenshot must be an actual candidate gameplay capture, without private chat/account information. Use PNG, JPEG or WebP at a pinned public GitHub commit; a GitHub `user-attachments/assets/...` image URL also works. Publish the screenshot and Markdown recipe in your own repository or a separate recipe PR first. New evidence PRs require these links; old entries remain readable. The recipe should give exact versions and full settings, compatible installation instructions, the measured route, and how to revert. Do not redistribute third-party binaries without permission.
 
 The final command above shows a compact local preview: public setup, timing summaries, interval counts and destination. It makes no network requests. The complete relative traces remain in your bundle file and will also be shared. When you choose to publish:
 
 ```sh
-silicon-shader challenge submit experiment.json --publish
+silicon-shader challenge submit experiment.json --presentation setup.json --publish
 silicon-shader challenge status experiment.json
 ```
 
-Publication uses an existing authenticated [GitHub CLI (`gh`)](https://cli.github.com/) installation. Check your login with `gh auth status --hostname github.com`. It publishes your GitHub handle and bundle, may create your fork, creates a deterministic branch and opens one data-only PR. No credential creation, login, automatic telemetry or transcript upload occurs. A fork may take time to become available. After an interrupted or failed request, inspect status and retry the **same bundle and digest**. The command resumes an existing file/PR and refuses to overwrite different content. A closed PR is returned as closed rather than resubmitted. Changed content gets a new submission identity. For scripted workflows that must publish exactly the bytes previously reviewed, the optional `--reviewed-digest DIGEST` refuses a changed bundle. Without it, `--publish` authorizes the named file as it exists when the command runs. No local Git checkout is reset or modified.
+Publication uses an existing authenticated [GitHub CLI (`gh`)](https://cli.github.com/) installation. Check your login with `gh auth status --hostname github.com`. It publishes your GitHub handle and bundle, may create your fork, creates a deterministic branch and opens one data-only PR. No credential creation, login, automatic telemetry or transcript upload occurs. A fork may take time to become available. After an interrupted or failed request, inspect status and retry the **same bundle and digest**. The command resumes an existing file/PR and refuses to overwrite different content. A closed PR is returned as closed rather than resubmitted. Changed content gets a new submission identity. For scripted workflows that must publish exactly the timing bundle previously reviewed, the optional `--reviewed-digest DIGEST` refuses a changed timing bundle; it does not cover the separate presentation file. Review the screenshot and recipe links too. Without it, `--publish` authorizes the named file as it exists when the command runs. No local Git checkout is reset or modified.
 
 Add a short reproduction recipe to the PR description: setup/version sources, the exact baseline and candidate settings, how to create the test scene and repeat the route, and what you saw. A label such as `walk-v1` alone is not a usable recipe. Keep private world names and personal paths out of it. If setup or submission gets stuck, [open an issue](https://github.com/fortunexbt/minecraft-apple-silicon-framework/issues) with the error and public version details.
 

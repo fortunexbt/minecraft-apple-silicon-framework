@@ -52,6 +52,10 @@ if blob["size"] > MAX_BYTES or blob.get("encoding") != "base64":
 entry = validate_entry(
     json.loads(base64.b64decode(blob["content"])), Path(f["filename"]).name
 )
+if "presentation" not in entry:
+    raise SystemExit(
+        "Include setup title, gameplay screenshot and a pinned Markdown recipe in presentation"
+    )
 if entry["author"].lower() != pr["user"]["login"].lower():
     raise SystemExit("Public author must match the submitting GitHub account")
 print("Consistent self-reported evidence. Human recipe/visual review still required.")
