@@ -235,6 +235,58 @@ class Workflow(unittest.TestCase):
         self.assertIsNotNone(second)
         self.assertEqual(second["profile"]["scale"], 0.65)
 
+    def test_faster_candidate_with_worse_pacing_is_rejected(self):
+        variants = {
+            "absolute": [10.0] * 2000,
+            "local": [10.0] * 2000,
+            "p95": ([9.0] * 9 + [16.0]) * 200,
+        }
+        variants["absolute"][100] = 60.0
+        variants["local"][100] = 25.0
+        for label, intervals in variants.items():
+            with self.subTest(label=label):
+                state = start(["loaded"], target_fps=120)
+                submit(state, capture(80))
+                plan = propose(
+                    state,
+                    {
+                        "options": {"renderDistance": 12, "simulationDistance": 8},
+                        "scale": 0.75,
+                    },
+                )
+                candidate = capture(100, profile=plan["id"])
+                candidate["id"] = "candidate"
+                candidate["observed"]["simulation_distance"] = candidate["expected"][
+                    "simulation_distance"
+                ] = 6
+                candidate["metrics"] = analyze(intervals)
+                submit(state, candidate)
+                self.assertGreaterEqual(
+                    state["decisions"][-1]["worst_scene_gain"], 0.05
+                )
+                self.assertEqual(state["winner"], "baseline")
+                self.assertFalse(state["decisions"][-1]["pacing_passed"])
+
+    def test_worst_scene_gain_does_not_hide_another_scene_regression(self):
+        state = start(["loaded", "water"], target_fps=120)
+        for scene, fps in [("loaded", 80), ("water", 110)]:
+            row = capture(fps, scene)
+            row["id"] = "baseline-" + scene
+            submit(state, row)
+        plan = propose(
+            state,
+            {"options": {"renderDistance": 12, "simulationDistance": 8}, "scale": 0.75},
+        )
+        for scene, fps in [("loaded", 95), ("water", 106)]:
+            row = capture(fps, scene, plan["id"])
+            row["id"] = "candidate-" + scene
+            row["observed"]["simulation_distance"] = row["expected"][
+                "simulation_distance"
+            ] = 6
+            submit(state, row)
+        self.assertGreaterEqual(state["decisions"][-1]["worst_scene_gain"], 0.05)
+        self.assertEqual(state["winner"], "baseline")
+
     def test_measure_interval_semantics(self):
         a = analyze([10] * 1000 + [60] + [10] * 1000)
         self.assertEqual(a["over_50"]["count"], 1)

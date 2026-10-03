@@ -8,13 +8,16 @@ DEPS_DIR="$BUILD_DIR/deps"
 ASM_LOCK="$SAMPLER_DIR/asm.lock"
 lock_value() { awk -F= -v key="$1" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' "$ASM_LOCK"; }
 ASM_VERSION="$(lock_value version)"
+read_lock() {
+  awk -F= -v key="$1" '$1 == key { count++; value=substr($0,index($0,"=")+1) } END { if (count != 1 || value == "") exit 2; print value }' "$SAMPLER_DIR/asm.lock"
+}
+ASM_VERSION="$(read_lock version)"
+ASM_URL="$(read_lock url)"
+ASM_SHA256="$(read_lock sha256)"
+[[ "$ASM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "invalid ASM version in lock" >&2; exit 2; }
+[[ "$ASM_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo "invalid ASM checksum in lock" >&2; exit 2; }
+[[ "$ASM_URL" == "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/$ASM_VERSION/asm-$ASM_VERSION.jar" ]] || { echo "ASM lock URL must match its Maven Central version" >&2; exit 2; }
 ASM_JAR="$DEPS_DIR/asm-$ASM_VERSION.jar"
-ASM_URL="$(lock_value url)"
-ASM_SHA256="$(lock_value sha256)"
-if [[ -z "$ASM_VERSION" || -z "$ASM_URL" || -z "$ASM_SHA256" ]]; then
-  echo "incomplete ASM pin in $ASM_LOCK" >&2
-  exit 2
-fi
 
 for tool in javac jar curl shasum; do
   command -v "$tool" >/dev/null 2>&1 || { echo "missing required build tool: $tool" >&2; exit 2; }
