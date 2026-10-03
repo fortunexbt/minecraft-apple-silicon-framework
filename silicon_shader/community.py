@@ -110,6 +110,10 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api, presentatio
     digest = _digest(bundle["content_digest"])
     if presentation is not None:
         validate_presentation(presentation)
+    if publish and (presentation is None or not presentation.get("minecraft_profile")):
+        raise ValueError(
+            "Add the active Minecraft username or UUID as minecraft_profile in setup.json before publishing"
+        )
     preview = {
         "digest": digest,
         "destination": "https://github.com/" + REPOSITORY,
