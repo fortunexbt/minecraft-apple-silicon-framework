@@ -5,6 +5,20 @@ from urllib.request import Request, urlopen
 from .discover import hardware_info
 
 URL = "https://fortunexbt.github.io/minecraft-apple-silicon-framework/data.json"
+HARDWARE_FIELDS = (
+    "family",
+    "tier",
+    "memory_gib",
+    "gpu_cores",
+    "cpu_cores",
+    "model_identifier",
+)
+
+
+def _same_hardware_value(key, actual, requested):
+    if key in ("family", "tier", "model_identifier"):
+        return str(actual).lower() == str(requested).lower()
+    return actual == requested
 
 
 def select(
@@ -27,27 +41,15 @@ def select(
         if (not minecraft or e["metadata"]["minecraft"] == minecraft)
         and (not loader or e["metadata"]["loader"]["name"].lower() == loader.lower())
     ]
-    fields = (
-        "family",
-        "tier",
-        "memory_gib",
-        "gpu_cores",
-        "cpu_cores",
-        "model_identifier",
-    )
 
     def differences(entry):
         hardware = entry["metadata"]["hardware"]
         return [
             key
-            for key in fields
+            for key in HARDWARE_FIELDS
             if requested.get(key) is not None
             and not (key == "model_identifier" and not hardware.get(key))
-            and (
-                str(hardware.get(key, "")).lower() != str(requested[key]).lower()
-                if key in ("family", "tier", "model_identifier")
-                else hardware.get(key) != requested[key]
-            )
+            and not _same_hardware_value(key, hardware.get(key), requested[key])
         ]
 
     exact = [e for e in comparable if not differences(e)]
@@ -61,7 +63,9 @@ def select(
             for e in comparable
             if all(
                 not requested.get(key)
-                or e["metadata"]["hardware"].get(key) == requested[key]
+                or _same_hardware_value(
+                    key, e["metadata"]["hardware"].get(key), requested[key]
+                )
                 for key in ("family", "tier")
             )
         ] or comparable
@@ -100,7 +104,7 @@ def select(
                 "hardware_differences": diffs,
                 "hardware_unknowns": [
                     key
-                    for key in fields
+                    for key in HARDWARE_FIELDS
                     if requested.get(key) is not None
                     and entry["metadata"]["hardware"].get(key) is None
                 ],
@@ -139,17 +143,7 @@ def find(
             raise ValueError(
                 "Could not detect an Apple chip; inspect discover output and use explicit filters"
             )
-        target = {
-            key: observed.get(key)
-            for key in (
-                "family",
-                "tier",
-                "memory_gib",
-                "gpu_cores",
-                "cpu_cores",
-                "model_identifier",
-            )
-        }
+        target = {key: observed.get(key) for key in HARDWARE_FIELDS}
     try:
         with urlopen(
             Request(URL, headers={"User-Agent": "silicon-shader"}), timeout=20
@@ -160,7 +154,17 @@ def find(
         entries = json.loads(raw)["entries"]
         if not isinstance(entries, list):
             raise ValueError("Invalid public setup index")
-        return select(entries, chip, tier, ram, sort, limit, target, minecraft, loader)
+        return select(
+            entries,
+            chip=chip,
+            tier=tier,
+            ram=ram,
+            sort=sort,
+            limit=limit,
+            target=target,
+            minecraft=minecraft,
+            loader=loader,
+        )
     except (OSError, KeyError, TypeError, json.JSONDecodeError) as error:
         raise ValueError(
             "Cannot read the public setup index; use the website or retry later"

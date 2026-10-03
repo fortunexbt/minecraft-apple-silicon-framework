@@ -93,6 +93,13 @@ class OnboardingTests(unittest.TestCase):
         self.assertTrue(result["broadened_search"])
         self.assertEqual(result["setups"][0]["hardware_differences"], ["memory_gib"])
         self.assertFalse(select(entries, minecraft="1.21.1")["setups"])
+        foreign = entry("c", 16, 10, 200)
+        foreign["metadata"]["hardware"]["family"] = "M3"
+        expanded = entries + [foreign]
+        upper = select(expanded, chip="M4", ram=16)["setups"]
+        lower = select(expanded, chip="m4", ram=16)["setups"]
+        self.assertEqual(lower, upper)
+        self.assertNotIn("c", [row["digest"] for row in lower])
 
     def test_future_hardware_can_be_submitted_without_editing_whitelist(self):
         fixture = test_challenge.ChallengeTests()

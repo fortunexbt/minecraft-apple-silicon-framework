@@ -9,6 +9,6 @@ Keep this a small CLI and agent pack. No GUI, daemon, telemetry or launcher repl
 - `time_ms` in threshold summaries means whole durations of intervals above the threshold. Report absolute >33/50/100 ms separately from local abrupt outliers. Do not sell normal gradual FPS changes as hitches.
 - Baseline first; reuse valid matched evidence. Short representative segments, material settings changes and a finite stopping condition. No arbitrary frame quotas or JVM matrices.
 - A clean copy is not a tested daily setup. Normal gameplay, inventory, block interaction and save/reload require an explicit operator check. Do not mark them complete from config inspection.
-- Public files must contain no private paths, account details, tokens, worlds, raw logs, runtimes or third-party binaries. Use attributed download manifests/patch recipes and verify licenses. Never infer a redistribution license from a download link.
+- Public files must contain no private paths, private account details, tokens, worlds, raw logs, runtimes or third-party binaries. Use attributed download manifests/patch recipes and verify licenses. Never infer a redistribution license from a download link. The selected public Minecraft name/UUID is allowed in the reviewed submission presentation for its skin face.
 - Keep public performance claims scoped to the actual machine, scene, version and metric. Unknown hardware or game mappings remain unverified.
 - Do not create credentials, accept terms, submit promotional posts or publish new releases without direct user authority.

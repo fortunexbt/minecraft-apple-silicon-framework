@@ -8,3 +8,6 @@ dist/
 .DS_Store
 *.jar
 *.class
+
+# Built from reviewed contributions before preview/deploy.
+/site/data.json

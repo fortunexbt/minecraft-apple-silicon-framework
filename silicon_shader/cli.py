@@ -82,14 +82,17 @@ def setup(destination, mc, fabric):
 def parser():
     p = argparse.ArgumentParser(
         prog="silicon-shader",
-        description="Shader quality first. Short measurements. A finite path to a daily instance.",
+        description="Find, try and share Minecraft shader setups for your Mac.",
+        epilog="Start: discover → doctor INSTANCE → challenge find --this-mac. Use COMMAND --help for details.",
     )
     s = p.add_subparsers(dest="cmd", required=True)
-    d = s.add_parser("discover", help="Read hardware and Prism metadata")
+    d = s.add_parser(
+        "discover", help="Read Mac hardware, game instances and public player profiles"
+    )
     d.add_argument("--prism")
     q = s.add_parser(
         "doctor",
-        help="Inspect one instance and generate honest observation placeholders",
+        help="Inspect game settings, mods and missing measurement context",
     )
     q.add_argument("instance")
     q.add_argument(
@@ -262,14 +265,14 @@ def run(args):
             return community.contract()
         if args.action == "find":
             return catalog.find(
-                args.chip,
-                args.tier,
-                args.ram,
-                args.sort,
-                args.limit,
-                args.this_mac,
-                args.minecraft,
-                args.loader,
+                chip=args.chip,
+                tier=args.tier,
+                ram=args.ram,
+                sort=args.sort,
+                limit=args.limit,
+                this_mac=args.this_mac,
+                minecraft=args.minecraft,
+                loader=args.loader,
             )
         if args.action == "prepare":
             if Path(args.out).exists():
