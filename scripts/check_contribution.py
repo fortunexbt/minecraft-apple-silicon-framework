@@ -24,11 +24,25 @@ number = os.environ["PR_NUMBER"]
 if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo) or not number.isdigit():
     raise SystemExit("Invalid event identity")
 pr = api(f"repos/{repo}/pulls/{number}")
-files = api(f"repos/{repo}/pulls/{number}/files?per_page=100")
-if pr["changed_files"] > 100:
+base_sha = pr.get("base", {}).get("sha", "")
+head_sha = pr.get("head", {}).get("sha", "")
+if not re.fullmatch(r"[a-f0-9]{40,64}", base_sha) or not re.fullmatch(
+    r"[a-f0-9]{40,64}", head_sha
+):
+    raise SystemExit("Invalid pull request base or head SHA")
+changed_files = pr.get("changed_files")
+if type(changed_files) is not int or changed_files < 0:
+    raise SystemExit("Invalid pull request changed-file count")
+if changed_files > 100:
     raise SystemExit(
         "Large PR needs separate review; evidence gate cannot inspect all files"
     )
+comparison = api(f"repos/{repo}/compare/{base_sha}...{head_sha}")
+if comparison.get("base_commit", {}).get("sha") != base_sha:
+    raise SystemExit("Pinned comparison returned a different base")
+files = comparison.get("files")
+if not isinstance(files, list) or len(files) != changed_files:
+    raise SystemExit("Pinned comparison is incomplete; file count does not match PR")
 submissions = [
     f
     for f in files
@@ -42,6 +56,7 @@ if len(files) != 1 or len(submissions) != 1:
         "Submit exactly one evidence JSON; put code changes in a separate PR"
     )
 f = submissions[0]
+auto_merge_eligible = False
 if f["status"] not in ("added", "modified") or not re.fullmatch(
     r"contributions/[a-f0-9]{64}\.json", f["filename"]
 ):
@@ -84,6 +99,19 @@ if f["status"] == "modified":
     # standard workload contract.
     if old["bundle"].get("schema_version") == 2:
         require_standard(entry["bundle"])
+        auto_merge_eligible = True
 else:
     require_standard(entry["bundle"])
-print("Consistent self-reported evidence. Human recipe/visual review still required.")
+    auto_merge_eligible = True
+
+# Only a successfully validated, data-only contribution emits merge eligibility.
+# The SHA is constrained above and is checked again by GitHub's merge endpoint.
+output_path = os.environ.get("GITHUB_OUTPUT")
+if auto_merge_eligible and output_path:
+    with open(output_path, "a", encoding="utf-8") as output:
+        output.write("eligible=true\n")
+        output.write(f"head_sha={head_sha}\n")
+if auto_merge_eligible:
+    print("Validated data-only contribution; exact head is eligible for automatic merge.")
+else:
+    print("Historical presentation update validated; it is not eligible for automatic merge.")

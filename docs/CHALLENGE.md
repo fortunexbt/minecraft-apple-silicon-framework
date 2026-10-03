@@ -51,7 +51,7 @@ silicon-shader challenge submit experiment.json --presentation setup.json --publ
 silicon-shader challenge status experiment.json
 ```
 
-Publication uses existing GitHub CLI authentication, may create your fork, and opens one data-only PR. Maintainer review comes before inclusion on the site. If interrupted, check status and retry the same bundle; do not create duplicates. A closed PR stays closed. A changed timing bundle is a new submission.
+Publication uses existing GitHub CLI authentication, may create your fork, and opens one data-only PR. Trusted checks automatically merge valid current-workload data-only submissions at the exact checked commit and publish the site. Code changes and historical-entry updates remain separate review work. If interrupted, check status and retry the same bundle; do not create duplicates. A closed PR stays closed. A changed timing bundle is a new submission.
 
 The skin loads through [MCHeads](https://mc-heads.net/), using the submitted public identity. UUIDs survive username changes. A default Minecraft face appears for old entries or unavailable skins; GitHub photos are not used. Skin identity is not proof of account ownership.
 
@@ -66,3 +66,5 @@ Recipe, mod, adapter and harness source improvements use ordinary code PRs, sepa
 Submissions are **self-reported**. Validation recomputes timing metrics and rejects inconsistent data; it cannot prove that gameplay happened. Screenshots and image-quality judgments remain subjective. CPU frame production is not displayed/generated FPS or input latency, and a short route is not an all-day smoothness guarantee.
 
 [Compare setups for your Mac](FAIRNESS.md) · [Submission format and validation rules](reference/SUBMISSIONS.md) · [Sampler protocol](../sampler/README.md)
+
+Automatic publication checks data consistency and format. It does not certify the screenshot, visual quality, account ownership or independent performance. Report a misleading entry through the repository issues; maintainers can correct or remove it.

@@ -1,4 +1,4 @@
-"""Build a public data index from reviewed, bounded, data-only contributions."""
+"""Build a public data index from validated, bounded, self-reported contributions."""
 
 import json
 from pathlib import Path

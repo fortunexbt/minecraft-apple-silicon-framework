@@ -192,6 +192,8 @@ def parser():
     sub = q.add_subparsers(dest="action", required=True)
     sub.add_parser("show")
     sub.add_parser("workload", help="Print the pinned standard benchmark route")
+    a = sub.add_parser("screenshot", help="Check the saved portrait PNG dimensions")
+    a.add_argument("png")
     a = sub.add_parser(
         "route-receipt",
         help="Validate and export the standard adapter's route observations",
@@ -286,6 +288,10 @@ def run(args):
     if args.cmd == "challenge":
         if args.action == "show":
             return community.contract()
+        if args.action == "screenshot":
+            from .presentation import inspect_screenshot
+
+            return inspect_screenshot(args.png)
         if args.action == "workload":
             from .workload import contract
 
