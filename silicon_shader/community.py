@@ -58,7 +58,7 @@ def api(endpoint, method="GET", payload=None):
     if result.returncode:
         # Do not reflect remote text or authentication details into public output.
         raise ValueError(
-            "GitHub request failed; check existing gh authentication/permissions and inspect submission status"
+            "GitHub request failed; run gh auth status --hostname github.com, check permissions, then inspect challenge status before retrying"
         )
     return json.loads(result.stdout) if result.stdout.strip() else {}
 
@@ -111,15 +111,32 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api):
         "digest": digest,
         "destination": "https://github.com/" + REPOSITORY,
         "path": f"contributions/{digest}.json",
-        "bundle": bundle,
+        "metadata": bundle["metadata"],
+        "timings": {
+            name: {
+                key: run["metrics"][key]
+                for key in (
+                    "average_fps",
+                    "worst_5s_fps",
+                    "p95_ms",
+                    "p99_ms",
+                    "over_33",
+                    "over_50",
+                    "over_100",
+                )
+            }
+            for name, run in bundle["runs"].items()
+        },
+        "relative_intervals": {
+            name: len(run["intervals_ms"]) for name, run in bundle["runs"].items()
+        },
+        "review": "The full relative traces remain in your bundle file and will also be published.",
         "publication": "Public evidence and authenticated GitHub handle; may create a fork, branch and pull request",
     }
     if not publish:
         return preview
-    if reviewed_digest != digest:
-        raise ValueError(
-            "Publication requires --reviewed-digest matching the reviewed bundle"
-        )
+    if reviewed_digest is not None and reviewed_digest != digest:
+        raise ValueError("Bundle changed: --reviewed-digest does not match this file")
     login = _identity(request)
     existing = _pulls(request, login, digest)
     if existing:

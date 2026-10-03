@@ -18,7 +18,9 @@ class CommunityTests(unittest.TestCase):
 
     def test_preview_and_wrong_digest_never_contact_github(self):
         request = Mock(side_effect=AssertionError("No network"))
-        self.assertEqual(submit(self.bundle, request=request)["bundle"], self.bundle)
+        preview = submit(self.bundle, request=request)
+        self.assertEqual(preview["metadata"], self.bundle["metadata"])
+        self.assertNotIn("intervals_ms", json.dumps(preview))
         with self.assertRaises(ValueError):
             submit(self.bundle, True, "wrong", request)
         request.assert_not_called()
@@ -81,7 +83,7 @@ class CommunityTests(unittest.TestCase):
                     }
                 raise AssertionError(endpoint)
 
-            result = submit(self.bundle, True, digest, request)
+            result = submit(self.bundle, True, request=request)
             self.assertEqual(result["state"], "open")
             writes = [c for c in calls if "/contents/" in c[0]]
             self.assertEqual(len(writes), 0 if resumed else 1)

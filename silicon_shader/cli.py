@@ -205,7 +205,7 @@ def parser():
             a.add_argument("--publish", action="store_true")
             a.add_argument("--reviewed-digest")
     a = sub.add_parser("status")
-    a.add_argument("digest")
+    a.add_argument("digest", help="Bundle file or full submission digest")
     s.add_parser("skill", help="Print the bundled portable agent skill")
     q = s.add_parser(
         "install-skill", help="Install skill into an explicit agent skill directory"
@@ -260,7 +260,12 @@ def run(args):
                 "status": "self_reported; unpublished",
             }
         if args.action == "status":
-            return community.status(args.digest)
+            identifier = (
+                community.load_bundle(args.digest)["content_digest"]
+                if Path(args.digest).is_file()
+                else args.digest
+            )
+            return community.status(identifier)
         bundle = community.load_bundle(args.bundle)
         if args.action == "validate":
             return {
@@ -268,7 +273,10 @@ def run(args):
                 "status": "self_reported",
                 "digest": bundle["content_digest"],
             }
-        return community.submit(bundle, args.publish, args.reviewed_digest)
+        result = community.submit(bundle, args.publish, args.reviewed_digest)
+        if not args.publish:
+            result["bundle_file"] = str(Path(args.bundle).expanduser())
+        return result
     if args.cmd == "discover":
         return discover(args.prism)
     if args.cmd == "doctor":
