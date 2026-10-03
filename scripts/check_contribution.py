@@ -104,14 +104,22 @@ else:
     require_standard(entry["bundle"])
     auto_merge_eligible = True
 
+auto_merge_eligible = auto_merge_eligible and (
+    pr.get("base", {}).get("ref") == "main"
+    and pr.get("base", {}).get("repo", {}).get("full_name") == repo
+)
+
 # Only a successfully validated, data-only contribution emits merge eligibility.
 # The SHA is constrained above and is checked again by GitHub's merge endpoint.
 output_path = os.environ.get("GITHUB_OUTPUT")
 if auto_merge_eligible and output_path:
     with open(output_path, "a", encoding="utf-8") as output:
         output.write("eligible=true\n")
+        output.write(f"base_sha={base_sha}\n")
         output.write(f"head_sha={head_sha}\n")
 if auto_merge_eligible:
     print("Validated data-only contribution; exact head is eligible for automatic merge.")
+elif entry["bundle"].get("schema_version") == 2:
+    print("Validated contribution, but automatic merge only targets this repository's main branch.")
 else:
     print("Historical presentation update validated; it is not eligible for automatic merge.")
