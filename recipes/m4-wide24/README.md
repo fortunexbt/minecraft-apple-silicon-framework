@@ -1,12 +1,16 @@
 # Base M4: wide-view MakeUp shaders
 
-A configuration showcase selected from the campaign's shader, renderer, scaling, JVM and settings experiments. It prioritizes atmosphere and a longer horizon over the largest counter. It is self-reported, not an official ranking or an independently reproduced result.
+A configuration showcase selected from the campaign's shader, renderer, scaling, JVM and settings experiments. It prioritizes atmosphere and a longer horizon over the largest counter. It is self-reported and has not been independently reproduced.
 
 The October 3 paired camera segment produced 96.52 FPS at 22 chunks without texture filtering and 94.28 FPS at 24 chunks with 8x anisotropic texture filtering. Worst five-second rates were 94.92 and 92.74 FPS. Maximum intervals were 14.76 and 14.89 ms, with no recorded intervals above 33, 50 or 100 ms and no detected local abrupt outliers. These are CPU frame-production intervals, including the limiter, from one approximately 21-second pair. They do not measure presentation or input latency, qualify travel across all worlds, promise locked 120 FPS, or establish a statistical speed difference. Short-run tail statistics should not be treated as qualified long-session tails.
 
 Both presets keep native 3024x1964 exclusive fullscreen output, a static 60% internal scale, nearest scaler filtering, 120 FPS cap, VSync off, simulation distance 6, two Sodium workers, Faithful 32x, volumetric clouds, TAA, filtered shadows and the complete MakeUp atmosphere. The baseline and candidate differ only in render distance and anisotropic texture filtering. The wider view costs about 2.3% average frame production in this pair. Texture filtering is enabled for shallow-angle texture detail; this is an operator preference, not an objective beauty score.
 
 The 75% quality profile and clean low-cost fallback remain alternatives in the campaign ledger. The wide preset was chosen for the user's preference for distance with preserved current resolution. The screened Metal renderers, shader-work variants and JVM alternatives did not establish a better supported overall balance. A later AO work-elimination experiment compiled and looked sound but its single roughly 2% gain was not retained; it is absent from this recipe.
+
+![MakeUp Ultra Fast with Faithful 32x on the base M4](gameplay.png)
+
+Actual unedited gameplay from the clean 24-chunk daily copy, at native output and the same shader/scaling settings. The screenshot is a nearby village-water view; the paired timing route is the fixed camera position described below. It is illustrative, not a timing measurement. Faithful textures: [Faithful team](https://faithfulpack.net/). MakeUp shaders: KDXavier.
 
 ## Recreate the setup
 
