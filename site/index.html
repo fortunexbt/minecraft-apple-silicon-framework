@@ -60,7 +60,7 @@
         <div>
           <p class="eyebrow eyebrow-dark">THE COMMUNITY LIBRARY</p>
           <h2 id="library-title">Find your next setup</h2>
-          <p class="section-note">Standard-route results use the same pinned Minecraft scene and movement. Resolution, shaders and hardware still differ, so compare those details too.</p>
+          <p class="section-note">New submissions share one flight route and one front-facing screenshot location. Shaders, resolution and hardware still differ, so compare those details too.</p>
           <button class="how-link" type="button" data-dialog="rules">How to use the library ↗</button>
         </div>
         <p id="count" class="setup-count" aria-live="polite">Loading setups…</p>
@@ -87,12 +87,18 @@
 
       <p id="load-status" class="sr-only" role="status">Loading setup library.</p>
       <div id="results" class="setup-grid" aria-live="polite"></div>
+      <div class="pagination-controls">
+        <button id="show-more" class="show-more" type="button" hidden>Show more setups</button>
+      </div>
       <div id="empty-state" class="empty-state" hidden></div>
 
       <details id="earlier-routes" class="earlier-routes" hidden>
         <summary><span>Earlier routes</span><span id="earlier-count"></span></summary>
         <p>These setups were measured on different routes or before the standard was introduced. Their FPS is not directly comparable with standard-route results.</p>
         <div id="earlier-results" class="setup-grid"></div>
+        <div class="pagination-controls">
+          <button id="show-more-earlier" class="show-more" type="button" hidden>Show more earlier routes</button>
+        </div>
       </details>
 
       <aside class="contribute-note">
@@ -117,7 +123,11 @@
     <p class="eyebrow eyebrow-dark">START WITH YOUR OWN SETUP</p>
     <h2 id="participate-title">Let your agent help.</h2>
     <p>Give this prompt to Codex, Claude Code, or your preferred coding agent. It starts with your launcher, mods and image-quality preferences.</p>
-    <pre id="agent-prompt">Find and try a Minecraft shader setup that would improve my experience on this Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework. Follow silicon_shader/skills/silicon-shader/SKILL.md. Detect my hardware and existing game, then compare compatible community recipes and screenshots. Adapt a recipe in an isolated copy while preserving my worlds and current settings. Use my current image quality as the default floor. If recording or submitting a performance comparison, first run `silicon-shader challenge workload` and follow its pinned world, route, movement and capture instructions for both baseline and candidate; never use a flat or different route as comparable evidence. Finish setup or tuning without a benchmark when no compatible harness is available. Ask only for missing choices or required access, and before publishing anything.</pre>
+    <pre id="agent-prompt">Use https://github.com/fortunexbt/minecraft-apple-silicon-framework and follow silicon_shader/skills/silicon-shader/SKILL.md. Detect my Mac, launcher, existing Minecraft session, loader, mods, harness, image quality and compatible community recipes. Preserve my worlds, current settings and any game already in use; adapt one compatible setup in an isolated copy, keeping current image quality as the default floor.
+
+For automatic performance comparison, require a supported game-control harness and the pinned disposable world. Run one matched baseline and one candidate on the same seed and fixed flight path; no manual steering or substitute terrain. Use brief in-game phase messages before measurement and after each capture. Announce the upcoming flight during warm-up; keep timed frames free of new chat messages or screenshots. Explain the candidate switch and final portrait outside measurement. Keep the repeat comparison under five minutes. If the world or supported controls are unavailable, finish setup and report performance as unmeasured instead of interrupting a running game.
+
+After testing, take exactly one candidate screenshot from the shared front-facing view. Prepare a data-only submission with observed hardware, launcher/mods, agent/model/harness, recipe, screenshot and validated timing. Publishing is optional: publish only when this task already authorizes it; once authorized, do not ask again. Otherwise leave the validated draft local. Changes to code or toolkit still go through review.</pre>
     <button id="copy-prompt" class="button button-dark" type="button">Copy agent prompt</button>
     <span id="copy-status" class="copy-status" role="status"></span>
     <p class="fine">Public comparisons use the pinned standard workload shown by <code>silicon-shader challenge workload</code>. A compatible harness and save may take time to prepare; no performance result is assumed until the route receipt validates.</p>
@@ -130,7 +140,7 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install .</pre>
       <p><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKFLOW.md">Optimize your setup ↗</a> · <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md#cli-and-hosted-board">Submit an experiment ↗</a></p>
-      <p class="fine">Publishing uses <a href="https://cli.github.com/">GitHub CLI</a> and your GitHub login. It opens a pull request for maintainer review. Include your setup and route recipe so another player can repeat the experiment.</p>
+      <p class="fine">Publishing uses <a href="https://cli.github.com/">GitHub CLI</a> and your existing GitHub login. Data-only submissions pass automatic consistency checks before appearing in the library; performance remains contributor-reported. Changes to code and the toolkit still go through maintainer review.</p>
     </details>
   </dialog>
 

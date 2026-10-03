@@ -273,8 +273,29 @@
   ],
   "repeat_budget_s": 300,
   "warmup_seconds": 30,
-  "attempt_timeout_seconds": 65,
+  "attempt_timeout_seconds": 75,
   "terrain_generation": "Prepared vanilla terrain; fresh generation excluded from timed route",
   "max_capture_seconds": 30,
-  "timing": "Nominally 21 seconds; complete the same 420 ticks and retain slow frames, up to the 30-second capture limit."
+  "timing": "Nominally 21 seconds; complete the same 420 ticks and retain slow frames, up to the 30-second capture limit.",
+  "showcase": {
+    "id": "overworld-front-v1",
+    "position": [
+      -109.5,
+      70,
+      438.5
+    ],
+    "yaw": 0,
+    "pitch": 0,
+    "camera": "THIRD_PERSON_FRONT",
+    "fov": 70,
+    "framebuffer": [
+      1920,
+      1080
+    ],
+    "hud_hidden": true,
+    "time": "noon",
+    "weather": "clear",
+    "script": "https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/workloads/overworld-v1/showcase.pyj",
+    "capture_after_benchmark": true
+  }
 }

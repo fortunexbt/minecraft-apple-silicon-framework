@@ -40,7 +40,9 @@ The script checks the pinned upstream input, reproduces the measured `RenderScal
 
 While the instance is stopped, copy the included `renderscale.json5`, `sodium-options.json`, `moreculling.json` and `entityculling.json` into its config folder. Set Minecraft render distance 24, simulation distance 6, native fullscreen resolution, 120 FPS cap, VSync off, mipmaps 4, texture filtering Anisotropic 8x, inactive FPS policy Minimized and biome blend radius 2. Leave the scaler's forceLinear and FSR options off. Load the selected Faithful pack. Verify effective output pixels, static 60% scale and filtering in F3 after launch; config inspection alone does not prove live state.
 
-## Repeat the public workload
+## Historical capture recipe
+
+For a new submission, follow the [current flight workload](../../docs/WORKLOAD.md). The instructions below explain the earlier entry; its camera pan cannot qualify as a new standard-route result.
 
 Create your own disposable default-generation Minecraft 26.3 world, seed **20260929**, in creative mode with cheats. Use the same world for both presets. Generate and warm the surrounding 24-chunk terrain before either capture, so the shorter baseline does not get a terrain-generation advantage. This is a loaded desert-village camera workload, not a fresh-generation or movement stress test.
 
@@ -62,7 +64,7 @@ Completion comes from the sampler's real `-done.txt`, with actual frame count, z
 python3 recipes/m4-wide24/sampler/import_capture.py CONTROL UNIQUE_ID operator-manifest.json new-capture.json
 ```
 
-Run this from an environment with the Silicon Shader CLI installed. Supply both resulting capture JSONs and original CSVs to `silicon-shader challenge prepare`, with public metadata following [setup.json](setup.json). Keep your source manifests local.
+Run this from an environment with the Silicon Shader CLI installed. For new standard-route runs, the importer recognizes the shipped flight receipt. Supply the resulting captures, CSVs and normalized route receipts to `silicon-shader challenge prepare`, following the current workload guide. The historical metadata in [setup.json](setup.json) describes the old pan only. Keep your source manifests local.
 
 The local capture manifests recorded living creative gameplay, exact save/instance, native framebuffer, settings and operator visual approval. The challenge bundle discards those private identifiers and absolute nanotimes, retaining relative intervals and their CSV provenance. No incomplete historical run was upgraded to fill the board.
 

@@ -45,6 +45,6 @@ If the lab contains measurement tools, `daily LAB NEW_DEST --closed` makes a cle
 
 ## Measure or contribute
 
-Use an existing harness when available. The [benchmarking guide](reference/BENCHMARKING.md) covers the optional sampler, capture manifests, finite tuning loop and quality floors. Start with one baseline and one material candidate; do not require a sampler-porting project just to try a recipe.
+For community results, use the [shared flight workflow](WORKLOAD.md). It identifies the supported game control, sampler, screenshot and submission steps. The [benchmarking guide](reference/BENCHMARKING.md) is for private exploratory work, not a substitute public route. Start with one baseline and one material candidate; do not require a sampler-porting project just to try a recipe.
 
 [Share a setup](CHALLENGE.md) when you have the screenshot, reproducible recipe and matched measurements. Recipe or harness source improvements can also be ordinary code PRs.

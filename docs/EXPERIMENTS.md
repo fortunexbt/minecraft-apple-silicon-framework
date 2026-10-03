@@ -1,5 +1,20 @@
 # What the campaign measured
 
+This is historical research, not a queue of experiments to repeat. Start from the [published recipes](../recipes/m4-wide24/README.md) and current [shared workload](WORKLOAD.md).
+
+## Decisions the next agent should inherit
+
+- Preserve the version-matched Iris depth-identity and MakeUp exposure/finite-CAS correctness fixes. A black or corrupted world is invalid, however high its FPS.
+- Use static render scaling as the measured default. Dynamic scaling and alternate Metal renderers were not established as better daily replacements.
+- Shader scale, scaler filtering and anisotropic texture filtering are different controls. Preserve full shader properties when changing one value.
+- Spend headroom according to the player’s preference: clarity, reflections or farther terrain may be worth a small FPS cost. Start from their current quality floor.
+- Do not repeat JVM matrices, tiny AO differences or already rejected presets without a new material reason. Try one meaningful change and stop.
+- Prepared terrain and the fixed flight make comparisons useful; screenshots and raw FPS alone do not prove a win. Keep all slow frames.
+- A short smooth flight does not rule out inventory or gameplay hitches. The accepted Wide View daily had a 76 ms first-inventory observation.
+- Keep the accepted fallback. A copied or newly configured daily instance is not automatically gameplay-verified.
+
+## Original quality campaign
+
 These receipts describe one base M4 MacBook Pro (10 CPU cores, 10 GPU cores, 24 GiB memory). They do not forecast performance on another Mac. The indexed values and source references live in [`evidence/ledger.json`](../evidence/ledger.json).
 
 The selected M4 profile used Minecraft 26.3 with Fabric Loader 0.19.5, Iris 1.11.6, Sodium 0.9.2, MakeUp Ultra Fast 9.5f, and Faithful 32x. It ran at native 3024×1898 fullscreen output, 75% internal scale with nearest filtering, render distance 12, simulation distance 8, 10-sample volumetric clouds, a 120 FPS cap, VSync off, and ARM64 Java 25/G1 with a 512 MiB initial and 4 GiB maximum heap. The clean campaign copy had no benchmark Java agent or Minescript.

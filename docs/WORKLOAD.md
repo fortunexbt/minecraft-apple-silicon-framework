@@ -26,12 +26,31 @@ Terrain is generated before the timed run. Flying still exercises chunk loading 
 
 Hardware and the shader/configuration being tested can differ. Keep resolution and non-intervention settings matched within a baseline/candidate pair; compare those settings across cards before interpreting FPS. A shared path does not make different image quality or hardware equivalent.
 
+## What the player sees
+
+| Stage | In-game behavior | Screenshots |
+| --- | --- | --- |
+| Prepare | Agent explains the chosen setting, checks the isolated reference world and resets the view | Only a diagnostic image if needed for visual review |
+| Warm up | Chat announces the baseline/candidate, 30-second warm-up and upcoming flight | None required |
+| Measure | The same automatic flight and turn for about 21 seconds; new chat messages are withheld to keep the workload clean | None |
+| Compare | Chat reports completion; the agent reads actual timing files and explains the candidate change/result | None required |
+| Portrait | Fixed front-facing view; the agent presses F2 once and checks the saved PNG | One final candidate image for publication |
+| Finish | Restore the view, report the actual FPS/pacing and keep or revert the candidate | Stats, seed and submission ID appear on the website card |
+
+Never invent an FPS readout while testing. The agent may announce a result in Minecraft chat only after reading the completed metrics. Do not open the chat input, take screenshots or fast-forward movement during timed frames. Setup and diagnostic screenshots are local; they are not automatically uploaded.
+
+## Supported automatic path
+
+Use Minecraft 26.3, ARM64 Java 25, the version-matched Fabric/Minescript 5/Pyjinn stack and [reference FrameAgent setup](../workloads/overworld-v1/README.md). These are installed in the isolated lab, not the daily instance. The agent must already have working game controls: launch its lab, send Minecraft chat commands, press native F2, inspect the resulting image and restore the view. Codex/computer-control, another coding agent’s native controls, or an existing local game harness can provide that boundary. Shell access alone is insufficient; this repository does not install a system-wide input driver.
+
+If those controls or the pinned version are unavailable, finish the compatible recipe/setup work and report performance as unmeasured. Do not turn one prompt into a new harness-porting project, steal a playing user’s screen, or run a second GPU client. First-time world creation and terrain preparation happen once; reuse them.
+
 ## Agent workflow
 
 1. Inspect the Mac and existing game; prepare the isolated reference instance once.
 2. Apply the baseline, reset the route and run the shipped adapter. Let it warm up, move and finish without human input.
 3. Apply one material candidate and repeat that same run. Keep the baseline if the change is not useful.
-4. Review the screenshot and recorded results, export the observed route receipts, then prepare the submission with both receipts:
+4. After measurement, capture the [standard front-facing portrait](../workloads/overworld-v1/README.md#submission-screenshot) with the candidate settings. This short, separate step shows the player’s skin without changing the timed camera. Review the saved image and recorded results, export the observed route receipts, then prepare the submission with both receipts:
 
 ```sh
 silicon-shader challenge route-receipt CONTROL BASELINE_RUN --out baseline-route.json
@@ -43,6 +62,15 @@ silicon-shader challenge prepare baseline.json candidate.json \
 ```
 
 The metadata and capture templates contain illustrative values: replace hardware, versions and settings with observations. The public workload labels must be `scene: overworld-flight`, `route: silicon-shader-overworld-v1`, and `terrain: vanilla-seed-20260929`, with Minecraft `26.3`.
+
+Before the final `challenge prepare`, import each real completion with an operator manifest built from observed context:
+
+```sh
+python3 recipes/m4-wide24/sampler/import_capture.py CONTROL BASELINE_RUN baseline-manifest.json baseline.json
+python3 recipes/m4-wide24/sampler/import_capture.py CONTROL CANDIDATE_RUN candidate-manifest.json candidate.json
+```
+
+The importer accepts the current flight’s text receipt and also retains the historical pan format for old evidence. Never manufacture an old `route.json` or a modern sampler status file to get past it.
 
 Preparation validates the versioned workload and ties each route receipt to its actual frame CSV. Publication requires these checks too. Do not hand-write a passing receipt or copy one from another capture.
 

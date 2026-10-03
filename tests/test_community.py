@@ -19,6 +19,7 @@ class CommunityTests(unittest.TestCase):
         self.presentation = {
             "title": "Example setup",
             "minecraft_profile": "ExamplePlayer",
+            "screenshot_view": "overworld-front-v1",
             "agent": {"model": "Example Model 1", "harness": "Example Agent"},
             "screenshot_url": "https://raw.githubusercontent.com/tester/recipe/"
             + "a" * 40
@@ -55,6 +56,17 @@ class CommunityTests(unittest.TestCase):
                     k: v for k, v in self.presentation.items() if k != "agent"
                 },
             )
+        request.assert_not_called()
+
+    def test_standard_showcase_required_before_publication(self):
+        from silicon_shader.presentation import validate_presentation
+
+        legacy = {k: v for k, v in self.presentation.items() if k != "screenshot_view"}
+        self.assertEqual(validate_presentation(legacy), legacy)
+        request = Mock(side_effect=AssertionError("No network"))
+        for shot in (legacy, {**legacy, "screenshot_view": "another-spot"}):
+            with self.assertRaisesRegex(ValueError, "standard front-facing"):
+                submit(self.bundle, True, request=request, presentation=shot)
         request.assert_not_called()
 
     def test_agent_labels_preserve_legacy_and_reject_invalid_attribution(self):
@@ -203,14 +215,24 @@ class CommunityTests(unittest.TestCase):
 
         digest = self.bundle["content_digest"]
         path = "contributions/" + digest + ".json"
+        base_sha = "b" * 40
+        head_sha = "d" * 40
+        compare_key = f"repos/owner/repo/compare/{base_sha}...{head_sha}"
         responses = {
             "repos/owner/repo/pulls/1": {
                 "changed_files": 1,
                 "user": {"login": "tester"},
+                "base": {
+                    "sha": base_sha,
+                    "ref": "main",
+                    "repo": {"full_name": "owner/repo"},
+                },
+                "head": {"sha": head_sha},
             },
-            "repos/owner/repo/pulls/1/files?per_page=100": [
-                {"filename": path, "status": "added", "sha": "a" * 40}
-            ],
+            compare_key: {
+                "base_commit": {"sha": base_sha},
+                "files": [{"filename": path, "status": "added", "sha": "a" * 40}],
+            },
             "repos/owner/repo/git/blobs/" + "a" * 40: {
                 "size": 1000,
                 "encoding": "base64",
@@ -222,6 +244,7 @@ class CommunityTests(unittest.TestCase):
                             "presentation": {
                                 "title": "Example setup",
                                 "minecraft_profile": "ExamplePlayer",
+                                "screenshot_view": "overworld-front-v1",
                                 "agent": {
                                     "model": "Example Model 1",
                                     "harness": "Example Agent",
@@ -254,21 +277,37 @@ class CommunityTests(unittest.TestCase):
             "GH_REPO": "owner/repo",
             "PR_NUMBER": "1",
             "FIXTURE_RESPONSES": str(fixture),
+            "GITHUB_OUTPUT": str(self.root / "gate-output"),
         }
         script = Path(test_challenge.ROOT) / "scripts/check_contribution.py"
+        output_file = Path(env["GITHUB_OUTPUT"])
 
         def check():
             fixture.write_text(json.dumps(responses))
+            output_file.write_text("")
             return subprocess.run(
                 [sys.executable, str(script)], env=env, capture_output=True, text=True
             )
 
         self.assertEqual(check().returncode, 0)
-        responses["repos/owner/repo/pulls/1"]["base"] = {"sha": "b" * 40}
-        responses["repos/owner/repo/pulls/1/files?per_page=100"][0]["status"] = (
-            "modified"
+        self.assertEqual(
+            output_file.read_text(),
+            f"eligible=true\nbase_sha={base_sha}\nhead_sha={head_sha}\n",
         )
-        previous_key = "repos/owner/repo/contents/" + path + "?ref=" + "b" * 40
+        responses["repos/owner/repo/pulls/1"]["base"]["ref"] = "feature"
+        self.assertEqual(check().returncode, 0)
+        self.assertEqual(output_file.read_text(), "")
+        responses["repos/owner/repo/pulls/1"]["base"]["ref"] = "main"
+        responses["repos/owner/repo/pulls/1"]["base"]["repo"]["full_name"] = (
+            "other/repo"
+        )
+        self.assertEqual(check().returncode, 0)
+        self.assertEqual(output_file.read_text(), "")
+        responses["repos/owner/repo/pulls/1"]["base"]["repo"]["full_name"] = (
+            "owner/repo"
+        )
+        responses[compare_key]["files"][0]["status"] = "modified"
+        previous_key = "repos/owner/repo/contents/" + path + "?ref=" + base_sha
         responses[previous_key] = dict(
             responses["repos/owner/repo/git/blobs/" + "a" * 40]
         )
@@ -288,11 +327,20 @@ class CommunityTests(unittest.TestCase):
             json.dumps(previous).encode()
         ).decode()
         self.assertNotEqual(check().returncode, 0)
-        responses["repos/owner/repo/pulls/1/files?per_page=100"][0]["status"] = "added"
+        responses[compare_key]["files"][0]["status"] = "added"
         responses["repos/owner/repo/pulls/1"]["user"]["login"] = "someone-else"
         self.assertNotEqual(check().returncode, 0)
         responses["repos/owner/repo/pulls/1"]["user"]["login"] = "tester"
-        responses["repos/owner/repo/pulls/1/files?per_page=100"].append(
+        responses[compare_key]["files"].append(
             {"filename": "silicon_shader/measure.py"}
         )
+        responses["repos/owner/repo/pulls/1"]["changed_files"] = 2
         self.assertNotEqual(check().returncode, 0)
+        responses[compare_key]["files"] = []
+        self.assertNotEqual(check().returncode, 0)
+        self.assertEqual(output_file.read_text(), "")
+
+        responses[compare_key]["files"] = [{"filename": "README.md"}]
+        responses["repos/owner/repo/pulls/1"]["changed_files"] = 1
+        self.assertEqual(check().returncode, 0)
+        self.assertEqual(output_file.read_text(), "")

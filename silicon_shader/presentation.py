@@ -1,15 +1,46 @@
 """Public screenshot and reproduction links for a shared setup."""
 
 import re
+import struct
+from pathlib import Path
 from urllib.parse import urlsplit
 
 
-def validate_presentation(value, *, for_submission=False):
+SHOWCASE_VIEW = "overworld-front-v1"
+
+
+def inspect_screenshot(path):
+    """Check the saved PNG's dimensions; pixels still need visual inspection."""
+    path = Path(path)
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > 16_000_000:
+        raise ValueError("Choose a saved PNG under 16 MB, not a symlink")
+    with path.open("rb") as stream:
+        header = stream.read(24)
+    if (
+        len(header) != 24
+        or header[:8] != b"\x89PNG\r\n\x1a\n"
+        or header[8:16] != b"\x00\x00\x00\rIHDR"
+    ):
+        raise ValueError("Expected an original Minecraft PNG screenshot")
+    width, height = struct.unpack(">II", header[16:24])
+    if (width, height) != (1920, 1080):
+        raise ValueError(
+            f"Screenshot is {width}x{height}; capture 1920x1080 without resizing the PNG"
+        )
+    return {
+        "screenshot_view": SHOWCASE_VIEW,
+        "dimensions": [width, height],
+        "visual_review_required": True,
+        "next": "Inspect the full image for the fixed front-facing view, visible skin and correct shaders; dimensions alone do not verify content.",
+    }
+
+
+def validate_presentation(value, *, for_submission=False, require_showcase=False):
     required = {"title", "screenshot_url", "recipe_url"}
     if (
         not isinstance(value, dict)
         or not required <= set(value)
-        or set(value) - required - {"minecraft_profile", "agent"}
+        or set(value) - required - {"minecraft_profile", "agent", "screenshot_view"}
     ):
         raise ValueError("Setup details need title, screenshot_url and recipe_url")
     if for_submission and not value.get("minecraft_profile"):
@@ -17,6 +48,13 @@ def validate_presentation(value, *, for_submission=False):
     if for_submission and "agent" not in value:
         raise ValueError(
             "Add agent.model and agent.harness to setup.json before publishing"
+        )
+    if (require_showcase or "screenshot_view" in value) and value.get(
+        "screenshot_view"
+    ) != SHOWCASE_VIEW:
+        raise ValueError(
+            "Capture the standard front-facing showcase and add "
+            "screenshot_view: overworld-front-v1 before publishing"
         )
     if "agent" in value:
         agent = value["agent"]
