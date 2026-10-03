@@ -68,6 +68,8 @@ The local capture manifests recorded living creative gameplay, exact save/instan
 
 For a normal daily copy, remove the sampler JVM argument and Minescript, launch normally, check controls, inventory, interactions and save/reload, then return to the title screen. Preserve the lab and prior daily profiles. The short paired showcase is not a daily qualification certificate.
 
+The clean daily copy passed a brief normal launch, movement/jump/look, creative inventory, stone placement/breaking and save/reload check. Its first inventory opening showed a 76 ms interval on the F3 chart; a warm repeat showed 19 ms maximum. Those are separate operator observations outside the paired trace, with no demonstrated cause. They rule out a universal zero-spike claim. The previous 22-chunk, Quality75 and low-cost profiles remain preserved.
+
 ## Credits and source terms
 
 [Frame Bench](https://github.com/fortunexbt/minecraft-frame-bench) supplied the campaign sampler/route (MIT). ASM is BSD-3-Clause and is not bundled. Iris is LGPL-3.0-only; the independent bytecode-transform recipe is MIT. RenderScale is by Zolo101 and is MIT; only original transform code is supplied. MakeUp patch material is LGPL-3.0-only, with its AMD CAS MIT notice retained in the resulting local pack. Other mods and Faithful retain their own terms and are downloaded from their publishers.
