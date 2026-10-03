@@ -40,10 +40,10 @@ if len(files) != 1 or len(submissions) != 1:
         "Submit exactly one evidence JSON; put code changes in a separate PR"
     )
 f = submissions[0]
-if f["status"] != "added" or not re.fullmatch(
+if f["status"] not in ("added", "modified") or not re.fullmatch(
     r"contributions/[a-f0-9]{64}\.json", f["filename"]
 ):
-    raise SystemExit("Evidence must be a new digest-named JSON file")
+    raise SystemExit("Evidence must be one digest-named JSON file")
 if not re.fullmatch(r"[a-f0-9]{40,64}", f["sha"]):
     raise SystemExit("Invalid blob SHA")
 blob = api(f"repos/{repo}/git/blobs/{f['sha']}")
@@ -52,10 +52,24 @@ if blob["size"] > MAX_BYTES or blob.get("encoding") != "base64":
 entry = validate_entry(
     json.loads(base64.b64decode(blob["content"])), Path(f["filename"]).name
 )
-if "presentation" not in entry:
+if "presentation" not in entry or not entry["presentation"].get("minecraft_profile"):
     raise SystemExit(
-        "Include setup title, gameplay screenshot and a pinned Markdown recipe in presentation"
+        "Include setup title, Minecraft profile, gameplay screenshot and a pinned Markdown recipe in presentation"
     )
 if entry["author"].lower() != pr["user"]["login"].lower():
     raise SystemExit("Public author must match the submitting GitHub account")
+if f["status"] == "modified":
+    previous = api(f"repos/{repo}/contents/{f['filename']}?ref={pr['base']['sha']}")
+    if (
+        previous.get("size", MAX_BYTES + 1) > MAX_BYTES
+        or previous.get("encoding") != "base64"
+    ):
+        raise SystemExit("Invalid previous submission")
+    old = validate_entry(
+        json.loads(base64.b64decode(previous["content"])), Path(f["filename"]).name
+    )
+    if old["author"] != entry["author"] or old["bundle"] != entry["bundle"]:
+        raise SystemExit(
+            "Existing submissions may update presentation only; preserve author and evidence"
+        )
 print("Consistent self-reported evidence. Human recipe/visual review still required.")

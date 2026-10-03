@@ -53,7 +53,7 @@ function setupTitle(entry) {
   return shaderName(entry) + ' · ' + titleCase(asText(chip.family, 'Apple Silicon')) + ' ' + titleCase(asText(chip.tier, ''));
 }
 
-function githubProfile(handle) {
+function githubProfile(handle, minecraftProfile) {
   const safeHandle = /^[A-Za-z0-9-]{1,39}$/.test(handle || '') ? handle : 'unknown';
   const link = node('a', undefined, {
     class: 'contributor',
@@ -61,9 +61,11 @@ function githubProfile(handle) {
     target: '_blank',
     rel: 'noopener noreferrer'
   });
-  const avatar = node('span', safeHandle.slice(0, 2).toUpperCase(), { class: 'avatar', 'aria-hidden': 'true' });
+  let skin = typeof minecraftProfile === 'string' && /^(?:[A-Za-z0-9_]{3,16}|[a-fA-F0-9]{32}|[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$/.test(minecraftProfile);
+  const defaultFace = 'https://mc-heads.net/avatar/MHF_Steve/64';
+  const avatar = node('span', safeHandle.slice(0, 2).toUpperCase(), { class: 'avatar skin-avatar', 'aria-hidden': 'true' });
   const image = node('img', undefined, {
-    src: 'https://github.com/' + encodeURIComponent(safeHandle) + '.png?size=96',
+    src: skin ? 'https://mc-heads.net/avatar/' + encodeURIComponent(minecraftProfile) + '/64' : defaultFace,
     alt: '',
     loading: 'lazy',
     decoding: 'async',
@@ -71,7 +73,12 @@ function githubProfile(handle) {
     width: '38',
     height: '38'
   });
-  image.addEventListener('error', () => image.remove());
+  image.addEventListener('error', () => {
+    if (skin) {
+      skin = false;
+      image.src = defaultFace;
+    } else image.remove();
+  });
   avatar.append(image);
   link.append(avatar, node('span', '@' + safeHandle));
   return link;
@@ -213,6 +220,7 @@ function detailsFor(entry) {
   const workload = metadata.workload || {};
   const quality = metadata.quality_review || {};
   const rows = [
+    ['Mac model', [asText(hardware(entry).model), asText(hardware(entry).model_identifier)].filter(Boolean).join(' · ') || 'Not recorded'],
     ['Measurement', 'CPU frame production; not displayed or generated FPS'],
     ['Minecraft', asText(metadata.minecraft, 'Not recorded')],
     ['Launcher and loader', [asText(metadata.launcher, 'Launcher not recorded'), metadata.loader ? titleCase(asText(metadata.loader.name, '')) + (metadata.loader.version ? ' ' + metadata.loader.version : '') : ''].filter(Boolean).join(' · ')],
@@ -263,7 +271,7 @@ function createCard(entry) {
   const top = node('div', undefined, { class: 'card-top' });
   const titleBlock = node('div', undefined, { class: 'card-title-block' });
   titleBlock.append(node('p', shaderName(entry), { class: 'eyebrow eyebrow-dark shader-kicker' }), node('h3', title));
-  top.append(titleBlock, githubProfile(entry.author));
+  top.append(titleBlock, githubProfile(entry.author, (entry.presentation || {}).minecraft_profile));
   body.append(top);
 
   const hardwareLine = node('div', undefined, { class: 'hardware-line' });
@@ -395,7 +403,7 @@ function render() {
 
   const selected = sortEntries(matchingEntries());
   byId('count').textContent = selected.length + (selected.length === 1 ? ' setup' : ' setups');
-  byId('load-status').textContent = selected.length + ' setups shown.';
+  byId('load-status').textContent = selected.length + (selected.length === 1 ? ' setup shown.' : ' setups shown.');
   if (selected.length === 0) {
     showEmpty('No setups match those filters.', 'Try another chip family, tier, or memory size.', 'Clear filters', 'clear');
     return;

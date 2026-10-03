@@ -18,7 +18,7 @@ The supported metric is **CPU frame production**. It is not GPU presentation, di
 
 Unknown keys are rejected throughout public metadata. Required fields are:
 
-- `hardware`: `family` M1–M5, `tier` base/pro/max/ultra, integer `cpu_cores`, `gpu_cores`, and `memory_gib` (1–512).
+- `hardware`: observed `family` such as M1–M6 or A18, `tier` base/pro/max/ultra, integer `cpu_cores`, `gpu_cores`, and `memory_gib` (1–2048). Optional `model` (e.g. MacBook Pro) and `model_identifier` (e.g. Mac16,1) preserve chassis context without serial numbers. The hardware reference is not an admission whitelist.
 - `minecraft`, `launcher`, `harness`, `runtime`: short product/version labels. `loader` has `name` and `version`.
 - `workload`: generic public `scene`, `route`, and `terrain` recipe labels, matching capture context exactly. Use reproducible recipe names, never a private world name. Runtime must also match the capture.
 - `baseline` and `candidate`: each has `mods` (1–200 name-to-version entries), `shader` (`name`, `version`), and `settings`.
@@ -58,12 +58,15 @@ Create `setup.json` beside your evidence bundle:
 ```json
 {
   "title": "MakeUp with a wide view on base M4",
+  "minecraft_profile": "YOUR_JAVA_USERNAME_OR_UUID",
   "screenshot_url": "https://raw.githubusercontent.com/OWNER/REPO/COMMIT/evidence/screenshot.png",
   "recipe_url": "https://github.com/OWNER/REPO/blob/COMMIT/docs/setup.md"
 }
 ```
 
 Replace COMMIT with the full commit ID. The screenshot must be an actual candidate gameplay capture, without private chat/account information. Use PNG, JPEG or WebP at a pinned public GitHub commit; a GitHub `user-attachments/assets/...` image URL also works. Publish the screenshot and Markdown recipe in your own repository or a separate recipe PR first. New evidence PRs require these links; old entries remain readable. The recipe should give exact versions and full settings, compatible installation instructions, the measured route, and how to revert. Do not redistribute third-party binaries without permission.
+
+New submissions include `minecraft_profile`, the contributor's public Java username or UUID, to display their Minecraft skin face. `discover` reads public names/UUIDs from Prism profiles; use the active profile automatically, or the selected launcher's profile when available. UUIDs survive username changes. Review this public identity with the submission preview; never upload account files or credentials. Faces load through [MCHeads](https://mc-heads.net/). GitHub names remain linked for attribution, but GitHub photos are not used. Legacy entries and failed skin requests fall back to a default Minecraft face, then initials. A skin is decoration, not verified account ownership.
 
 The final command above shows a compact local preview: public setup, timing summaries, interval counts and destination. It makes no network requests. The complete relative traces remain in your bundle file and will also be shared. When you choose to publish:
 

@@ -1,11 +1,48 @@
 """Read-only configuration triage. Disk state never substitutes for observation."""
 
+import json
 from pathlib import Path
 import zipfile
-from .common import contained, digest, no_links, properties
+from .common import contained, digest, no_links, properties, read
 from .discover import instance_info
-from .instances import current_profile
+from .instances import current_profile, MARKER
 from .measure import CONTEXT
+
+
+def mod_inventory(game):
+    result = []
+    for path in sorted((game / "mods").glob("*.jar")):
+        item = {"file": path.name, "id": None, "version": None}
+        try:
+            with zipfile.ZipFile(path) as archive:
+                manifest = next(
+                    (
+                        name
+                        for name in ("fabric.mod.json", "quilt.mod.json")
+                        if name in archive.namelist()
+                    ),
+                    None,
+                )
+                if manifest and archive.getinfo(manifest).file_size <= 1_000_000:
+                    data = json.loads(archive.read(manifest))
+                    if not isinstance(data, dict):
+                        raise ValueError("Manifest must be an object")
+                    data = data.get("quilt_loader", data)
+                    if not isinstance(data, dict):
+                        raise ValueError("Loader manifest must be an object")
+                    item.update(
+                        id=data.get("id"),
+                        version=data.get("version"),
+                        manifest=manifest,
+                    )
+                else:
+                    item["note"] = (
+                        "No supported Fabric/Quilt manifest; inspect this mod before applying a recipe"
+                    )
+        except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+            item["note"] = "Unreadable mod manifest"
+        result.append(item)
+    return result
 
 
 def doctor(instance, game_directory=False):
@@ -18,9 +55,14 @@ def doctor(instance, game_directory=False):
 
     profile = None
     shader = None
+    mods = []
     try:
         # Refuse config/mod/world symlinks rather than reading beyond this instance.
         no_links(path)
+        if (path / MARKER).is_file():
+            game_directory = (
+                game_directory or read(path / MARKER).get("layout") == "game-directory"
+            )
         if game_directory:
             info.update(
                 game_dir=".", versions={}, java_required=None, launcher="external"
@@ -28,6 +70,7 @@ def doctor(instance, game_directory=False):
         else:
             info = instance_info(path)
         game = path / info["game_dir"]
+        mods = mod_inventory(game)
         profile = current_profile(path, game_directory=game_directory)
         options = profile["options"]
         if options.get("fullscreen") is not True:
@@ -121,6 +164,7 @@ def doctor(instance, game_directory=False):
     return {
         "instance": info,
         "profile": profile,
+        "mods": mods,
         "shader": shader,
         "issues": issues,
         "configuration_ready": not issues,

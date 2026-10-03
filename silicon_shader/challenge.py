@@ -110,21 +110,29 @@ def _metadata(meta):
         },
         "metadata",
     )
-    _keys(
-        meta["hardware"],
-        {"family", "tier", "cpu_cores", "gpu_cores", "memory_gib"},
-        "hardware",
-    )
     hw = meta["hardware"]
-    if hw["family"] not in ["M1", "M2", "M3", "M4", "M5"] or hw["tier"] not in [
-        "base",
-        "pro",
-        "max",
-        "ultra",
-    ]:
-        raise ValueError("Unsupported chip family/tier")
+    required_hardware = {"family", "tier", "cpu_cores", "gpu_cores", "memory_gib"}
+    if (
+        not isinstance(hw, dict)
+        or not required_hardware <= set(hw)
+        or set(hw) - required_hardware - {"model", "model_identifier"}
+    ):
+        raise ValueError("Unexpected or missing hardware fields")
+    if (
+        not isinstance(hw["family"], str)
+        or not re.fullmatch(r"[MA][1-9][0-9]{0,2}", hw["family"])
+        or hw["tier"] not in ("base", "pro", "max", "ultra")
+    ):
+        raise ValueError("Use the observed Apple chip family and tier")
     for key in ("cpu_cores", "gpu_cores", "memory_gib"):
-        _number(hw[key], 1, 512, True)
+        _number(hw[key], 1, 2048, True)
+    if "model" in hw:
+        _label(hw["model"])
+    if "model_identifier" in hw and (
+        not isinstance(hw["model_identifier"], str)
+        or not re.fullmatch(r"[A-Za-z]+[0-9]+,[0-9]+", hw["model_identifier"])
+    ):
+        raise ValueError("Invalid generic Mac model identifier")
     _keys(meta["workload"], {"scene", "route", "terrain"}, "workload")
     for value in meta["workload"].values():
         _label(value)

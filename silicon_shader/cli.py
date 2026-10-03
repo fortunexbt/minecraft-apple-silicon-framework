@@ -189,7 +189,14 @@ def parser():
     sub = q.add_subparsers(dest="action", required=True)
     sub.add_parser("show")
     a = sub.add_parser("find", help="Find shared setups for your Mac")
-    a.add_argument("--chip", help="Chip family, e.g. M4")
+    a.add_argument(
+        "--this-mac",
+        action="store_true",
+        help="Detect this Mac and prefer matching setups",
+    )
+    a.add_argument("--minecraft", help="Only this Minecraft version")
+    a.add_argument("--loader", help="Only this loader, e.g. fabric")
+    a.add_argument("--chip", help="Chip family, e.g. M6 or A18")
     a.add_argument("--tier", choices=("base", "pro", "max", "ultra"))
     a.add_argument("--ram", type=int, help="Memory in GiB")
     a.add_argument("--sort", choices=("pacing", "fps", "distance"), default="pacing")
@@ -254,7 +261,16 @@ def run(args):
         if args.action == "show":
             return community.contract()
         if args.action == "find":
-            return catalog.find(args.chip, args.tier, args.ram, args.sort, args.limit)
+            return catalog.find(
+                args.chip,
+                args.tier,
+                args.ram,
+                args.sort,
+                args.limit,
+                args.this_mac,
+                args.minecraft,
+                args.loader,
+            )
         if args.action == "prepare":
             if Path(args.out).exists():
                 raise ValueError("Bundle output exists; choose a new path")

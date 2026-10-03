@@ -53,7 +53,7 @@ The reference campaign used a **base M4, 10 CPU/GPU cores, 24 GB**. Quality 75% 
 
 Wide View 20 traded internal resolution for R20/S6. Brief ordinary movement showed approximately **91–105 F3 FPS**; a separate percentile readout was **69 FPS**. It was not locked at 120. The [experiment digest](docs/EXPERIMENTS.md) and [indexed ledger](evidence/) include losses, invalid runs, and unmeasured ideas as well as winners.
 
-Discovery is designed for M1–M5 families, including Pro/Max/Ultra and MacBooks, iMacs and minis. **Only the named M4 campaign has gameplay evidence.** Start from your own baseline on every other machine. Static scaling is the default; native Metal and dynamic resolution are research paths, not promised upgrades.
+Discovery reads the actual Apple chip, CPU/GPU cores, RAM and Mac model, including M6 and A-series Macs. The [hardware reference](docs/HARDWARE.md) lists released configurations without rejecting newer chips. **Only the named M4 campaign has gameplay evidence.** Start from your own baseline on every other machine. Static scaling is the default; native Metal and dynamic resolution are research paths, not promised upgrades.
 
 ![MakeUp and Faithful village, historical visual reference](evidence/images/makeup-faithful-village.png)
 
@@ -101,7 +101,7 @@ The Git repository is the durable source of the site and every accepted contribu
 ### Find and try a shared setup
 
 ```sh
-silicon-shader challenge find --chip M4 --tier base --ram 24 --sort pacing
+silicon-shader challenge find --this-mac --sort pacing
 ```
 
 Your agent can read the matching recipes, compare versions and visual tradeoffs, then apply compatible settings through the existing isolated-lab and rollback workflow. It must not silently install unknown code, replace your mod stack or alter your original world.

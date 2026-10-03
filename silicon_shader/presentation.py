@@ -5,12 +5,22 @@ from urllib.parse import urlsplit
 
 
 def validate_presentation(value):
-    if not isinstance(value, dict) or set(value) != {
-        "title",
-        "screenshot_url",
-        "recipe_url",
-    }:
+    required = {"title", "screenshot_url", "recipe_url"}
+    if (
+        not isinstance(value, dict)
+        or not required <= set(value)
+        or set(value) - required - {"minecraft_profile"}
+    ):
         raise ValueError("Setup details need title, screenshot_url and recipe_url")
+    profile = value.get("minecraft_profile")
+    if "minecraft_profile" in value and (
+        not isinstance(profile, str)
+        or not re.fullmatch(
+            r"(?:[A-Za-z0-9_]{3,16}|[a-fA-F0-9]{32}|[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})",
+            profile,
+        )
+    ):
+        raise ValueError("Minecraft profile must be a Java username or UUID")
     title = value["title"]
     if (
         not isinstance(title, str)

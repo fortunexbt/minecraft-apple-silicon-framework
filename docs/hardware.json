@@ -1,0 +1,849 @@
+{
+  "as_of": "2026-10-03",
+  "scope": "Released Apple Silicon Macs, including previously sold models. CPU/GPU/RAM options only; no storage, color or regional SKU permutations. Hardware reference, not verified Minecraft compatibility.",
+  "configurations": [
+    {
+      "models": [
+        "MacBook Air 13-inch (M1, 2020)",
+        "iMac 24-inch (M1, 2021; two-port, 7-core GPU configuration)"
+      ],
+      "family": "M1",
+      "tier": "base",
+      "cpu_cores": 8,
+      "gpu_cores": 7,
+      "memory_gib": [
+        8,
+        16
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111883",
+        "https://support.apple.com/en-us/111895"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air 13-inch (M1, 2020)",
+        "MacBook Pro 13-inch (M1, 2020)",
+        "Mac mini (M1, 2020)",
+        "iMac 24-inch (M1, 2021; four-port, 8-core GPU configuration)"
+      ],
+      "family": "M1",
+      "tier": "base",
+      "cpu_cores": 8,
+      "gpu_cores": 8,
+      "memory_gib": [
+        8,
+        16
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111883",
+        "https://support.apple.com/en-us/111893",
+        "https://support.apple.com/en-us/111894",
+        "https://support.apple.com/en-us/111895"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (2021)"
+      ],
+      "family": "M1",
+      "tier": "pro",
+      "cpu_cores": 8,
+      "gpu_cores": 14,
+      "memory_gib": [
+        16,
+        32
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111902"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (2021)"
+      ],
+      "family": "M1",
+      "tier": "pro",
+      "cpu_cores": 10,
+      "gpu_cores": 14,
+      "memory_gib": [
+        16,
+        32
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111902"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (2021)",
+        "MacBook Pro 16-inch (2021)"
+      ],
+      "family": "M1",
+      "tier": "pro",
+      "cpu_cores": 10,
+      "gpu_cores": 16,
+      "memory_gib": [
+        16,
+        32
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111902",
+        "https://support.apple.com/en-us/111901"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (2021)",
+        "MacBook Pro 16-inch (2021)",
+        "Mac Studio (2022)"
+      ],
+      "family": "M1",
+      "tier": "max",
+      "cpu_cores": 10,
+      "gpu_cores": 24,
+      "memory_gib": [
+        32,
+        64
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111902",
+        "https://support.apple.com/en-us/111901",
+        "https://support.apple.com/en-us/111900"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (2021)",
+        "MacBook Pro 16-inch (2021)",
+        "Mac Studio (2022)"
+      ],
+      "family": "M1",
+      "tier": "max",
+      "cpu_cores": 10,
+      "gpu_cores": 32,
+      "memory_gib": [
+        32,
+        64
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111902",
+        "https://support.apple.com/en-us/111901",
+        "https://support.apple.com/en-us/111900"
+      ]
+    },
+    {
+      "models": [
+        "Mac Studio (2022)"
+      ],
+      "family": "M1",
+      "tier": "ultra",
+      "cpu_cores": 20,
+      "gpu_cores": 48,
+      "memory_gib": [
+        64,
+        128
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111900"
+      ]
+    },
+    {
+      "models": [
+        "Mac Studio (2022)"
+      ],
+      "family": "M1",
+      "tier": "ultra",
+      "cpu_cores": 20,
+      "gpu_cores": 64,
+      "memory_gib": [
+        64,
+        128
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111900"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air 13-inch (M2, 2022)"
+      ],
+      "family": "M2",
+      "tier": "base",
+      "cpu_cores": 8,
+      "gpu_cores": 8,
+      "memory_gib": [
+        8,
+        16,
+        24
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111867"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air 13-inch (M2, 2022)",
+        "MacBook Air 15-inch (M2, 2023)",
+        "MacBook Pro 13-inch (M2, 2022)",
+        "Mac mini (2023)"
+      ],
+      "family": "M2",
+      "tier": "base",
+      "cpu_cores": 8,
+      "gpu_cores": 10,
+      "memory_gib": [
+        8,
+        16,
+        24
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111867",
+        "https://support.apple.com/en-us/111346",
+        "https://support.apple.com/en-us/111869",
+        "https://support.apple.com/en-us/111837"
+      ]
+    },
+    {
+      "models": [
+        "Mac mini (2023)",
+        "MacBook Pro 14-inch (2023)"
+      ],
+      "family": "M2",
+      "tier": "pro",
+      "cpu_cores": 10,
+      "gpu_cores": 16,
+      "memory_gib": [
+        16,
+        32
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111837",
+        "https://support.apple.com/en-us/111340"
+      ]
+    },
+    {
+      "models": [
+        "Mac mini (2023)",
+        "MacBook Pro 14-inch (2023)",
+        "MacBook Pro 16-inch (2023)"
+      ],
+      "family": "M2",
+      "tier": "pro",
+      "cpu_cores": 12,
+      "gpu_cores": 19,
+      "memory_gib": [
+        16,
+        32
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111837",
+        "https://support.apple.com/en-us/111340",
+        "https://support.apple.com/en-us/111838"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (2023)",
+        "MacBook Pro 16-inch (2023)",
+        "Mac Studio (2023)"
+      ],
+      "family": "M2",
+      "tier": "max",
+      "cpu_cores": 12,
+      "gpu_cores": 30,
+      "memory_gib": [
+        32,
+        64
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111340",
+        "https://support.apple.com/en-us/111838",
+        "https://support.apple.com/en-us/111835"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (2023)",
+        "MacBook Pro 16-inch (2023)",
+        "Mac Studio (2023)"
+      ],
+      "family": "M2",
+      "tier": "max",
+      "cpu_cores": 12,
+      "gpu_cores": 38,
+      "memory_gib": [
+        32,
+        64,
+        96
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111340",
+        "https://support.apple.com/en-us/111838",
+        "https://support.apple.com/en-us/111835"
+      ]
+    },
+    {
+      "models": [
+        "Mac Studio (2023)",
+        "Mac Pro tower (2023)",
+        "Mac Pro (2023, rack enclosure)"
+      ],
+      "family": "M2",
+      "tier": "ultra",
+      "cpu_cores": 24,
+      "gpu_cores": 60,
+      "memory_gib": [
+        64,
+        128,
+        192
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111835",
+        "https://support.apple.com/en-us/111343"
+      ]
+    },
+    {
+      "models": [
+        "Mac Studio (2023)",
+        "Mac Pro tower (2023)",
+        "Mac Pro (2023, rack enclosure)"
+      ],
+      "family": "M2",
+      "tier": "ultra",
+      "cpu_cores": 24,
+      "gpu_cores": 76,
+      "memory_gib": [
+        64,
+        128,
+        192
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/111835",
+        "https://support.apple.com/en-us/111343"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air 13-inch (M3, 2024)",
+        "iMac 24-inch (M3, 2023; two-port configuration)"
+      ],
+      "family": "M3",
+      "tier": "base",
+      "cpu_cores": 8,
+      "gpu_cores": 8,
+      "memory_gib": [
+        8,
+        16,
+        24
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/118551",
+        "https://support.apple.com/en-us/117733"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air 13-inch (M3, 2024)",
+        "MacBook Air 15-inch (M3, 2024)",
+        "MacBook Pro 14-inch (M3, Nov 2023)",
+        "iMac 24-inch (M3, 2023; four-port configuration)"
+      ],
+      "family": "M3",
+      "tier": "base",
+      "cpu_cores": 8,
+      "gpu_cores": 10,
+      "memory_gib": [
+        8,
+        16,
+        24
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/118551",
+        "https://support.apple.com/en-us/118552",
+        "https://support.apple.com/en-us/117735",
+        "https://support.apple.com/en-us/117734"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (M3 Pro or M3 Max, Nov 2023)"
+      ],
+      "family": "M3",
+      "tier": "pro",
+      "cpu_cores": 11,
+      "gpu_cores": 14,
+      "memory_gib": [
+        18,
+        36
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/117736"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (M3 Pro or M3 Max, Nov 2023)",
+        "MacBook Pro 16-inch (Nov 2023)"
+      ],
+      "family": "M3",
+      "tier": "pro",
+      "cpu_cores": 12,
+      "gpu_cores": 18,
+      "memory_gib": [
+        18,
+        36
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/117736",
+        "https://support.apple.com/en-us/117737"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (M3 Pro or M3 Max, Nov 2023)",
+        "MacBook Pro 16-inch (Nov 2023)"
+      ],
+      "family": "M3",
+      "tier": "max",
+      "cpu_cores": 14,
+      "gpu_cores": 30,
+      "memory_gib": [
+        36,
+        96
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/117736",
+        "https://support.apple.com/en-us/117737"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro 14-inch (M3 Pro or M3 Max, Nov 2023)",
+        "MacBook Pro 16-inch (Nov 2023)"
+      ],
+      "family": "M3",
+      "tier": "max",
+      "cpu_cores": 16,
+      "gpu_cores": 40,
+      "memory_gib": [
+        48,
+        64,
+        128
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/117736",
+        "https://support.apple.com/en-us/117737"
+      ]
+    },
+    {
+      "models": [
+        "Mac Studio (2025)"
+      ],
+      "family": "M3",
+      "tier": "ultra",
+      "cpu_cores": 28,
+      "gpu_cores": 60,
+      "memory_gib": [
+        96,
+        256
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/122211",
+        "https://www.apple.com/newsroom/2025/03/apple-unveils-new-mac-studio-the-most-powerful-mac-ever/",
+        "https://www.apple.com/shop/product/g1ce9ll/a/Refurbished-Mac-Studio-Apple-M3-Ultra-chip-with-28%E2%80%91Core-CPU-and-60%E2%80%91Core-GPU",
+        "https://www.apple.com/shop/product/g1ce0ll/a/Refurbished-Mac-Studio-Apple-M3-Ultra-chip-with-28%E2%80%91Core-CPU-and-60%E2%80%91Core-GPU"
+      ]
+    },
+    {
+      "models": [
+        "Mac Studio (2025)"
+      ],
+      "family": "M3",
+      "tier": "ultra",
+      "cpu_cores": 32,
+      "gpu_cores": 80,
+      "memory_gib": [
+        96,
+        256,
+        512
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/122211",
+        "https://www.apple.com/newsroom/2025/03/apple-unveils-new-mac-studio-the-most-powerful-mac-ever/",
+        "https://www.apple.com/shop/product/g1ce6ll/a/Refurbished-Mac-Studio-Apple-M3-Ultra-chip-with-32%E2%80%91Core-CPU-and-80%E2%80%91Core-GPU",
+        "https://www.apple.com/shop/product/g1cecll/a/Refurbished-Mac-Studio-Apple-M3-Ultra-chip-with-32%E2%80%91Core-CPU-and-80%E2%80%91Core-GPU",
+        "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air (13-inch, M4, 2025)"
+      ],
+      "family": "M4",
+      "tier": "base",
+      "cpu_cores": 10,
+      "gpu_cores": 8,
+      "memory_gib": [
+        16
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/122209"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air (13-inch, M4, 2025)",
+        "MacBook Air (15-inch, M4, 2025)",
+        "MacBook Pro (14-inch, M4, 2024)",
+        "Mac mini (2024)",
+        "iMac (24-inch, 2024, Four ports)"
+      ],
+      "family": "M4",
+      "tier": "base",
+      "cpu_cores": 10,
+      "gpu_cores": 10,
+      "memory_gib": [
+        16,
+        24,
+        32
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/122209",
+        "https://support.apple.com/en-us/122210",
+        "https://support.apple.com/en-us/121552",
+        "https://support.apple.com/en-us/121555",
+        "https://support.apple.com/en-us/121557"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro (14-inch, M4 Pro or M4 Max, 2024)"
+      ],
+      "family": "M4",
+      "tier": "pro",
+      "cpu_cores": 12,
+      "gpu_cores": 16,
+      "memory_gib": [
+        24,
+        48
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/121553",
+        "https://www.apple.com/shop/product/g1fe4ll/a/Refurbished-14-inch-MacBook-Pro-Apple-M4-Pro-Chip-with-12%E2%80%91Core-CPU-and-16%E2%80%91Core-GPU-Space-Black"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro (14-inch, M4 Pro or M4 Max, 2024)",
+        "MacBook Pro (16-inch, 2024)"
+      ],
+      "family": "M4",
+      "tier": "pro",
+      "cpu_cores": 14,
+      "gpu_cores": 20,
+      "memory_gib": [
+        24,
+        48
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/121553",
+        "https://support.apple.com/en-us/121554"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro (14-inch, M4 Pro or M4 Max, 2024)",
+        "MacBook Pro (16-inch, 2024)",
+        "Mac Studio (2025)"
+      ],
+      "family": "M4",
+      "tier": "max",
+      "cpu_cores": 14,
+      "gpu_cores": 32,
+      "memory_gib": [
+        36
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/121553",
+        "https://support.apple.com/en-us/121554",
+        "https://support.apple.com/en-us/122211"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro (14-inch, M4 Pro or M4 Max, 2024)",
+        "MacBook Pro (16-inch, 2024)",
+        "Mac Studio (2025)"
+      ],
+      "family": "M4",
+      "tier": "max",
+      "cpu_cores": 16,
+      "gpu_cores": 40,
+      "memory_gib": [
+        48,
+        64,
+        128
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/121553",
+        "https://support.apple.com/en-us/121554",
+        "https://support.apple.com/en-us/122211"
+      ]
+    },
+    {
+      "models": [
+        "Mac mini (2024)"
+      ],
+      "family": "M4",
+      "tier": "pro",
+      "cpu_cores": 12,
+      "gpu_cores": 16,
+      "memory_gib": [
+        24,
+        48,
+        64
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/121555",
+        "https://www.apple.com/shop/buy-mac/mac-mini/m4-pro-chip-12-core-cpu-16-core-gpu-64gb-memory-1tb-storage"
+      ]
+    },
+    {
+      "models": [
+        "Mac mini (2024)"
+      ],
+      "family": "M4",
+      "tier": "pro",
+      "cpu_cores": 14,
+      "gpu_cores": 20,
+      "memory_gib": [
+        24,
+        48,
+        64
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/121555",
+        "https://www.apple.com/sa-en/shop/buy-mac/mac-mini/m4-pro-chip-14-core-cpu-20-core-gpu-24gb-memory-2tb-storage",
+        "https://www.apple.com/shop/product/g1jvlll/a/Refurbished-Mac-mini-Apple-M4-Pro-Chip-with-14-Core-CPU-and-20-Core-GPU-Gigabit-Ethernet-"
+      ]
+    },
+    {
+      "models": [
+        "iMac (24-inch, 2024, Two ports)"
+      ],
+      "family": "M4",
+      "tier": "base",
+      "cpu_cores": 8,
+      "gpu_cores": 8,
+      "memory_gib": [
+        16,
+        24
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/121556"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air (13-inch, M5, 2026)"
+      ],
+      "family": "M5",
+      "tier": "base",
+      "cpu_cores": 10,
+      "gpu_cores": 8,
+      "memory_gib": [
+        16
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/126320"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Air (13-inch, M5, 2026)",
+        "MacBook Air (15-inch, M5, 2026)",
+        "MacBook Pro (14-inch, M5, 2025)"
+      ],
+      "family": "M5",
+      "tier": "base",
+      "cpu_cores": 10,
+      "gpu_cores": 10,
+      "memory_gib": [
+        16,
+        24,
+        32
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/126320",
+        "https://support.apple.com/en-us/126321",
+        "https://support.apple.com/en-us/125405"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro (14-inch, M5 Pro or M5 Max, 2026)"
+      ],
+      "family": "M5",
+      "tier": "pro",
+      "cpu_cores": 15,
+      "gpu_cores": 16,
+      "memory_gib": [
+        24,
+        48
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/126318"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro (14-inch, M5 Pro or M5 Max, 2026)",
+        "MacBook Pro (16-inch, M5 Pro or M5 Max, 2026)",
+        "Mac mini (M6 or M5 Pro, 2026)"
+      ],
+      "family": "M5",
+      "tier": "pro",
+      "cpu_cores": 18,
+      "gpu_cores": 20,
+      "memory_gib": [
+        24,
+        48,
+        64
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/126318",
+        "https://support.apple.com/en-us/126319",
+        "https://support.apple.com/en-us/128108",
+        "https://www.apple.com/us-edu/shop/buy-mac/mac-mini/m5-pro-chip-18-core-cpu-20-core-gpu-24gb-memory-8tb-storage"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro (14-inch, M5 Pro or M5 Max, 2026)",
+        "MacBook Pro (16-inch, M5 Pro or M5 Max, 2026)",
+        "Mac Studio (M5 Max or M5 Ultra, 2026)"
+      ],
+      "family": "M5",
+      "tier": "max",
+      "cpu_cores": 18,
+      "gpu_cores": 32,
+      "memory_gib": [
+        36
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/126318",
+        "https://support.apple.com/en-us/126319",
+        "https://support.apple.com/en-us/128107"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Pro (14-inch, M5 Pro or M5 Max, 2026)",
+        "MacBook Pro (16-inch, M5 Pro or M5 Max, 2026)",
+        "Mac Studio (M5 Max or M5 Ultra, 2026)"
+      ],
+      "family": "M5",
+      "tier": "max",
+      "cpu_cores": 18,
+      "gpu_cores": 40,
+      "memory_gib": [
+        48,
+        64,
+        128
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/126318",
+        "https://support.apple.com/en-us/126319",
+        "https://support.apple.com/en-us/128107"
+      ]
+    },
+    {
+      "models": [
+        "Mac mini (M6 or M5 Pro, 2026)"
+      ],
+      "family": "M5",
+      "tier": "pro",
+      "cpu_cores": 15,
+      "gpu_cores": 16,
+      "memory_gib": [
+        24,
+        48,
+        64
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/128108",
+        "https://www.apple.com/shop/buy-mac/mac-mini/m5-pro-chip-15-core-cpu-16-core-gpu-64gb-memory-4tb-storage"
+      ]
+    },
+    {
+      "models": [
+        "Mac Studio (M5 Max or M5 Ultra, 2026)"
+      ],
+      "family": "M5",
+      "tier": "ultra",
+      "cpu_cores": 30,
+      "gpu_cores": 64,
+      "memory_gib": [
+        96
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/128107",
+        "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+        "https://www.apple.com/newsroom/2026/09/the-new-mac-mini-and-mac-studio-are-available-today/"
+      ]
+    },
+    {
+      "models": [
+        "Mac Studio (M5 Max or M5 Ultra, 2026)"
+      ],
+      "family": "M5",
+      "tier": "ultra",
+      "cpu_cores": 36,
+      "gpu_cores": 80,
+      "memory_gib": [
+        256
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/128107",
+        "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+        "https://www.apple.com/shop/buy-mac/mac-studio/m5-ultra-chip-36-core-cpu-80-core-gpu-256gb-memory-16tb-storage",
+        "https://www.apple.com/newsroom/2026/09/the-new-mac-mini-and-mac-studio-are-available-today/"
+      ]
+    },
+    {
+      "models": [
+        "Mac mini (M6 or M5 Pro, 2026)"
+      ],
+      "family": "M6",
+      "tier": "base",
+      "cpu_cores": 12,
+      "gpu_cores": 12,
+      "memory_gib": [
+        16,
+        24,
+        32
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/128108",
+        "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro/",
+        "https://www.apple.com/newsroom/2026/09/the-new-mac-mini-and-mac-studio-are-available-today/"
+      ]
+    },
+    {
+      "models": [
+        "MacBook Neo (13-inch, A18 Pro, 2026)"
+      ],
+      "family": "A18",
+      "tier": "pro",
+      "cpu_cores": 6,
+      "gpu_cores": 5,
+      "memory_gib": [
+        8
+      ],
+      "sources": [
+        "https://support.apple.com/en-us/126322"
+      ]
+    }
+  ]
+}
