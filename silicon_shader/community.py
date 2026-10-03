@@ -8,6 +8,7 @@ import subprocess
 from urllib.parse import urlencode
 
 from .challenge import MAX_BYTES, validate_bundle
+from .presentation import validate_presentation
 
 REPOSITORY = "fortunexbt/minecraft-apple-silicon-framework"
 
@@ -21,11 +22,7 @@ def contract():
         "leaderboard": "https://fortunexbt.github.io/minecraft-apple-silicon-framework/",
         "submission": "Optional data-only pull request; maintainer review before publication on the board",
         "eligibility": "Matched same-machine 20–30 second living gameplay, explicit controls and visual review",
-        "ranking": "Unranked setup showcase; official fixed-preset ranking awaits a qualified reference workload and independent replay",
-        "ranking_status": "not_open",
-        "fairness_rules": "https://github.com/"
-        + REPOSITORY
-        + "/blob/main/docs/FAIRNESS.md",
+        "comparison": "Browse screenshots and measured setups; filter by hardware and compare resolution, shader and view distance before FPS",
         "verification": "Trace consistency is self-reported evidence, not independent reproduction",
         "rules": "https://github.com/" + REPOSITORY + "/blob/main/docs/CHALLENGE.md",
         "editable_submission_paths": ["contributions/<content_digest>.json"],
@@ -106,11 +103,13 @@ def status(digest, request=api):
     }
 
 
-def submit(bundle, publish=False, reviewed_digest=None, request=api):
+def submit(bundle, publish=False, reviewed_digest=None, request=api, presentation=None):
     errors = validate_bundle(bundle)
     if errors:
         raise ValueError("; ".join(errors))
     digest = _digest(bundle["content_digest"])
+    if presentation is not None:
+        validate_presentation(presentation)
     preview = {
         "digest": digest,
         "destination": "https://github.com/" + REPOSITORY,
@@ -137,6 +136,8 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api):
         "review": "The full relative traces remain in your bundle file and will also be published.",
         "publication": "Public evidence and authenticated GitHub handle; may create a fork, branch and pull request",
     }
+    if presentation is not None:
+        preview["presentation"] = presentation
     if not publish:
         return preview
     if reviewed_digest is not None and reviewed_digest != digest:
@@ -183,6 +184,8 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api):
         raise ValueError("Cannot safely inspect a truncated destination tree")
     path = preview["path"]
     entry = {"author": login, "bundle": bundle}
+    if presentation is not None:
+        entry["presentation"] = presentation
     existing_file = next((x for x in tree["tree"] if x["path"] == path), None)
     if existing_file:
         blob = request(f"repos/{target}/git/blobs/{existing_file['sha']}")

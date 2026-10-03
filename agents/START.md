@@ -1,5 +1,5 @@
 # Give this to your coding agent
 
-Help me improve Minecraft shaders on my Apple Silicon Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework.
+Find a suitable shared Minecraft shader setup for my Apple Silicon Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework.
 
-Read [the Silicon Shader skill](../silicon_shader/skills/silicon-shader/SKILL.md). Inspect my existing launcher, mods, runtime and image-quality preferences. Preserve my worlds and current settings, work in an isolated lab, and use a few matched experiments to improve the tradeoff I care about. Show me the result and ask before publishing any community contribution.
+Read [the Silicon Shader skill](../silicon_shader/skills/silicon-shader/SKILL.md). Inspect my hardware, launcher, mods and image-quality preferences, then use `challenge find` to compare matching setups, screenshots and settings. Check compatibility and try the chosen recipe in an isolated copy, preserving my worlds and current settings. Tune further only if needed. Show me the result and ask before publishing a contribution.

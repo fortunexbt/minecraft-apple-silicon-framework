@@ -75,11 +75,11 @@ Original framework code is [MIT licensed](LICENSE). Third-party components retai
 
 ## Open community challenge
 
-**Share a setup now. Compete on a fixed workload when the ranked track opens.** Current submissions are unranked, self-reported experiments. [Fair-winner rules](docs/FAIRNESS.md) lock the required image and workload, compare repeated runs on the same evaluator hardware, and require independent reproduction. Beauty, raw FPS across different Macs, and GitHub popularity do not determine a winner.
+**Find a setup for your Mac.** Browse gameplay screenshots, filter by chip and RAM, compare FPS alongside resolution and view distance, and ask your agent to try a compatible recipe. [How to compare setups](docs/FAIRNESS.md).
 
 [Explore the hosted challenge](https://fortunexbt.github.io/minecraft-apple-silicon-framework/) · [Agent skill](silicon_shader/skills/silicon-shader/SKILL.md) · [Rules and optional submission](docs/CHALLENGE.md) · [What we learned from Yukon](docs/YUKON.md)
 
-Version 0.2 adds launcher-neutral game-directory isolation, a read-only setup doctor, user-selected quality floors and an optional quality-first search. Community contributions pair a baseline and candidate, export bounded relative timing evidence, and use an explicit opt-in publication command. The hosted board separates cohorts and labels all initial results self-reported. No community measurements are fabricated to populate it.
+Version 0.2 adds launcher-neutral game-directory isolation, a read-only setup doctor, user-selected quality floors and an optional quality-first search. Community contributions pair a baseline and candidate, export bounded relative timing evidence, and use an explicit opt-in publication command. The site pairs screenshots with hardware, settings and measured results. No community measurements are fabricated to populate it.
 
 ```sh
 silicon-shader doctor /path/to/game --game-dir
@@ -97,3 +97,11 @@ This is an **early-access challenge**. You can submit matched experiments now; t
 Publishing requires [GitHub CLI](https://cli.github.com/) and your GitHub login. Run `gh auth status --hostname github.com` to check it. [Submission instructions](docs/CHALLENGE.md#cli-and-hosted-board) cover preview, publication and retry. After submission, add enough setup and route detail to the PR for another player to repeat it. A maintainer reviews it before it appears on the board.
 
 The Git repository is the durable source of the site and every accepted contribution. To rebuild the board elsewhere, run `python3 -m silicon_shader.registry contributions site/data.json`, then host `site/` on any static host. No database or private service is required.
+
+### Find and try a shared setup
+
+```sh
+silicon-shader challenge find --chip M4 --tier base --ram 24 --sort pacing
+```
+
+Your agent can read the matching recipes, compare versions and visual tradeoffs, then apply compatible settings through the existing isolated-lab and rollback workflow. It must not silently install unknown code, replace your mod stack or alter your original world.

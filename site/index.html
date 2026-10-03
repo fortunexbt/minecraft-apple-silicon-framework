@@ -1,22 +1,127 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="An open challenge for smoother, sharper Minecraft shaders on Apple Silicon. Matched experiments, public recipes, optional contributions."><title>Silicon Shader — an open Minecraft challenge</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
-<body><header><a class="brand" href="./">Silicon<span>Shader</span><i> / THE OPEN CHALLENGE</i></a><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework">GitHub ↗</a></header>
-<main><section class="hero"><div class="hero-top"><span class="eyebrow">APPLE SILICON · MINECRAFT JAVA</span><span class="badge">EARLY ACCESS · OPEN</span></div><div class="intro"><div><h1>Better shaders.<br>Built by all of us.</h1><p>Keep the image you love. Find the performance it deserves. <br>Bring your Mac, your launcher, your mods—and your next idea.</p></div><div class="actions"><button data-dialog="participate">Tune your setup ↗</button><button class="outline" data-dialog="rules">How it works</button></div></div>
-<div class="milestones"><div><span>01 / YOUR SETUP</span><strong>Measure the baseline</strong></div><b>→</b><div><span>02 / ONE HYPOTHESIS</span><strong>Make a matched comparison</strong></div><b>→</b><div><span>03 / SHARED PROGRESS</span><strong>Publish what others can repeat</strong></div></div>
-<div class="chart-heading"><div><span class="eyebrow">MATCHED EXPERIMENTS</span><p>Frame pacing and image quality, together.</p></div><div class="tabs" role="group" aria-label="Chart view"><button data-view="pacing" aria-pressed="true">Pacing</button><button data-view="gain" aria-pressed="false">Improvement</button></div></div>
-<div class="filters"><label>Comparison cohort <select id="cohort"><option value="">Choose a cohort</option></select></label><span id="cohort-note">Same hardware, workload and fixed controls.</span></div>
-<div class="chart" id="chart"><div class="empty"><span class="cross">+</span><h2>The next point could be yours.</h2><p>No community experiments have been published yet.<br>Start with a baseline. Share a result worth repeating.</p><button data-dialog="participate">Make the first contribution ↗</button></div></div>
-<div class="chart-foot"><span>● Candidate &nbsp; ○ Matched baseline</span><span>CPU frame production · self-reported until independently reproduced</span></div></section>
-<section class="board"><div class="section-title"><div><span class="eyebrow">THE PUBLIC RECORD</span><h2>Setup showcase</h2></div><span id="count">Loading evidence…</span></div><p class="board-note">Useful setups, honest tradeoffs. These are unranked, self-reported experiments grouped by comparable hardware and workload. An avatar identifies the contributor; it does not certify the result.</p><div class="table-wrap"><table><thead><tr><th>Contributor</th><th>Experiment</th><th>Worst 5s FPS</th><th>p95 frame time</th><th>Quality</th><th>Evidence</th></tr></thead><tbody id="results"></tbody></table></div><p id="load-status" role="status"></p></section>
-<section class="fairness" aria-labelledby="fair-title"><div><span class="eyebrow">A FAIR WINNER NEEDS THE SAME WORK</span><h2 id="fair-title">Same image. Less frame time.</h2><p>Visual taste belongs in the showcase. A ranked result must preserve the agreed image and improve a repeatable workload on the same reference Mac.</p></div><div class="fair-steps"><div><span>01</span><strong>Lock the picture</strong><p>Same scene, pixels, distance and shader effects. No generated-frame boost.</p></div><div><span>02</span><strong>Repeat the comparison</strong><p>Paired runs against one baseline. The weakest scene determines the score.</p></div><div><span>03</span><strong>Reproduce the lead</strong><p>Independent replay, intact visuals, no worse stalls. Close results tie.</p></div></div><div class="fair-footer"><span class="rank-state">Ranked track: not open yet</span><p>We are establishing the shared reference workload. Submit a showcase now; nobody gets crowned from an unmatched FPS counter.</p><button data-dialog="rules">How a winner is decided ↗</button></div></section>
-<section class="join"><div><span class="eyebrow">HUMANS AND AGENTS WELCOME</span><h2>Your setup is part<br>of the research.</h2><p>Prism, another launcher, or your own measurement harness. Start with what you use. Share a configuration, reproduce an experiment, or improve an adapter.</p></div><div class="terminal"><span>OPTIONAL CONTRIBUTION LOOP</span><pre>inspect → isolate → baseline
-change → measure → review
-prepare → validate → submit</pre><p>Local tuning needs no account. Publishing is a separate, explicit choice.</p><button data-dialog="participate">Tune your setup ↗</button></div></section>
-</main><footer><span>Silicon Shader / independent, open source research</span><nav><a href="data.json" download>Open data</a><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md">Rules</a><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/YUKON.md">Inspired by Yukon</a><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/issues">Contribute</a></nav><small>Not affiliated with Mojang, Microsoft, Apple or Yukon. No analytics or automatic uploads. GitHub hosts this site, contributor avatars and any evidence you choose to publish.</small></footer>
-<dialog id="participate"><button class="close" aria-label="Close">×</button><span class="eyebrow">START WITH YOUR OWN SETUP</span><h2>Let your agent help.</h2><p>Give this prompt to Codex, Claude Code, or your preferred coding agent. It starts with your launcher, mods and image-quality preferences.</p><pre id="agent-prompt">Help me improve Minecraft shaders on my Apple Silicon Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework. Read silicon_shader/skills/silicon-shader/SKILL.md. Inspect my existing setup, preserve my worlds and current settings, and work in an isolated lab. Use a few matched experiments to improve the tradeoff I care about. Show me the result and ask before publishing any community contribution.</pre><button id="copy-prompt">Copy agent prompt</button><span id="copy-status" role="status"></span><p class="fine">Early access: measurement setup depends on your Minecraft version. Your agent may need to adapt the sampler hook. Sharing results is always optional.</p><details><summary>Prefer the manual CLI?</summary><p>Requires Python 3.10+ and Minecraft Java. Use a Python environment to avoid changing your system packages.</p><pre>git clone https://github.com/fortunexbt/minecraft-apple-silicon-framework.git
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse Minecraft shader setups shared by Apple Silicon players. Compare the recipe, resolution, view distance, and community performance evidence.">
+  <title>Silicon Shader — setup library</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Silicon Shader home"><span class="brand-mark">S</span><span>silicon<span class="brand-light">shader</span></span></a>
+    <nav aria-label="Main navigation">
+      <a href="#library">Setup library</a>
+      <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework">GitHub <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-orbit orbit-one" aria-hidden="true"></div>
+      <div class="hero-orbit orbit-two" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="live-dot"></span> APPLE SILICON · MINECRAFT JAVA</p>
+        <h1 id="hero-title">A setup worth<br><em>playing with.</em></h1>
+        <p class="hero-description">Browse shader recipes shared by Mac players. Compare the image settings and performance evidence, then ask an agent to check a setup against your game.</p>
+        <div class="hero-actions">
+          <a class="button button-light" href="#library">Browse setups <span aria-hidden="true">↓</span></a>
+          <button class="button button-quiet" type="button" data-dialog="participate">Tune my setup <span aria-hidden="true">↗</span></button>
+        </div>
+        <p class="hero-footnote">Inspect first. Try changes in an isolated copy of your game.</p>
+      </div>
+      <div class="hero-stamp" aria-hidden="true">
+        <span>COMMUNITY</span>
+        <strong>SETUPS<br>IN THE<br>OPEN</strong>
+        <i>⌘</i>
+      </div>
+    </section>
+
+    <section class="library" id="library" aria-labelledby="library-title">
+      <div class="library-heading">
+        <div>
+          <p class="eyebrow eyebrow-dark">THE COMMUNITY LIBRARY</p>
+          <h2 id="library-title">Find your next setup</h2>
+          <p class="section-note">Different resolutions and shader settings can change FPS substantially. Use the details to compare like for like.</p>
+          <button class="how-link" type="button" data-dialog="rules">How to use the library ↗</button>
+        </div>
+        <p id="count" class="setup-count" aria-live="polite">Loading setups…</p>
+      </div>
+
+      <div id="filters" class="filters" hidden>
+        <label>Chip family
+          <select id="filter-family"><option value="">All families</option></select>
+        </label>
+        <label>Chip tier
+          <select id="filter-tier"><option value="">All tiers</option></select>
+        </label>
+        <label>RAM
+          <select id="filter-memory"><option value="">Any memory</option></select>
+        </label>
+        <label class="sort-control">Sort by
+          <select id="sort-by">
+            <option value="average">Average FPS · highest first</option>
+            <option value="worst">Worst 5 sec FPS · highest first</option>
+            <option value="distance">View distance · highest first</option>
+          </select>
+        </label>
+      </div>
+
+      <p id="load-status" class="sr-only" role="status">Loading setup library.</p>
+      <div id="results" class="setup-grid" aria-live="polite"></div>
+      <div id="empty-state" class="empty-state" hidden></div>
+
+      <aside class="contribute-note">
+        <div><span class="eyebrow eyebrow-dark">HAVE A SETUP TO SHARE?</span><p>Useful recipes and honest results help the next player get started.</p></div>
+        <button class="button button-dark" type="button" data-dialog="participate">Share or tune a setup <span aria-hidden="true">↗</span></button>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Silicon Shader <span class="footer-slash">/</span> community setup library</span>
+    <nav aria-label="Footer navigation">
+      <a href="data.json" download>Open data</a>
+      <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md">How contributions work</a>
+      <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/issues">Contribute</a>
+    </nav>
+    <small>Independent community project. Not affiliated with Mojang, Microsoft, Apple or Yukon. No analytics or automatic uploads. Shared performance is community evidence; check the setup and scene before comparing results.</small>
+  </footer>
+
+  <dialog id="participate" aria-labelledby="participate-title">
+    <button class="close" type="button" aria-label="Close">×</button>
+    <p class="eyebrow eyebrow-dark">START WITH YOUR OWN SETUP</p>
+    <h2 id="participate-title">Let your agent help.</h2>
+    <p>Give this prompt to Codex, Claude Code, or your preferred coding agent. It starts with your launcher, mods and image-quality preferences.</p>
+    <pre id="agent-prompt">Find a suitable shared Minecraft shader setup for my Apple Silicon Mac using https://github.com/fortunexbt/minecraft-apple-silicon-framework. Read silicon_shader/skills/silicon-shader/SKILL.md. Inspect my hardware, launcher, mods and image-quality preferences, then use challenge find to compare matching setups, screenshots and settings. Check compatibility and try the chosen recipe in an isolated copy, preserving my worlds and current settings. Tune further only if needed. Show me the result and ask before publishing a contribution.</pre>
+    <button id="copy-prompt" class="button button-dark" type="button">Copy agent prompt</button>
+    <span id="copy-status" class="copy-status" role="status"></span>
+    <p class="fine">Early access: measurement setup depends on your Minecraft version. Your agent may need to adapt the sampler hook. Sharing results is always optional.</p>
+    <details class="manual-install">
+      <summary>Prefer the manual CLI?</summary>
+      <p>Requires Python 3.10+ and Minecraft Java. Use a Python environment to avoid changing your system packages.</p>
+      <pre>git clone https://github.com/fortunexbt/minecraft-apple-silicon-framework.git
 cd minecraft-apple-silicon-framework
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install .</pre><p><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKFLOW.md">Optimize your setup ↗</a> · <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md#cli-and-hosted-board">Submit an experiment ↗</a></p><p class="fine">Publishing uses <a href="https://cli.github.com/">GitHub CLI</a> and your GitHub login. It opens a pull request for maintainer review. Include your setup and route recipe so another player can repeat the experiment.</p></details></dialog>
-<dialog id="rules"><button class="close" aria-label="Close">×</button><span class="eyebrow">CLEAR RULES BEFORE RECORDS</span><h2>What earns a win?</h2><p><strong>The same agreed image, rendered more efficiently.</strong> Turning down resolution or removing effects is a different configuration, not a win on the fixed-preset track.</p><ol><li><strong>One reference workload.</strong> A published world, camera route, visual preset and evaluator Mac. Output and internal resolution, view distance and required shader effects stay fixed. Frame generation and dynamic resolution are off.</li><li><strong>Matched repeats.</strong> Three baseline/candidate pairs per scene, alternating order. The score uses the median paired p95 frame-time ratio in each scene, then takes the lowest scene result. Faster averages alone do not win.</li><li><strong>Keep the image and pacing.</strong> Review still images and motion. Correct invisible-geometry culling is allowed; missing visible work is not. Reject worse tail latency or stalls under the published tolerances.</li><li><strong>Confirm the result.</strong> An independent evaluator repeats the workload. Small differences tie. GitHub popularity, subjective taste and self-entered claims never break a tie.</li></ol><p class="fine"><strong>Current status:</strong> the reference workload and official replay process are not operational yet. The site accepts unranked showcases; its current validator checks single-pair evidence, not this future ranking process. Measurements are CPU frame-production timings, not displayed or generated FPS.</p><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/FAIRNESS.md">Read the scoring formula, tolerances and eligibility rules ↗</a></dialog>
-<dialog id="detail"><button class="close" aria-label="Close">×</button><div id="detail-content"></div></dialog></body></html>
+python -m pip install .</pre>
+      <p><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKFLOW.md">Optimize your setup ↗</a> · <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md#cli-and-hosted-board">Submit an experiment ↗</a></p>
+      <p class="fine">Publishing uses <a href="https://cli.github.com/">GitHub CLI</a> and your GitHub login. It opens a pull request for maintainer review. Include your setup and route recipe so another player can repeat the experiment.</p>
+    </details>
+  </dialog>
+
+  <dialog id="rules" aria-labelledby="rules-title">
+    <button class="close" type="button" aria-label="Close">×</button>
+    <p class="eyebrow eyebrow-dark">A QUICK WAY TO USE THE LIBRARY</p>
+    <h2 id="rules-title">Check the recipe first.</h2>
+    <p>FPS depends on the Mac, shader, scene, resolution and settings. Read the recipe and evidence before comparing two cards.</p>
+    <ol class="how-list">
+      <li>Filter by your chip family, tier and memory.</li>
+      <li>Compare output and internal resolution, shader settings, view distance and the test scene.</li>
+      <li>Ask your agent to check compatibility and prepare an isolated copy before trying a change.</li>
+    </ol>
+    <p class="fine">The library shows contributor-submitted captures. An image-quality review is not an independent performance reproduction.</p>
+  </dialog>
+</body>
+</html>

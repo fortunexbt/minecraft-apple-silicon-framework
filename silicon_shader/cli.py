@@ -15,7 +15,7 @@ from .instances import (
     managed,
     closed,
 )
-from . import capture, loop, challenge, community
+from . import capture, loop, challenge, community, catalog
 from .doctor import doctor
 
 
@@ -188,6 +188,12 @@ def parser():
     q = s.add_parser("challenge", help="Optional community evidence and publication")
     sub = q.add_subparsers(dest="action", required=True)
     sub.add_parser("show")
+    a = sub.add_parser("find", help="Find shared setups for your Mac")
+    a.add_argument("--chip", help="Chip family, e.g. M4")
+    a.add_argument("--tier", choices=("base", "pro", "max", "ultra"))
+    a.add_argument("--ram", type=int, help="Memory in GiB")
+    a.add_argument("--sort", choices=("pacing", "fps", "distance"), default="pacing")
+    a.add_argument("--limit", type=int, default=5)
     a = sub.add_parser("prepare")
     for field in (
         "baseline_capture",
@@ -202,6 +208,10 @@ def parser():
         a = sub.add_parser(action)
         a.add_argument("bundle")
         if action == "submit":
+            a.add_argument(
+                "--presentation",
+                help="JSON containing setup title, screenshot_url and recipe_url",
+            )
             a.add_argument("--publish", action="store_true")
             a.add_argument("--reviewed-digest")
     a = sub.add_parser("status")
@@ -243,6 +253,8 @@ def run(args):
     if args.cmd == "challenge":
         if args.action == "show":
             return community.contract()
+        if args.action == "find":
+            return catalog.find(args.chip, args.tier, args.ram, args.sort, args.limit)
         if args.action == "prepare":
             if Path(args.out).exists():
                 raise ValueError("Bundle output exists; choose a new path")
@@ -273,7 +285,14 @@ def run(args):
                 "status": "self_reported",
                 "digest": bundle["content_digest"],
             }
-        result = community.submit(bundle, args.publish, args.reviewed_digest)
+        if args.publish and not args.presentation:
+            raise ValueError(
+                "Add --presentation setup.json with a screenshot and recipe before publishing"
+            )
+        presentation = read(args.presentation) if args.presentation else None
+        result = community.submit(
+            bundle, args.publish, args.reviewed_digest, presentation=presentation
+        )
         if not args.publish:
             result["bundle_file"] = str(Path(args.bundle).expanduser())
         return result
