@@ -3,7 +3,6 @@
 # \showcase restore : restore pose/settings/window and FIRST_PERSON.
 import sys
 import atexit
-from pathlib import Path
 from minescript import JavaClass, player, world_info, execute, echo, add_event_listener, remove_event_listener
 
 mc = JavaClass('net.minecraft.client.Minecraft').getInstance()
@@ -37,8 +36,9 @@ def release_inputs():
 
 
 def resize_to_target():
-    ratio_x = window.getWidth() / window.getScreenWidth()
-    ratio_y = window.getHeight() / window.getScreenHeight()
+    # RenderScale can virtualize getWidth during rendering; query actual pixels.
+    ratio_x = window.queryFramebufferSize().width() / window.getScreenWidth()
+    ratio_y = window.queryFramebufferSize().height() / window.getScreenHeight()
     if ratio_x <= 0 or ratio_y <= 0:
         raise Exception('Invalid framebuffer/logical backing ratio')
     logical_width = int(1920 / ratio_x + 0.5)
@@ -62,7 +62,7 @@ def boolean(name):
     return str(p.getProperty(name)).lower() == 'true'
 
 
-def guard():
+def guard(verify_terrain=False):
     if Sink.recording:
         raise Exception('Refusing showcase while FrameSink is recording')
     server = mc.getSingleplayerServer()
@@ -71,6 +71,24 @@ def guard():
         raise Exception('Showcase requires the dedicated reference world')
     if server.getWorldGenSettings().options().seed() - 20260929 > 0.000001 or 20260929 - server.getWorldGenSettings().options().seed() > 0.000001:
         raise Exception('Showcase world seed mismatch')
+    if verify_terrain:
+        options = server.getWorldGenSettings().options()
+        generator = server.getWorldGenSettings().dimensions().overworld()
+        biome_key = JavaClass('net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists').OVERWORLD
+        if str(JavaClass('net.minecraft.SharedConstants').getCurrentVersion().name()) != '26.3':
+            raise Exception('Showcase requires Minecraft 26.3')
+        if not options.generateStructures() or options.generateBonusChest():
+            raise Exception('Showcase world-generation options differ')
+        if str(generator.getClass().getName()) != 'net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator' or str(generator.generatorSettings().getRegisteredName()) != 'minecraft:overworld' or not generator.getBiomeSource().stable(biome_key):
+            raise Exception('Showcase requires the default overworld generator')
+        height_type = JavaClass('net.minecraft.world.level.levelgen.Heightmap$Types').MOTION_BLOCKING_NO_LEAVES
+        BlockPos = JavaClass('net.minecraft.core.BlockPos')
+        blocks = JavaClass('net.minecraft.core.registries.BuiltInRegistries').BLOCK
+        for point in [[-121, 438, 70, 'minecraft:sand'], [-121, 320, 63, 'minecraft:water'], [-240, 300, 64, 'minecraft:sand']]:
+            height = server.overworld().getHeight(height_type, point[0], point[1])
+            block = server.overworld().getBlockState(BlockPos(point[0], height - 1, point[1])).getBlock()
+            if absolute(height - point[2]) > 0.01 or str(blocks.getKey(block)) != point[3]:
+                raise Exception('Showcase terrain differs from the reference world')
 
 
 def restore(reason):
@@ -116,7 +134,7 @@ if mode == 'restore':
     finished = True
     echo('Showcase restoration requested; first-person camera restored')
 elif mode == 'prepare':
-    guard()
+    guard(True)
     if File(state_path).exists():
         raise Exception('Run \\showcase restore before preparing another view')
     pose = player()
@@ -132,8 +150,8 @@ elif mode == 'prepare':
     prop('prior_exclusive_option', mc.options.exclusiveFullscreen().get())
     prop('prior_logical_width', window.getScreenWidth())
     prop('prior_logical_height', window.getScreenHeight())
-    prop('prior_framebuffer_width', window.getWidth())
-    prop('prior_framebuffer_height', window.getHeight())
+    prop('prior_framebuffer_width', window.queryFramebufferSize().width())
+    prop('prior_framebuffer_height', window.queryFramebufferSize().height())
     prop('prior_x', pose.position[0])
     prop('prior_y', pose.position[1])
     prop('prior_z', pose.position[2])
@@ -172,7 +190,7 @@ elif mode == 'prepare':
                 ready_since = 0
                 ready_frames = 0
                 return
-            if absolute(window.getWidth() - 1920) > 0.1 or absolute(window.getHeight() - 1080) > 0.1:
+            if absolute(window.queryFramebufferSize().width() - 1920) > 0.1 or absolute(window.queryFramebufferSize().height() - 1080) > 0.1:
                 ready_since = 0
                 ready_frames = 0
                 if now - last_resize >= 1000000000 and resize_attempts < 3:
@@ -201,8 +219,8 @@ elif mode == 'prepare':
             prop('actual_camera', str(mc.options.getCameraType()))
             prop('actual_fov', mc.options.fov().get())
             prop('actual_hud_hidden', mc.gui.hud.isHidden())
-            prop('actual_width', window.getWidth())
-            prop('actual_height', window.getHeight())
+            prop('actual_width', window.queryFramebufferSize().width())
+            prop('actual_height', window.queryFramebufferSize().height())
             prop('actual_x', pose.position[0])
             prop('actual_y', pose.position[1])
             prop('actual_z', pose.position[2])

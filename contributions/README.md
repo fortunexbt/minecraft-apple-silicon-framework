@@ -1,5 +1,7 @@
-# Community experiments
+# Community submissions
 
-Reviewed data-only submissions appear here as `<content_digest>.json`. Use `silicon-shader challenge prepare`, inspect the bundle, then opt in with `challenge submit`. New entries contain a public GitHub handle, validated timing bundle, and `presentation` with title, gameplay screenshot URL and Markdown recipe URL. Use `challenge submit BUNDLE --presentation setup.json` to preview; add `--publish` when ready. They remain **self-reported** after review; merging does not certify independent reproduction.
+Optional data-only submissions live at `<content_digest>.json`. Follow [Share a setup](../docs/CHALLENGE.md). The payload contains a public GitHub handle, validated timing bundle, Minecraft profile, agent attribution, screenshot and pinned recipe links.
 
-Maintainers must verify the author matches the submitting GitHub account, open the screenshot and recipe links, inspect reproducibility and quality claims, and review the exact data before merging. The automated gate validates with the base branch's code and never executes contributor code. Changes to the validator belong in a separate code PR. See [the rules](../docs/CHALLENGE.md).
+The trusted-base gate accepts exactly one contribution file, checks its author and full current-workload evidence, and merges only the validated head commit. It never executes contributor code. Successful merges trigger site publication automatically. Drafts, code changes and historical v1 presentation edits do not auto-merge.
+
+All entries remain **self-reported**. Automatic consistency checks are not visual approval or independent reproduction. Maintainers handle reports and corrections; repository code changes are reviewed separately.

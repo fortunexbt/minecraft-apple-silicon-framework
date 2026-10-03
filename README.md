@@ -8,7 +8,7 @@ Find and share Minecraft Java shader setups for Apple Silicon. Browse screenshot
 
 ## Get started
 
-Give [the starter prompt](agents/START.md) to Codex, Claude Code or another coding agent with shell access. It detects your hardware and game, compares suitable recipes, and tries changes in a separate copy with rollback. Your current image quality is the starting point. Sharing is optional.
+Give [the starter prompt](agents/START.md) to Codex, Claude Code or another coding agent with shell access. It detects your hardware and game, compares suitable recipes, and tries changes in a separate copy with rollback. Automatic play needs an agent with working game controls; shell access alone cannot drive Minecraft. A game already in use is left alone. Your current image quality is the starting point. Sharing is optional.
 
 Prefer the CLI? You need **Python 3.10+** and your own Minecraft Java installation. There are no Python runtime dependencies or API keys.
 
@@ -26,7 +26,7 @@ Continue with [try a setup](docs/WORKFLOW.md). Prism has the most direct integra
 
 ## Choose a setup that fits
 
-New challenge submissions use [one shared seeded world and scripted flight](docs/WORKLOAD.md): two 21-second runs, targeting a repeat comparison under five minutes. Earlier-route recipes remain separate.
+New challenge submissions use [one shared seeded world and scripted flight](docs/WORKLOAD.md): one baseline and one candidate flight, about 21 seconds each after warm-up, targeting a repeat comparison under five minutes. One fixed front-facing portrait is taken afterward. Earlier-route recipes remain separate.
 
 Each submission has a screenshot, Minecraft skin, hardware, game/mod versions, resolution, view distance, FPS/frame pacing and a reproducible recipe. Filter by Mac and compare the visual tradeoffs before choosing the highest FPS. There is no universal winner.
 
@@ -39,7 +39,7 @@ The first [M4 Wide View recipe](recipes/m4-wide24/README.md) includes its exact 
 | Inspect the Mac, active player and game | `discover`, `doctor`, `runtime` |
 | Find a community recipe | `challenge find --this-mac` |
 | Try settings and roll back | `isolate`, `profile` — [workflow](docs/WORKFLOW.md) |
-| Measure or tune several candidates | `capture`, `loop` — [benchmarking](docs/reference/BENCHMARKING.md) |
+| Measure one fair comparison | [Shared flight and portrait](docs/WORKLOAD.md) |
 | Make a clean daily copy | `daily` |
 | Preview and publish evidence | `challenge submit`, `challenge status` — [submission guide](docs/CHALLENGE.md) |
 
@@ -64,7 +64,7 @@ python3 -m silicon_shader.registry contributions site/data.json
 python3 -m http.server 8000 --directory site
 ```
 
-No database or private backend is required. Historical campaign notes remain in [the experiment digest](docs/EXPERIMENTS.md) and `evidence/`.
+Validated current-workload data-only submissions merge and publish automatically; recipe/tool changes still need review. Entries remain self-reported, not certified performance. No database or private backend is required. Historical campaign notes remain in [the experiment digest](docs/EXPERIMENTS.md) and `evidence/`.
 
 Original code is [MIT licensed](LICENSE). See [third-party attribution](THIRD_PARTY.md) for mods, shaders and textures. Independent community project; not affiliated with Apple or Prism.
 
