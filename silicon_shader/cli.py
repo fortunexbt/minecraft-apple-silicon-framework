@@ -3,7 +3,9 @@
 import argparse
 import json
 from pathlib import Path
+import subprocess
 import sys
+import zipfile
 from .common import read, write
 from .discover import discover, java_requirement, inspect_runtime
 from .instances import (
@@ -307,6 +309,10 @@ def run(args):
                 "path": args.out,
                 "workload_id": result["workload_id"],
                 "status": "route checked; self-reported",
+                "notes": [
+                    "The first flight after a game launch runs a few FPS slower with deeper 1% lows. Use a warmed flight (run one throwaway flight first) for both baseline and candidate.",
+                    "Look at the portrait before publishing: a pinned-at-cap FPS with a vanilla-looking frame means the shader never ran.",
+                ],
             }
         if args.action == "find":
             return catalog.find(
@@ -337,6 +343,7 @@ def run(args):
                 "path": args.out,
                 "digest": result["content_digest"],
                 "status": "self_reported; unpublished",
+                "warnings": challenge.warnings(result),
             }
         if args.action == "status":
             identifier = (
@@ -521,8 +528,18 @@ def run(args):
 def main():
     try:
         emit(run(parser().parse_args()))
-    except (ValueError, KeyError, TypeError, OSError) as e:
-        print(json.dumps({"ok": False, "error": str(e)}), file=sys.stderr)
+    except (
+        ValueError,
+        KeyError,
+        TypeError,
+        OSError,
+        AttributeError,
+        RecursionError,
+        zipfile.BadZipFile,
+        subprocess.SubprocessError,
+    ) as e:
+        message = "Missing field " + str(e) if isinstance(e, KeyError) else str(e)
+        print(json.dumps({"ok": False, "error": message}), file=sys.stderr)
         sys.exit(2)
 
 

@@ -1,5 +1,19 @@
 # Verification and operating limits
 
+Current checks run in [GitHub Actions](https://github.com/fortunexbt/minecraft-apple-silicon-framework/actions).
+
+| Area | Status |
+| --- | --- |
+| Route and flight | Exercised on the base M4 across the campaign. Route validation catches off schedule cameras and incomplete runs. A deliberate 319.7 ms late stall passes route validation and stays in the trace. |
+| Portrait | The reference image was inspected. The shipped `showcase.pyj` can hang the game on macOS when it leaves fullscreen, so the supported path is a separate windowed launch. Every use still checks the saved PNG. |
+| Other Macs and displays | Not a tested matrix. Unsupported setups stop without a fabricated measurement. |
+| Publication checks | Verify current workload data, contributor identity and exact PR contents. They do not verify graphics, detect fabricated local evidence or review the linked recipe. |
+| Maintenance | Static site and data in GitHub. Code changes still need review, compatibility changes may need new adapters and misleading submissions may need moderation. |
+
+## History
+
+### Release finalisation (October 4)
+
 The release checks run in [GitHub Actions](https://github.com/fortunexbt/minecraft-apple-silicon-framework/actions). On October 4, finalization used existing recordings and remote CI only: the user was playing, so no Minecraft actions, local builds, tests or browser rendering were performed.
 
 - The pinned flight and full-route stop were previously exercised on the base M4. A deliberate 319.7 ms late stall remained in the recorded trace and passed route validation.
@@ -8,7 +22,7 @@ The release checks run in [GitHub Actions](https://github.com/fortunexbt/minecra
 - Automated publication checks current-workload data, contributor identity and exact PR contents. It does not independently verify graphics, detect fabricated local evidence or promise that community recipes are safe to execute blindly.
 - The static site and data live in GitHub. There is no private service to keep running. Code changes still need review, compatibility changes may need new adapters, and misleading submissions may need moderation. No honest local benchmark framework is maintenance-free forever.
 
-## Initial release snapshot
+### Initial release snapshot
 
 
 This historical snapshot records the initial framework build. Current checks are in [GitHub Actions](https://github.com/fortunexbt/minecraft-apple-silicon-framework/actions). It is not a current hardware-qualification matrix.

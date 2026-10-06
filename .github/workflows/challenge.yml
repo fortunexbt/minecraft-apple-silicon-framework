@@ -5,6 +5,9 @@ on:
 permissions:
   contents: read
   pull-requests: read
+concurrency:
+  group: challenge-${{ github.event.number }}
+  cancel-in-progress: false
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -82,5 +85,13 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$GH_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
-          gh api --method POST "repos/$GH_REPO/actions/workflows/pages.yml/dispatches" \
-            -f ref=main
+          # The merge already succeeded, so retry the dispatch a few times. The
+          # weekly rebuild in pages.yml is the backstop if every attempt fails.
+          for attempt in 1 2 3; do
+            if gh api --method POST "repos/$GH_REPO/actions/workflows/pages.yml/dispatches" -f ref=main; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          echo "Pages dispatch failed; the next scheduled rebuild will publish the merged entry." >&2
+          exit 1
