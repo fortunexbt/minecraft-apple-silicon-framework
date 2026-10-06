@@ -48,7 +48,8 @@ def analyze(intervals):
         for x in ms
     ):
         raise ValueError("Need positive finite frame intervals")
-    total = sum(ms)
+    # math.fsum is exact, so the metrics are identical on every supported Python.
+    total = math.fsum(ms)
     ordered = sorted(ms)
 
     def percentile(p):
@@ -58,7 +59,7 @@ def analyze(intervals):
     over = {
         f"over_{t}": {
             "count": sum(x > t for x in ms),
-            "time_ms": sum(x for x in ms if x > t),
+            "time_ms": math.fsum(x for x in ms if x > t),
         }
         for t in (33, 50, 100)
     }

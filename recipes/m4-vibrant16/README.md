@@ -1,6 +1,6 @@
 # M4 Vibrant 16
 
-A stable-90 Sildur's Vibrant setup for a base M4 MacBook Pro (10 CPU cores, 10 GPU cores, 24 GiB). It starts from the [M4 wide-view recipe](../m4-wide24/README.md) and keeps its Minecraft 26.3, Fabric 0.19.5, mod list, Iris depth-identity fix, RenderScale build, Faithful 32x textures, Java 25 runtime and 4 GiB heap. It changes the shader pack, internal scale, render distance and window mode.
+A stable-90 Sildur's Vibrant setup for a base M4 MacBook Pro (10 CPU cores, 10 GPU cores, 24 GiB). It starts from the [M4 wide-view recipe](../m4-wide24/README.md) and keeps its Minecraft 26.3, Fabric 0.19.5, mod list, Iris depth-identity fix, RenderScale build, Faithful 32x textures, Java 25 runtime and 4 GiB heap. It changes the shader pack, render distance and window mode. The internal render scale stays at 0.6.
 
 ## Changes from M4 wide-view
 
@@ -22,7 +22,7 @@ The MakeUp exposure and sharpening patches do not apply to this pack. The Iris d
 
 One same-machine pair on the standard 420-tick Overworld flight-and-turn route, both in borderless fullscreen at 3024x1898 output, cap 120, each the warmed second flight of its launch:
 
-| | Wide view (R24, MakeUp, 60%) | Vibrant 16 (R16, Sildur's Lite, 60%) |
+| | Wide view settings (R24, MakeUp, 60%, borderless) | Vibrant 16 (R16, Sildur's Lite, 60%, borderless) |
 | --- | --- | --- |
 | Average | 107.23 FPS | 99.82 FPS |
 | Worst five seconds | 98.96 FPS | 90.33 FPS |
@@ -30,7 +30,7 @@ One same-machine pair on the standard 420-tick Overworld flight-and-turn route, 
 | Longest frame | 20.66 ms | 22.61 ms |
 | Frames over 33 ms | 0 | 0 |
 
-The third warmed flight of the candidate launch measured 100.1 FPS with a worst five-second rate of 90.6 FPS. A repeat launch with Sildur's `Brightness=0.8` measured 99.2 and 99.2 FPS (worst five seconds 89.9 and 90.0).
+The baseline and candidate columns are each the second flight of their launch. The third warmed flight of the candidate launch measured 100.1 FPS with a worst five-second rate of 90.6 FPS. A repeat launch with Sildur's `Brightness=0.8` measured 99.2 and 99.2 FPS (worst five seconds 89.9 and 90.0).
 
 ![Vibrant 16 at the fixed front-facing shoreline view](gameplay.png)
 

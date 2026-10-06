@@ -64,12 +64,16 @@ def build(source, destination):
                 + path.name,
             }
         )
-    Path(destination).write_text(
+    # Write beside the target and replace, so a crash never leaves a truncated index.
+    target = Path(destination)
+    temporary = target.with_name(target.name + ".tmp")
+    temporary.write_text(
         json.dumps(
             {"contract": configuration, "entries": entries}, separators=(",", ":")
         )
         + "\n"
     )
+    temporary.replace(target)
     return {"entries": len(entries), "output": str(destination)}
 
 

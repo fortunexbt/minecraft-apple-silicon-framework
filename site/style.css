@@ -6,7 +6,7 @@
   --green: #244c37;
   --green-deep: #183a2b;
   --moss: #dce8cd;
-  --muted: #718074;
+  --muted: #566559;
   --line: #d5dbcf;
   --lime: #c4d994;
   --serif: Georgia, 'Times New Roman', serif;
@@ -24,7 +24,8 @@ a:hover { text-decoration: underline; }
 button, select { font: inherit; }
 button, a, select { touch-action: manipulation; }
 button { cursor: pointer; }
-button:focus-visible, a:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid #acbf75; outline-offset: 3px; }
+button:focus-visible, a:focus-visible, select:focus-visible, summary:focus-visible, input:focus-visible { outline: 3px solid #1f5a3a; outline-offset: 3px; }
+.hero :focus-visible, .button-dark:focus-visible { outline-color: #c4d994; }
 [hidden] { display: none !important; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -82,13 +83,13 @@ h1 em { color: var(--lime); font-family: var(--serif); font-weight: 400; letter-
 .library-heading h2 { margin: 10px 0 8px; font-size: clamp(28px, 3vw, 37px); line-height: 1.08; letter-spacing: -1.5px; font-weight: 560; }
 .section-note { max-width: 700px; margin: 0; color: #69796d; font-size: 13px; line-height: 1.6; }
 .how-link { margin-top: 10px; padding: 0; border: 0; color: #45674b; background: transparent; font-size: 11px; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
-.setup-count { flex: 0 0 auto; margin: 0 0 5px; color: var(--muted); font: 11px ui-monospace, monospace; }
+.setup-count { flex: 0 0 auto; margin: 0 0 5px; color: var(--muted); font: 12px ui-monospace, monospace; }
 .filters {
   display: grid; grid-template-columns: repeat(3, minmax(130px, 1fr)) minmax(240px, 1.55fr);
   gap: 12px; margin: 27px 0 20px; padding: 15px; border: 1px solid var(--line);
   border-radius: 11px; background: #e8ebe1;
 }
-.filters label { display: grid; gap: 7px; color: #67756a; font: 9px ui-monospace, monospace; letter-spacing: .6px; text-transform: uppercase; }
+.filters label { display: grid; gap: 7px; color: #4d5d51; font: 10px ui-monospace, monospace; letter-spacing: .6px; text-transform: uppercase; }
 .filters select {
   width: 100%; min-width: 0; height: 39px; padding: 0 30px 0 11px; border: 1px solid #cbd3c5;
   border-radius: 6px; color: #2c4233; background: #f8f9f1; font-size: 12px; text-transform: none; letter-spacing: 0;
@@ -103,7 +104,7 @@ h1 em { color: var(--lime); font-family: var(--serif); font-weight: 400; letter-
 .cover-placeholder:before, .cover-placeholder:after { content: ''; position: absolute; width: 150px; height: 150px; border: 1px solid #59765524; border-radius: 43%; transform: rotate(28deg); }
 .cover-placeholder:after { width: 205px; height: 205px; transform: rotate(-26deg); }
 .placeholder-kicker, .placeholder-title, .placeholder-note { position: relative; z-index: 1; }
-.placeholder-kicker { font: 8px ui-monospace, monospace; letter-spacing: 1.3px; color: #718674; }
+.placeholder-kicker { font: 8px ui-monospace, monospace; letter-spacing: 1.3px; color: #4d5d51; }
 .placeholder-title { font: 24px var(--serif); font-weight: 400; }
 .placeholder-note { font-size: 10px; color: #718174; }
 .setup-image { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
@@ -139,19 +140,27 @@ h1 em { color: var(--lime); font-family: var(--serif); font-weight: 400; letter-
 .skin-avatar { border-radius: 5px; }
 .skin-avatar img { image-rendering: pixelated; }
 .avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.agent-credit { margin: 10px 0 0; color: #657366; font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.agent-credit { margin: 10px 0 0; color: #4d5d51; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .hardware-line { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; }
-.hardware-chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid #c9d6bd; border-radius: 5px; color: #305139; background: #e9f0e0; font-size: 9px; font-weight: 650; }
+.hardware-chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid #c9d6bd; border-radius: 5px; color: #305139; background: #e9f0e0; font-size: 11px; font-weight: 650; }
 .secondary-chip { border-color: #dce1d6; color: #68766a; background: #f0f2e9; font-weight: 500; }
 .workload-chip { font-weight: 700; }
 .standard-workload { border-color: #b9d4ae; color: #244b30; background: #e3f0dc; }
 .earlier-workload { border-color: #d9d4c7; color: #726956; background: #f1eee5; }
 .setup-specs { display: grid; grid-template-columns: 1.35fr .8fr; gap: 12px; padding: 14px 0 11px; border-top: 1px solid #e5e9df; border-bottom: 1px solid #e5e9df; }
 .spec-item { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.spec-label { color: #78857a; font: 8px ui-monospace, monospace; letter-spacing: .8px; text-transform: uppercase; }
+.spec-label { color: #4d5d51; font: 10px ui-monospace, monospace; letter-spacing: .8px; text-transform: uppercase; }
 .spec-value { color: #2c4333; font-size: 12px; line-height: 1.2; font-weight: 640; overflow-wrap: anywhere; }
 .spec-note { min-height: 22px; color: #778378; font-size: 9px; line-height: 1.3; }
-.stability-note { margin: 11px 0 0; color: #68786b; font-size: 10px; }
+.stability-note { margin: 11px 0 0; color: #4d5d51; font-size: 12px; }
+.perf-compare { margin: 12px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.perf-compare p { margin: 0 0 5px; color: var(--ink); font-size: 12px; line-height: 1.5; }
+.perf-compare .evidence-note { margin: 6px 0 0; color: #4d5d51; font-size: 11px; }
+.perf-compare .hardware-chip { margin-left: 6px; vertical-align: middle; }
+.change-chip { background: #f4efd9; border-color: #dcd2a4; color: #5a4a14; }
+.diff-list { margin: 10px 0 0; padding-left: 18px; color: #3d4d41; font-size: 12px; line-height: 1.55; }
+.check-control { display: flex !important; grid-auto-flow: column; align-items: center; gap: 8px; text-transform: none !important; letter-spacing: 0 !important; font: 12px Inter, system-ui, sans-serif !important; }
+.link-control { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .advanced-details { margin-top: 12px; border-top: 1px solid #e7eadf; padding-top: 10px; }
 .advanced-details summary, .settings-details summary { cursor: pointer; color: #506650; font-size: 10px; font-weight: 630; }
 .advanced-details dl { display: grid; grid-template-columns: minmax(105px, .85fr) minmax(0, 1.15fr); gap: 7px 11px; margin: 13px 0; }
@@ -192,7 +201,7 @@ h1 em { color: var(--lime); font-family: var(--serif); font-weight: 400; letter-
 }
 .site-footer nav { gap: 20px; font-size: 10px; }
 .footer-slash { padding: 0 5px; color: #9da99b; }
-.site-footer small { width: 100%; max-width: 1000px; color: #889388; font-size: 9px; line-height: 1.55; }
+.site-footer small { width: 100%; max-width: 1000px; color: #4d5d51; font-size: 11px; line-height: 1.55; }
 dialog {
   position: relative; width: min(650px, 92vw); max-height: 88vh; overflow: auto; padding: 34px;
   border: 1px solid #cbd4c5; border-radius: 15px; color: var(--ink); background: var(--paper);
@@ -205,7 +214,7 @@ dialog pre { padding: 15px; border: 1px solid #d8dfd2; border-radius: 8px; color
 dialog a { color: #365f42; text-decoration: underline; text-underline-offset: 2px; }
 .close { position: absolute; top: 8px; right: 11px; width: 37px; height: 37px; padding: 0; border: 0; color: #607064; background: transparent; font-size: 25px; }
 .copy-status { display: block; min-height: 16px; margin-top: 8px; color: #637465; font-size: 11px; }
-.fine { color: #778478 !important; font-size: 10px !important; }
+.fine { color: #4d5d51 !important; font-size: 11px !important; }
 .manual-install { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--line); }
 .manual-install summary { cursor: pointer; color: #395941; font-size: 12px; font-weight: 650; }
 .how-list { padding-left: 21px; color: #435647; }
@@ -242,7 +251,7 @@ dialog a { color: #365f42; text-decoration: underline; text-underline-offset: 2p
   .contributor { gap: 5px; font-size: 9px; }
   .avatar { width: 27px; height: 27px; flex-basis: 27px; }
   .hardware-line { gap: 5px; margin: 11px 0 13px; }
-  .hardware-chip { padding: 0 6px; font-size: 8px; }
+  .hardware-chip { padding: 0 6px; font-size: 10px; }
   .setup-specs { grid-template-columns: 1fr; gap: 10px; }
   .spec-note { min-height: 0; }
   .contribute-note { align-items: flex-start; flex-direction: column; margin: 28px 0 40px; }
