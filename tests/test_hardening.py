@@ -1,5 +1,6 @@
 """Regression tests for validator hardening found in the project review."""
 
+import copy
 import json
 import subprocess
 import sys
@@ -297,3 +298,54 @@ class RegistryWrite(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MetricsAcrossPythonVersions(unittest.TestCase):
+    """Python 3.12 compensated float sum(); 3.10 and 3.11 do not. Bundles must validate on both."""
+
+    def entries(self):
+        for path in sorted((ROOT / "contributions").glob("*.json")):
+            yield path.name, json.loads(path.read_text())["bundle"]
+
+    def test_last_digit_differences_are_tolerated(self):
+        for name, bundle in self.entries():
+            nudged = copy.deepcopy(bundle)
+            for run in nudged["runs"].values():
+                run["metrics"]["duration_s"] *= 1 + 5e-12
+                run["metrics"]["average_fps"] *= 1 - 5e-12
+            # The content digest covers the stored numbers, so compare the metrics check only.
+            for run in nudged["runs"].values():
+                self.assertTrue(
+                    challenge._same_metrics(
+                        challenge.analyze(run["intervals_ms"]), run["metrics"]
+                    ),
+                    name,
+                )
+
+    def test_a_real_change_is_still_caught(self):
+        _, bundle = next(iter(self.entries()))
+        run = bundle["runs"]["candidate"]
+        changed = copy.deepcopy(run["metrics"])
+        changed["average_fps"] *= 1.001
+        self.assertFalse(
+            challenge._same_metrics(challenge.analyze(run["intervals_ms"]), changed)
+        )
+        changed = copy.deepcopy(run["metrics"])
+        changed["over_33"]["count"] += 1
+        self.assertFalse(
+            challenge._same_metrics(challenge.analyze(run["intervals_ms"]), changed)
+        )
+
+    def test_types_must_still_match(self):
+        self.assertFalse(challenge._same_metrics({"n": 1}, {"n": True}))
+        self.assertFalse(challenge._same_metrics({"n": 1}, {"n": "1"}))
+        self.assertTrue(challenge._same_metrics({"n": 1.0}, {"n": 1.0000000000001}))
+
+    def test_metrics_do_not_depend_on_summation_order(self):
+        import random
+
+        values = [random.Random(7).uniform(6, 14) for _ in range(2000)]
+        shuffled = values[::-1]
+        a, b = challenge.analyze(values), challenge.analyze(shuffled)
+        self.assertEqual(a["duration_s"], b["duration_s"])
+        self.assertEqual(a["average_fps"], b["average_fps"])
