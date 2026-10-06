@@ -5,6 +5,7 @@ const repo = 'https://github.com/fortunexbt/minecraft-apple-silicon-framework';
 const standardWorkloadId = 'silicon-shader-overworld-v1';
 const pageSize = 24;
 let entries = [];
+let thumbIndex = {};
 let loadFailed = false;
 let visibleStandardCount = pageSize;
 let visibleEarlierCount = pageSize;
@@ -280,10 +281,24 @@ function createCover(entry, title) {
 
   const screenshot = safeScreenshotUrl((entry.presentation || {}).screenshot_url);
   if (screenshot) {
-    const image = node('img', undefined, { class: 'setup-image', src: screenshot, alt: title, loading: 'lazy', decoding: 'async' });
+    // Small WebP copies are built with the site; the full screenshot is the fallback.
+    const widths = /^[a-f0-9]{64}$/.test(entry.digest || '') && Array.isArray(thumbIndex[entry.digest]) ? thumbIndex[entry.digest].filter(Number.isInteger) : [];
+    const attrs = { class: 'setup-image', src: screenshot, alt: title, loading: 'lazy', decoding: 'async', width: '1920', height: '1080' };
+    if (widths.length) {
+      attrs.src = 'thumbs/' + entry.digest + '-' + Math.min(...widths) + '.webp';
+      attrs.srcset = widths.map(width => 'thumbs/' + entry.digest + '-' + width + '.webp ' + width + 'w').join(', ');
+      attrs.sizes = '(max-width: 700px) 100vw, 380px';
+    }
+    const image = node('img', undefined, attrs);
     const fullImage = node('a', undefined, { class: 'screenshot-link', href: screenshot, target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Open full screenshot: ' + title });
     image.addEventListener('load', () => { fallback.hidden = true; });
-    image.addEventListener('error', () => fullImage.remove());
+    image.addEventListener('error', () => {
+      if (widths.length && image.getAttribute('srcset')) {
+        image.removeAttribute('srcset');
+        image.removeAttribute('sizes');
+        image.src = screenshot;
+      } else fullImage.remove();
+    });
     fullImage.append(image);
     cover.append(fullImage);
   }
@@ -688,6 +703,10 @@ async function load() {
     const data = await response.json();
     if (!Array.isArray(data.entries)) throw new Error('Invalid evidence index');
     entries = data.entries.filter(entry => entry && entry.metadata && entry.runs);
+    try {
+      const thumbs = await fetch('thumbs/index.json');
+      if (thumbs.ok) thumbIndex = await thumbs.json();
+    } catch {}
   } catch {
     loadFailed = true;
     byId('load-status').textContent = 'Could not load the setup library.';

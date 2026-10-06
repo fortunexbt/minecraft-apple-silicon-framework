@@ -118,8 +118,14 @@ if auto_merge_eligible and output_path:
         output.write(f"base_sha={base_sha}\n")
         output.write(f"head_sha={head_sha}\n")
 if auto_merge_eligible:
-    print("Validated data-only contribution; exact head is eligible for automatic merge.")
+    print(
+        "Validated data-only contribution; exact head is eligible for automatic merge."
+    )
 elif entry["bundle"].get("schema_version") == 2:
-    print("Validated contribution, but automatic merge only targets this repository's main branch.")
+    print(
+        "Validated contribution, but automatic merge only targets this repository's main branch."
+    )
 else:
-    print("Historical presentation update validated; it is not eligible for automatic merge.")
+    print(
+        "Historical presentation update validated; it is not eligible for automatic merge."
+    )

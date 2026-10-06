@@ -11,3 +11,4 @@ dist/
 
 # Built from reviewed contributions before preview/deploy.
 /site/data.json
+/site/thumbs/
