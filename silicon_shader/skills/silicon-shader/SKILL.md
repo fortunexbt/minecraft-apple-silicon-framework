@@ -87,7 +87,8 @@ Evidence
 
 1. `challenge route-receipt CONTROL RUN_ID --out route.json` for each side.
 2. Import each completion with `recipes/m4-wide24/sampler/import_capture.py` and an operator manifest built from observed context, run from the repository checkout.
-3. `challenge prepare baseline.json candidate.json baseline.csv candidate.csv metadata.json --baseline-route baseline-route.json --candidate-route candidate-route.json --out experiment.json`, then `challenge validate experiment.json`.
+3. `challenge metadata-template baseline.json candidate.json --out metadata.json` drafts the metadata from the two captures, with observed values and the interventions filled in. Replace every `<fill in>`, add `visual_properties` to the interventions when shader options differ, and set `quality_review` only after you have looked at both pictures.
+4. `challenge prepare baseline.json candidate.json baseline.csv candidate.csv metadata.json --baseline-route baseline-route.json --candidate-route candidate-route.json --out experiment.json`, then `challenge validate experiment.json`.
 
 Never fill a missing observation with an expected value. Reject paused, menu, death and black world captures, wrong scenes or saves, lost focus, throttling and incomplete output. After a timeout, inspect the same request. CPU frame production is not displayed or generated FPS or input latency.
 

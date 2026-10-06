@@ -349,3 +349,110 @@ class MetricsAcrossPythonVersions(unittest.TestCase):
         a, b = challenge.analyze(values), challenge.analyze(shuffled)
         self.assertEqual(a["duration_s"], b["duration_s"])
         self.assertEqual(a["average_fps"], b["average_fps"])
+
+
+class MetadataTemplate(unittest.TestCase):
+    def setUp(self):
+        fixture = test_challenge.ChallengeTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        self.fixture = fixture
+        self.paths = (fixture.root / "baseline.json", fixture.root / "candidate.json")
+
+    def template(self, hardware=None):
+        return challenge.metadata_template(*self.paths, hardware)
+
+    def test_observed_values_and_interventions_are_filled_in(self):
+        result = self.template(
+            {
+                "family": "M4",
+                "tier": "base",
+                "cpu_cores": 10,
+                "gpu_cores": 10,
+                "memory_gib": 24.0,
+            }
+        )
+        meta = result["metadata"]
+        self.assertEqual(
+            meta["hardware"],
+            {
+                "family": "M4",
+                "tier": "base",
+                "cpu_cores": 10,
+                "gpu_cores": 10,
+                "memory_gib": 24,
+            },
+        )
+        self.assertEqual(meta["candidate"]["settings"]["scale"], 0.75)
+        self.assertEqual(meta["baseline"]["settings"]["scale"], 1.0)
+        self.assertEqual(result["interventions_detected"], ["scale"])
+        self.assertEqual(meta["interventions"], ["scale"])
+
+    def test_unfilled_template_never_validates(self):
+        hardware = {
+            "family": "M4",
+            "tier": "base",
+            "cpu_cores": 10,
+            "gpu_cores": 10,
+            "memory_gib": 24,
+        }
+        meta = self.template(hardware)["metadata"]
+        with self.assertRaisesRegex(ValueError, "Replace the <fill in> placeholder"):
+            challenge._metadata(meta)
+
+    def test_quality_review_must_be_set_by_a_person(self):
+        meta = json.loads((ROOT / "examples/challenge-metadata.json").read_text())
+        template = self.template(
+            {
+                "family": "M4",
+                "tier": "base",
+                "cpu_cores": 10,
+                "gpu_cores": 10,
+                "memory_gib": 24,
+            }
+        )["metadata"]
+        # Fill every placeholder from a known-good example but keep the template's review.
+        for key in ("minecraft", "loader", "launcher", "harness"):
+            template[key] = meta[key]
+        template["runtime"] = meta["runtime"]
+        for name in ("baseline", "candidate"):
+            template[name]["mods"] = meta[name]["mods"]
+            template[name]["shader"] = meta[name]["shader"]
+            template[name]["settings"]["visual_properties"] = meta[name]["settings"][
+                "visual_properties"
+            ]
+        template["workload"] = meta["workload"]
+        with self.assertRaisesRegex(ValueError, "visual quality review"):
+            challenge._metadata(template)
+        template["quality_review"] = meta["quality_review"]
+        template["baseline"]["settings"]["resolution"] = meta["baseline"]["settings"][
+            "resolution"
+        ]
+        template["candidate"]["settings"]["resolution"] = meta["candidate"]["settings"][
+            "resolution"
+        ]
+        challenge._metadata(template)
+
+    def test_cli_writes_a_new_file_only(self):
+        import io
+        from contextlib import redirect_stdout
+
+        out = self.fixture.root / "draft.json"
+        argv = [
+            "silicon-shader",
+            "challenge",
+            "metadata-template",
+            str(self.paths[0]),
+            str(self.paths[1]),
+            "--out",
+            str(out),
+        ]
+        with patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+            cli.main()
+        self.assertEqual(json.loads(out.read_text())["interventions"], ["scale"])
+        with (
+            patch.object(sys, "argv", argv),
+            patch("sys.stderr"),
+            self.assertRaises(SystemExit),
+        ):
+            cli.main()
