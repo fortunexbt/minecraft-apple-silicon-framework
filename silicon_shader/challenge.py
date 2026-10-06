@@ -48,27 +48,44 @@ def _hash(value):
 
 
 def _keys(value, keys, label):
-    if not isinstance(value, dict) or set(value) != set(keys):
-        raise ValueError("Unexpected or missing fields: " + label)
+    if not isinstance(value, dict):
+        raise ValueError(f"Unexpected or missing fields: {label} must be an object")
+    missing = sorted(set(keys) - set(value))
+    extra = sorted(set(value) - set(keys))
+    if missing or extra:
+        detail = []
+        if missing:
+            detail.append("missing " + ", ".join(map(str, missing)))
+        if extra:
+            detail.append("unexpected " + ", ".join(map(str, extra)))
+        raise ValueError(f"Unexpected or missing fields: {label} ({'; '.join(detail)})")
 
 
-def _label(value):
+_LABEL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+() -]{0,47}")
+# Secret-looking prefixes match only at a word start, so "Disk-Cache" and
+# "risk-free" are fine while "sk-live-..." and "ghp_..." are not.
+_SECRET = re.compile(
+    r"(token|secret|password|bearer|\bsk-|\bgh[pousr]_|github_pat_)", re.IGNORECASE
+)
+
+
+def _label(value, name="label"):
     # Deliberately restrictive public labels, not an anonymization operation.
+    # The message names the field but never echoes the value.
     if (
         not isinstance(value, str)
-        or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+ -]{0,47}", value)
+        or not _LABEL.fullmatch(value)
         or ".." in value
-        or re.search(
-            r"(token|secret|password|bearer|sk-|ghp_|github_pat_)", value, re.IGNORECASE
-        )
+        or _SECRET.search(value)
         or re.search(r"[A-Za-z0-9_-]{32,}", value)
     ):
         raise ValueError(
-            "Unsafe public label; use a short generic product/version label"
+            f"Unsafe public {name}; use a short generic product/version label "
+            "of 1-48 characters (letters, digits, spaces and . _ + - ( ))"
         )
 
 
-def _number(value, low, high, integer=False):
+def _number(value, low, high, integer=False, name="number"):
     if (
         isinstance(value, bool)
         or not isinstance(value, (int, float))
@@ -76,20 +93,24 @@ def _number(value, low, high, integer=False):
         or not low <= value <= high
         or (integer and type(value) is not int)
     ):
-        raise ValueError("Number outside supported bounds")
+        shown = ""
+        if isinstance(value, (int, float)) and math.isfinite(value):
+            shown = f", got {value!r}"
+        kind = "an integer" if integer else "a number"
+        raise ValueError(f"{name} must be {kind} from {low} to {high}{shown}")
 
 
 def _properties(value):
     if not isinstance(value, dict) or len(value) > 100:
         raise ValueError("Invalid visual properties")
     for k, v in value.items():
-        _label(k)
+        _label(k, "visual property name")
         if isinstance(v, str):
-            _label(v)
+            _label(v, f"value of visual property {k}")
         elif type(v) is bool:
             pass
         else:
-            _number(v, -100000, 100000)
+            _number(v, -100000, 100000, name=f"visual property {k}")
 
 
 def _metadata(meta):
@@ -125,22 +146,22 @@ def _metadata(meta):
     ):
         raise ValueError("Use the observed Apple chip family and tier")
     for key in ("cpu_cores", "gpu_cores", "memory_gib"):
-        _number(hw[key], 1, 2048, True)
+        _number(hw[key], 1, 2048, True, f"hardware.{key}")
     if "model" in hw:
-        _label(hw["model"])
+        _label(hw["model"], "hardware.model")
     if "model_identifier" in hw and (
         not isinstance(hw["model_identifier"], str)
         or not re.fullmatch(r"[A-Za-z]+[0-9]+,[0-9]+", hw["model_identifier"])
     ):
         raise ValueError("Invalid generic Mac model identifier")
     _keys(meta["workload"], {"scene", "route", "terrain"}, "workload")
-    for value in meta["workload"].values():
-        _label(value)
+    for key, value in meta["workload"].items():
+        _label(value, f"workload.{key}")
     for key in ("minecraft", "launcher", "harness", "runtime"):
-        _label(meta[key])
+        _label(meta[key], key)
     _keys(meta["loader"], {"name", "version"}, "loader")
-    for v in meta["loader"].values():
-        _label(v)
+    for key, v in meta["loader"].items():
+        _label(v, f"loader.{key}")
     interventions = meta["interventions"]
     if (
         not isinstance(interventions, list)
@@ -149,37 +170,56 @@ def _metadata(meta):
         or any(type(v) is not str or v not in INTERVENTIONS for v in interventions)
         or len(set(interventions)) != len(interventions)
     ):
-        raise ValueError("Invalid interventions")
+        raise ValueError(
+            "interventions must be a non-empty list of unique names from: "
+            + ", ".join(sorted(INTERVENTIONS))
+        )
     for name in ("baseline", "candidate"):
         run = meta[name]
         _keys(run, {"mods", "shader", "settings"}, name)
         if not isinstance(run["mods"], dict) or not 1 <= len(run["mods"]) <= 200:
-            raise ValueError("List explicit mod versions")
+            raise ValueError(
+                f"{name}.mods must list 1 to 200 mod-name to version entries"
+            )
         for k, v in run["mods"].items():
-            _label(k)
-            _label(v)
-        _keys(run["shader"], {"name", "version"}, "shader")
-        for v in run["shader"].values():
-            _label(v)
+            _label(k, f"{name} mod name")
+            _label(v, f"{name} version of mod {k}")
+        _keys(run["shader"], {"name", "version"}, f"{name}.shader")
+        for key, v in run["shader"].items():
+            _label(v, f"{name}.shader.{key}")
         s = run["settings"]
-        _keys(s, SETTINGS, "settings")
+        _keys(s, SETTINGS, f"{name}.settings")
         if not isinstance(s["resolution"], list) or len(s["resolution"]) != 2:
-            raise ValueError("Invalid resolution")
+            raise ValueError(f"{name}.settings.resolution must be [width, height]")
         for v in s["resolution"]:
-            _number(v, 320, 16384, True)
-        _number(s["scale"], 0.5, 1)
+            _number(v, 320, 16384, True, f"{name}.settings.resolution")
+        _number(s["scale"], 0.5, 1, name=f"{name}.settings.scale")
         for key in ("render_distance", "simulation_distance"):
-            _number(s[key], 2, 64, True)
-        _number(s["cap"], 0, 1000, True)
+            _number(s[key], 2, 64, True, f"{name}.settings.{key}")
+        _number(s["cap"], 0, 1000, True, f"{name}.settings.cap (0 means uncapped)")
         if s["filter"] not in ("nearest", "linear", "off", "fsr"):
-            raise ValueError("Unknown filter")
+            raise ValueError(
+                f"{name}.settings.filter must be one of nearest, linear, off, fsr"
+            )
         _properties(s["visual_properties"])
     a, b = meta["baseline"], meta["candidate"]
     changed = {k for k in SETTINGS if a["settings"][k] != b["settings"][k]}
     changed |= {k for k in ("mods", "shader") if a[k] != b[k]}
     if changed != set(interventions):
         raise ValueError(
-            "Declare exactly the changed interventions; all other controls must match"
+            "Declare exactly the changed interventions; all other controls must match. "
+            f"Changed between baseline and candidate: {sorted(changed)}; "
+            f"declared: {sorted(interventions)}"
+            + (
+                "; missing from declared: " + ", ".join(sorted(changed - set(interventions)))
+                if changed - set(interventions)
+                else ""
+            )
+            + (
+                "; not actually changed: " + ", ".join(sorted(set(interventions) - changed))
+                if set(interventions) - changed
+                else ""
+            )
         )
     q = meta["quality_review"]
     _keys(
@@ -329,6 +369,57 @@ def _check_bundle(bundle):
         raise ValueError("Content digest mismatch")
 
 
+def _is_pinned(metrics, cap):
+    """True when the run sits at its frame limiter, so its FPS is a ceiling."""
+    if not isinstance(cap, int) or not 0 < cap < 260:
+        return False
+    return (
+        metrics["average_fps"] >= 0.97 * cap
+        and metrics["p50_ms"] >= 0.97 * 1000.0 / cap
+    )
+
+
+def pinned_runs(bundle):
+    meta = bundle["metadata"]
+    return [
+        name
+        for name in ("baseline", "candidate")
+        if _is_pinned(bundle["runs"][name]["metrics"], meta[name]["settings"]["cap"])
+    ]
+
+
+def warnings(bundle):
+    """Advisory checks for results that look fine to the validators but may not be.
+
+    Never raises and never affects validation, so historical entries stay valid.
+    """
+    out = []
+    try:
+        meta = bundle["metadata"]
+        for name in pinned_runs(bundle):
+            out.append(
+                f"The {name} run is pinned at its {meta[name]['settings']['cap']} FPS cap: "
+                "its FPS is a ceiling, not a measurement. Confirm the portrait shows the "
+                "shader (a pack that failed to load, or Vulkan with Iris, renders the "
+                "vanilla image at the cap) and consider capturing again with a higher cap."
+            )
+        base = bundle["runs"]["baseline"]["metrics"]["average_fps"]
+        cand = bundle["runs"]["candidate"]["metrics"]["average_fps"]
+        if (
+            base > 0
+            and abs(cand / base - 1) < 0.01
+            and {"shader", "scale", "render_distance", "mods"} & set(meta["interventions"])
+        ):
+            out.append(
+                "Candidate FPS is within 1% of the baseline although a shader, scale, "
+                "render distance or mod was declared as changed. Confirm the change was "
+                "actually applied in the candidate capture."
+            )
+    except (KeyError, TypeError, ZeroDivisionError):
+        pass
+    return out
+
+
 def validate_bundle(bundle):
     """Return errors, or [] for structurally valid self-reported evidence."""
     try:
@@ -410,7 +501,13 @@ def prepare(
                 and captures["baseline"]["observed"][key]
                 != captures["candidate"]["observed"][key]
             ):
-                raise ValueError("Unmatched capture context: " + key)
+                hint = (
+                    " (the installed mod set differs; add mods to interventions and "
+                    "list the added, removed or changed mods in the candidate)"
+                    if key == "versions"
+                    else " (baseline and candidate must match here unless it is a declared intervention)"
+                )
+                raise ValueError("Unmatched capture context: " + key + hint)
         bundle = {
             "schema_version": 2 if baseline_route_path is not None else 1,
             "status": "self_reported",
@@ -428,6 +525,15 @@ def prepare(
         errors = validate_bundle(bundle)
         if errors:
             raise ValueError("; ".join(errors))
+        pinned = pinned_runs(bundle)
+        if len(pinned) == 2:
+            raise ValueError(
+                "Both runs are pinned at their frame cap, so this comparison carries no "
+                "information (a pack that failed to load, or the wrong graphics backend, "
+                "also renders the vanilla image at the cap). Check the portrait shows the "
+                "shader, then lift the cap (for example 260) or lower the settings and "
+                "capture again."
+            )
         return bundle
     except (
         OSError,
