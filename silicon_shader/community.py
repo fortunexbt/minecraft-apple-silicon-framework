@@ -80,10 +80,7 @@ def api(endpoint, method="GET", payload=None):
             "run gh auth status --hostname github.com, check permissions, then inspect challenge status before retrying",
         )
         raise ValueError(
-            "GitHub request failed"
-            + (f" (HTTP {code})" if code else "")
-            + "; "
-            + hint
+            "GitHub request failed" + (f" (HTTP {code})" if code else "") + "; " + hint
         )
     return json.loads(result.stdout) if result.stdout.strip() else {}
 

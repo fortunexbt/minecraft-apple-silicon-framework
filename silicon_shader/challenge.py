@@ -211,12 +211,14 @@ def _metadata(meta):
             f"Changed between baseline and candidate: {sorted(changed)}; "
             f"declared: {sorted(interventions)}"
             + (
-                "; missing from declared: " + ", ".join(sorted(changed - set(interventions)))
+                "; missing from declared: "
+                + ", ".join(sorted(changed - set(interventions)))
                 if changed - set(interventions)
                 else ""
             )
             + (
-                "; not actually changed: " + ", ".join(sorted(set(interventions) - changed))
+                "; not actually changed: "
+                + ", ".join(sorted(set(interventions) - changed))
                 if set(interventions) - changed
                 else ""
             )
@@ -408,7 +410,8 @@ def warnings(bundle):
         if (
             base > 0
             and abs(cand / base - 1) < 0.01
-            and {"shader", "scale", "render_distance", "mods"} & set(meta["interventions"])
+            and {"shader", "scale", "render_distance", "mods"}
+            & set(meta["interventions"])
         ):
             out.append(
                 "Candidate FPS is within 1% of the baseline although a shader, scale, "

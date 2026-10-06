@@ -86,7 +86,11 @@ def validate_presentation(value, *, for_submission=False, require_showcase=False
         or title != title.strip()
         or "://" in title
         or re.search(r"\bwww\.", title, re.IGNORECASE)
-        or re.search(r"(token|secret|password|bearer|\bsk-|\bgh[pousr]_|github_pat_)", title, re.IGNORECASE)
+        or re.search(
+            r"(token|secret|password|bearer|\bsk-|\bgh[pousr]_|github_pat_)",
+            title,
+            re.IGNORECASE,
+        )
     ):
         raise ValueError(
             "Use a short public setup title (3-80 characters: letters, digits, "
