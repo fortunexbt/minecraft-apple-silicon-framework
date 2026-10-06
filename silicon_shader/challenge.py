@@ -84,6 +84,7 @@ def _keys(value, keys, label):
         raise ValueError(f"Unexpected or missing fields: {label} ({'; '.join(detail)})")
 
 
+PLACEHOLDER = "<fill in>"
 _LABEL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+() -]{0,47}")
 # Secret-looking prefixes match only at a word start, so "Disk-Cache" and
 # "risk-free" are fine while "sk-live-..." and "ghp_..." are not.
@@ -95,6 +96,8 @@ _SECRET = re.compile(
 def _label(value, name="label"):
     # Deliberately restrictive public labels, not an anonymization operation.
     # The message names the field but never echoes the value.
+    if isinstance(value, str) and PLACEHOLDER in value:
+        raise ValueError(f"Replace the {PLACEHOLDER} placeholder in {name}")
     if (
         not isinstance(value, str)
         or not _LABEL.fullmatch(value)
@@ -266,6 +269,91 @@ def _metadata(meta):
         or q["outcome"] not in ("improved", "equivalent", "tradeoff")
     ):
         raise ValueError("Explicit acceptable visual quality review required")
+
+
+def metadata_template(baseline_capture_path, candidate_capture_path, hardware=None):
+    """Draft metadata from two captures.
+
+    Observed values are filled in and the interventions list is derived from what
+    differs. Anything only a person can know stays a placeholder that fails
+    validation until replaced, including the visual quality review.
+    """
+    observed = {}
+    for name, path in (
+        ("baseline", baseline_capture_path),
+        ("candidate", candidate_capture_path),
+    ):
+        capture = _load(path)
+        if not isinstance(capture, dict) or not isinstance(
+            capture.get("observed"), dict
+        ):
+            raise ValueError(f"{name} capture has no observed context")
+        observed[name] = capture["observed"]
+    base, cand = observed["baseline"], observed["candidate"]
+    hw = hardware or {}
+
+    def run(o):
+        return {
+            "mods": {PLACEHOLDER: PLACEHOLDER},
+            "shader": {"name": o.get("shader"), "version": PLACEHOLDER},
+            "settings": {
+                "resolution": o.get("framebuffer"),
+                "scale": o.get("scale"),
+                "render_distance": o.get("render_distance"),
+                "simulation_distance": o.get("simulation_distance"),
+                "cap": o.get("cap"),
+                "filter": o.get("filter"),
+                "visual_properties": {"profile": PLACEHOLDER},
+            },
+        }
+
+    detected = [
+        key
+        for key in ("scale", "render_distance", "simulation_distance", "cap", "filter")
+        if base.get(key) != cand.get(key)
+    ]
+    if base.get("shader") != cand.get("shader"):
+        detected.append("shader")
+    if base.get("versions") != cand.get("versions"):
+        detected.append("mods")
+    notes = [
+        "Interventions are detected from the two captures. Shader options, mod "
+        "versions, window mode and graphics backend are not recorded in them: add "
+        "visual_properties (and list the changed mods in candidate.mods) when those "
+        "differ, and name window mode and backend in the recipe.",
+        "Replace every <fill in> placeholder. quality_review stays unreviewed until "
+        "someone has looked at both pictures and sets it.",
+    ]
+    template = {
+        "hardware": {
+            "family": hw.get("family") or PLACEHOLDER,
+            "tier": hw.get("tier") or PLACEHOLDER,
+            "cpu_cores": hw.get("cpu_cores"),
+            "gpu_cores": hw.get("gpu_cores"),
+            "memory_gib": int(hw["memory_gib"]) if hw.get("memory_gib") else None,
+        },
+        "minecraft": PLACEHOLDER,
+        "loader": {"name": PLACEHOLDER, "version": PLACEHOLDER},
+        "launcher": PLACEHOLDER,
+        "harness": PLACEHOLDER,
+        "runtime": base.get("runtime") or PLACEHOLDER,
+        "workload": {
+            "scene": base.get("scene"),
+            "route": base.get("route"),
+            "terrain": base.get("terrain"),
+        },
+        "interventions": detected,
+        "baseline": run(base),
+        "candidate": run(cand),
+        "quality_review": {
+            "reviewed": False,
+            "baseline_acceptable": False,
+            "candidate_acceptable": False,
+            "artifacts": True,
+            "outcome": PLACEHOLDER,
+        },
+    }
+    return {"metadata": template, "interventions_detected": detected, "notes": notes}
 
 
 def _load(path):

@@ -15,7 +15,7 @@ Use `discover` to get the active Prism profile automatically. For other launcher
 
 ## CLI and hosted board
 
-Run the [shared workload](WORKLOAD.md): two captures of the same 420-tick path (normally about 21 seconds each) with the shipped movement adapter. Alternative capture harnesses must implement its same observations and timing association. Fill [the metadata template](../examples/challenge-metadata.json), then prepare the evidence:
+Run the [shared workload](WORKLOAD.md): two captures of the same 420-tick path (normally about 21 seconds each) with the shipped movement adapter. Alternative capture harnesses must implement its same observations and timing association. Draft the metadata from your two captures with `silicon-shader challenge metadata-template baseline.json candidate.json --out metadata.json`. It fills in the observed values and the interventions it can detect, and leaves `<fill in>` placeholders that fail validation until you replace them. The [example metadata](../examples/challenge-metadata.json) shows a finished file. Then prepare the evidence:
 
 ```sh
 silicon-shader challenge prepare baseline.json candidate.json baseline.csv candidate.csv metadata.json --baseline-route baseline-route.json --candidate-route candidate-route.json --out experiment.json

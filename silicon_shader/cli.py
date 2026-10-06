@@ -203,6 +203,15 @@ def parser():
     a.add_argument("root")
     a.add_argument("id")
     a.add_argument("--out", required=True)
+    a = sub.add_parser(
+        "metadata-template",
+        help="Draft metadata from two captures; observed values filled in",
+    )
+    a.add_argument("baseline_capture")
+    a.add_argument("candidate_capture")
+    a.add_argument(
+        "--out", help="Write the draft here (a new file) instead of printing"
+    )
     a = sub.add_parser("find", help="Find shared setups for your Mac")
     a.add_argument(
         "--this-mac",
@@ -313,6 +322,22 @@ def run(args):
                     "The first flight after a game launch runs a few FPS slower with deeper 1% lows. Use a warmed flight (run one throwaway flight first) for both baseline and candidate.",
                     "Look at the portrait before publishing: a pinned-at-cap FPS with a vanilla-looking frame means the shader never ran.",
                 ],
+            }
+        if args.action == "metadata-template":
+            from .discover import hardware_info
+
+            result = challenge.metadata_template(
+                args.baseline_capture, args.candidate_capture, hardware_info()
+            )
+            if args.out is None:
+                return result
+            if Path(args.out).exists():
+                raise ValueError("Output exists; choose a new path")
+            write(args.out, result["metadata"])
+            return {
+                "path": args.out,
+                "interventions_detected": result["interventions_detected"],
+                "notes": result["notes"],
             }
         if args.action == "find":
             return catalog.find(
