@@ -43,6 +43,29 @@ def _canonical(value):
     ).encode()
 
 
+def _same_metrics(a, b):
+    """Equal up to float rounding, so a bundle prepared on one Python validates on another.
+
+    Python 3.12 made float sum() compensated, so the same trace gives metrics that
+    differ in the last digits between 3.10/3.11 and 3.12+. The tolerance (relative
+    1e-9) is far below anything that could hide a real change, and the content
+    digest still covers the exact stored numbers.
+    """
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(_same_metrics(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_same_metrics(x, y) for x, y in zip(a, b))
+    if isinstance(a, float) or isinstance(b, float):
+        return (
+            isinstance(a, (int, float))
+            and isinstance(b, (int, float))
+            and not isinstance(a, bool)
+            and not isinstance(b, bool)
+            and math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-9)
+        )
+    return type(a) is type(b) and a == b
+
+
 def _hash(value):
     return hashlib.sha256(_canonical(value)).hexdigest()
 
@@ -355,7 +378,7 @@ def _check_bundle(bundle):
         ):
             raise ValueError("Missing CSV provenance")
         metrics = _trace(run["intervals_ms"])
-        if _canonical(metrics) != _canonical(run["metrics"]):
+        if not _same_metrics(metrics, run["metrics"]):
             raise ValueError("Metrics differ from recomputed trace")
         durations.append(metrics["duration_s"])
     if schema == 1 and abs(durations[0] - durations[1]) > 1:
@@ -472,7 +495,7 @@ def prepare(
                 raise ValueError("Missing or mismatched CSV provenance")
             values, _ = read_csv(csv_path)
             metrics = _trace(values)
-            if _canonical(capture["metrics"]) != _canonical(metrics):
+            if not _same_metrics(capture["metrics"], metrics):
                 raise ValueError("Capture metrics differ from raw CSV")
             observed = capture["observed"]
             if observed["runtime"] != meta["runtime"] or any(
