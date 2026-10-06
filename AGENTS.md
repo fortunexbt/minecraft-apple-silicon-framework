@@ -12,3 +12,6 @@ Keep this a small CLI and agent pack. No GUI, daemon, telemetry or launcher repl
 - Public files must contain no private paths, private account details, tokens, worlds, raw logs, runtimes or third-party binaries. Use attributed download manifests/patch recipes and verify licenses. Never infer a redistribution license from a download link. The selected public Minecraft name/UUID is allowed in the reviewed submission presentation for its skin face.
 - Keep public performance claims scoped to the actual machine, scene, version and metric. Unknown hardware or game mappings remain unverified.
 - Do not create credentials, accept terms, submit promotional posts or publish new releases without direct user authority.
+- Kill only a process whose command line contains the lab path. Never use `pkill java` or similar.
+- Keep `agents/START.md` under about 350 words and the skill under about 1,800, and update both when a command changes.
+- Put campaign lessons into `docs/EXPERIMENTS.md` before lab folders are discarded. `.work/` is gitignored.

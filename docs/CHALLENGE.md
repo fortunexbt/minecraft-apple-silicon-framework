@@ -6,7 +6,7 @@ The [community library](https://fortunexbt.github.io/minecraft-apple-silicon-fra
 
 - A real candidate screenshot from the [standard front-facing showcase](../workloads/overworld-v1/README.md#submission-screenshot): same scenic point, camera and 16:9 framing, with the player's skin visible.
 - Hardware, game/loader, Java, mod and shader versions; resolution and view distance.
-- A public recipe with exact settings, download sources, patches, harness/route and rollback steps.
+- A public recipe with exact settings, download sources, patches, harness/route and rollback steps. The [recipe template](RECIPE_TEMPLATE.md) lists what to include, including window mode and graphics backend.
 - Matched baseline/candidate timings on the [shared challenge route](WORKLOAD.md), with a visual review.
 - The model and coding harness used to create the setup (or `None` / `Manual` for manual work).
 - Your public Minecraft UUID or Java username for the skin face; GitHub identifies the contributor.

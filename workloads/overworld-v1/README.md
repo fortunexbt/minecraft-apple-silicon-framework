@@ -36,6 +36,10 @@ A completed capture reports `recorded`; older receipts may say `calibration_requ
 
 ## Submission screenshot
 
+Take the portrait in a separate short launch, never in the timed session. The shipped `showcase.pyj` can hang the game on macOS when it leaves fullscreen (the render thread blocks in native `SDL_PollEvent`), and heavier frames make that more likely.
+
+Start the lab in a windowed 1920x1080 pixel window. On a Retina display that is a 960x540 logical window. Use the candidate's exact shader and settings and run no timed flights. For a Distant Horizons setup, stand still at the start for about 200 seconds first. Then follow the steps below. Say in the recipe that the portrait came from a separate windowed launch.
+
 After measuring the candidate, take its portrait in the same world. The `showcase` section of `silicon-shader challenge workload` pins the location and camera: player position **-109.5, 70, 438.5**, yaw **0**, pitch **0**, overlooking the village bay. Every new submission uses front-facing third person (the second F5 view), FOV 70, clear noon, a hidden HUD and a **1920×1080** framebuffer. Keep the candidate's shaders, resource packs and visual settings. The player’s own skin is part of the picture.
 
 Copy `showcase.pyj` into the instance’s `minescript/` directory, then let the agent run:

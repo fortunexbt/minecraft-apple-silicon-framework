@@ -18,7 +18,7 @@ Every other setting is unchanged, including simulation distance 6, nearest filte
 
 One same-machine pair on the standard 420-tick Overworld flight-and-turn route at 3024x1898 output. Each capture is the third flight of its launch; the first flight of every launch was a warm-up and ran a few FPS slower with deeper 1% lows.
 
-| | Wide view (R24, 60%) | Max 32 (R32, 50%) |
+| | Wide view settings (R24, 60%, borderless) | Max 32 (R32, 50%, borderless) |
 | --- | --- | --- |
 | Average | 109.15 FPS | 98.49 FPS |
 | Worst five seconds | 101.37 FPS | 88.91 FPS |
@@ -29,6 +29,8 @@ One same-machine pair on the standard 420-tick Overworld flight-and-turn route a
 The other warmed flights of the same two launches measured 108.3 FPS (worst five seconds 100.1) for wide view and 96.9 FPS (88.6) for Max 32. An earlier launch of Max 32 measured 97.1 and 98.4 FPS (88.6 and 89.8). Run-to-run noise on this Mac is about 1 to 3 FPS. The worst five-second rate sits just under 90 FPS rather than above it.
 
 ![Max 32 at the fixed front-facing shoreline view](gameplay.png)
+
+Both captures ran in borderless fullscreen. The published M4 Wide View card used exclusive fullscreen, so its numbers are not directly comparable with the baseline column here.
 
 These are short CPU frame-production measurements on the shared route. They are not displayed FPS, input latency or a long-session guarantee.
 
