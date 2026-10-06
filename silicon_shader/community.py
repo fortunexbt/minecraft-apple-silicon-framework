@@ -8,6 +8,7 @@ import subprocess
 from urllib.parse import urlencode
 
 from .challenge import MAX_BYTES, validate_bundle
+from .challenge import warnings as advisories
 from .presentation import validate_presentation
 
 REPOSITORY = "fortunexbt/minecraft-apple-silicon-framework"
@@ -66,8 +67,23 @@ def api(endpoint, method="GET", payload=None):
         ) from exc
     if result.returncode:
         # Do not reflect remote text or authentication details into public output.
+        # Only the numeric HTTP status is read, to pick a more useful hint.
+        found = re.search(r"HTTP (\d{3})", result.stderr or "")
+        code = int(found.group(1)) if found else None
+        hint = {
+            401: "authentication failed: run gh auth login --hostname github.com",
+            403: "permission denied or rate limited: check gh auth status --hostname github.com, then wait and retry",
+            404: "not found yet: a freshly created fork can take a minute, so rerun the same command",
+            422: "GitHub rejected the request, often because the branch already exists: run challenge status and rerun the same command",
+        }.get(
+            code,
+            "run gh auth status --hostname github.com, check permissions, then inspect challenge status before retrying",
+        )
         raise ValueError(
-            "GitHub request failed; run gh auth status --hostname github.com, check permissions, then inspect challenge status before retrying"
+            "GitHub request failed"
+            + (f" (HTTP {code})" if code else "")
+            + "; "
+            + hint
         )
     return json.loads(result.stdout) if result.stdout.strip() else {}
 
@@ -125,8 +141,14 @@ def submit(bundle, publish=False, reviewed_digest=None, request=api, presentatio
         validate_presentation(
             presentation, for_submission=publish, require_showcase=publish
         )
+    if publish and reviewed_digest is None:
+        raise ValueError(
+            "Preview first (run without --publish and read it), then publish with "
+            f"--reviewed-digest {digest}"
+        )
     preview = {
         "digest": digest,
+        "warnings": advisories(bundle),
         "workload_id": bundle.get("workload_id"),
         "destination": "https://github.com/" + REPOSITORY,
         "path": f"contributions/{digest}.json",
