@@ -21,6 +21,11 @@ jobs:
         with:
           python-version: '3.13'
       - run: python3 -m silicon_shader.registry contributions site/data.json
+      - name: Build small WebP thumbnails (optional, the page falls back to the originals)
+        continue-on-error: true
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 scripts/make_thumbs.py site/data.json site/thumbs
       - name: Refuse to publish an empty library
         run: python3 -c "import json; d = json.load(open('site/data.json')); assert d['entries'], 'no entries in the generated index'"
       - uses: actions/upload-pages-artifact@v3

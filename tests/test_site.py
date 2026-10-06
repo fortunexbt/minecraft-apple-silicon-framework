@@ -49,3 +49,84 @@ class SiteConsistency(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Thumbnails(unittest.TestCase):
+    def setUp(self):
+        import importlib.util
+        import sys
+
+        if importlib.util.find_spec("PIL") is None:
+            self.skipTest("Pillow is not installed")
+        sys.path.insert(0, str(SITE.parent / "scripts"))
+        import make_thumbs
+
+        self.module = make_thumbs
+
+    def png(self, width, height):
+        import io
+
+        from PIL import Image
+
+        buffer = io.BytesIO()
+        Image.new("RGB", (width, height), (40, 90, 160)).save(buffer, "PNG")
+        return buffer.getvalue()
+
+    def test_writes_each_width_that_fits_and_keeps_the_aspect_ratio(self):
+        import tempfile
+
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory() as folder:
+            made = self.module.make_thumbnails(self.png(1920, 1080), "a" * 64, folder)
+            self.assertEqual(made, [640, 1280])
+            small = Image.open(Path(folder) / ("a" * 64 + "-640.webp"))
+            self.assertEqual(small.size, (640, 360))
+
+    def test_small_sources_are_not_upscaled(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertEqual(
+                self.module.make_thumbnails(self.png(800, 450), "b" * 64, folder), [640]
+            )
+            self.assertEqual(
+                self.module.make_thumbnails(self.png(300, 200), "c" * 64, folder), []
+            )
+
+    def test_only_commit_pinned_raw_github_screenshots_are_fetched(self):
+        pinned = "https://raw.githubusercontent.com/o/r/" + "a" * 40 + "/x/shot.png"
+        self.assertTrue(self.module.PINNED.fullmatch(pinned))
+        for bad in (
+            "https://raw.githubusercontent.com/o/r/main/shot.png",
+            "https://example.com/" + "a" * 40 + "/shot.png",
+            pinned + "?x=1",
+            "http://raw.githubusercontent.com/o/r/" + "a" * 40 + "/shot.png",
+        ):
+            self.assertFalse(self.module.PINNED.fullmatch(bad), bad)
+
+    def test_a_failed_download_is_skipped_not_fatal(self):
+        import json
+        import tempfile
+        from unittest.mock import patch
+
+        data = {
+            "entries": [
+                {
+                    "digest": "d" * 64,
+                    "presentation": {
+                        "screenshot_url": "https://raw.githubusercontent.com/o/r/"
+                        + "a" * 40
+                        + "/s.png"
+                    },
+                }
+            ]
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / "data.json"
+            source.write_text(json.dumps(data))
+            with patch.object(self.module, "fetch", side_effect=OSError("offline")):
+                self.assertEqual(self.module.build(source, Path(folder) / "t"), {})
+            self.assertEqual(
+                json.loads((Path(folder) / "t" / "index.json").read_text()), {}
+            )
