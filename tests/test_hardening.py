@@ -1,6 +1,5 @@
 """Regression tests for validator hardening found in the project review."""
 
-import copy
 import json
 import subprocess
 import sys
@@ -43,7 +42,8 @@ class LabelAndNumberMessages(unittest.TestCase):
 
     def test_number_error_names_the_field_and_bounds(self):
         with self.assertRaisesRegex(
-            ValueError, r"candidate.settings.scale must be a number from 0.5 to 1, got 0.45"
+            ValueError,
+            r"candidate.settings.scale must be a number from 0.5 to 1, got 0.45",
         ):
             challenge._number(0.45, 0.5, 1, name="candidate.settings.scale")
         with self.assertRaisesRegex(ValueError, "an integer from 2 to 64, got 12.0"):
@@ -64,7 +64,8 @@ class MetadataMessages(unittest.TestCase):
         self.meta["interventions"] = ["scale"]
         self.meta["candidate"]["settings"]["render_distance"] = 16
         with self.assertRaisesRegex(
-            ValueError, r"Changed between baseline and candidate: \['render_distance', 'scale'\]"
+            ValueError,
+            r"Changed between baseline and candidate: \['render_distance', 'scale'\]",
         ) as caught:
             challenge._metadata(self.meta)
         self.assertIn("missing from declared: render_distance", str(caught.exception))
@@ -76,7 +77,9 @@ class MetadataMessages(unittest.TestCase):
 
     def test_scale_floor_message_is_actionable(self):
         self.meta["candidate"]["settings"]["scale"] = 0.45
-        with self.assertRaisesRegex(ValueError, "candidate.settings.scale must be a number from 0.5 to 1"):
+        with self.assertRaisesRegex(
+            ValueError, "candidate.settings.scale must be a number from 0.5 to 1"
+        ):
             challenge._metadata(self.meta)
 
     def test_mods_message_names_the_run(self):
@@ -97,12 +100,17 @@ class PinnedAtCap(unittest.TestCase):
         }
         return {
             "metadata": meta,
-            "runs": {"baseline": run(base_fps, base_p50), "candidate": run(cand_fps, cand_p50)},
+            "runs": {
+                "baseline": run(base_fps, base_p50),
+                "candidate": run(cand_fps, cand_p50),
+            },
         }
 
     def test_pinned_run_is_flagged_and_normal_runs_are_not(self):
         self.assertEqual(challenge.pinned_runs(self.bundle(95, 119.9)), ["candidate"])
-        self.assertEqual(challenge.pinned_runs(self.bundle(119.8, 119.9)), ["baseline", "candidate"])
+        self.assertEqual(
+            challenge.pinned_runs(self.bundle(119.8, 119.9)), ["baseline", "candidate"]
+        )
         self.assertEqual(challenge.pinned_runs(self.bundle(95, 100)), [])
 
     def test_uncapped_or_high_caps_are_never_pinned(self):
@@ -134,8 +142,14 @@ class LinkAndTitleChecks(unittest.TestCase):
 
     def test_dot_segments_cannot_turn_a_pinned_link_into_a_moving_one(self):
         for key, url in (
-            ("screenshot_url", f"https://raw.githubusercontent.com/o/r/{COMMIT}/../main/x.png"),
-            ("screenshot_url", f"https://raw.githubusercontent.com/o/r/{COMMIT}/./x.png"),
+            (
+                "screenshot_url",
+                f"https://raw.githubusercontent.com/o/r/{COMMIT}/../main/x.png",
+            ),
+            (
+                "screenshot_url",
+                f"https://raw.githubusercontent.com/o/r/{COMMIT}/./x.png",
+            ),
             ("recipe_url", f"https://github.com/o/r/blob/{COMMIT}/../../main/r.md"),
         ):
             with self.assertRaises(ValueError, msg=url):
@@ -143,13 +157,23 @@ class LinkAndTitleChecks(unittest.TestCase):
 
     def test_hidden_characters_in_links_are_rejected(self):
         base = f"https://raw.githubusercontent.com/o/r/{COMMIT}/x.png"
-        for url in (base[:-4] + "\n.png", base[:-4] + "\t.png", base + " ", base.replace("x.png", "a%2e%2e/x.png"), base.replace("/x.png", "\\x.png")):
+        for url in (
+            base[:-4] + "\n.png",
+            base[:-4] + "\t.png",
+            base + " ",
+            base.replace("x.png", "a%2e%2e/x.png"),
+            base.replace("/x.png", "\\x.png"),
+        ):
             with self.assertRaises(ValueError, msg=repr(url)):
                 validate_presentation(presentation(screenshot_url=url))
 
     def test_bad_port_is_a_clean_error(self):
         with self.assertRaisesRegex(ValueError, "public link"):
-            validate_presentation(presentation(recipe_url=f"https://github.com:xyz/o/r/blob/{COMMIT}/r.md"))
+            validate_presentation(
+                presentation(
+                    recipe_url=f"https://github.com:xyz/o/r/blob/{COMMIT}/r.md"
+                )
+            )
 
     def test_titles_reject_spoofing_and_link_bait(self):
         for title in (
@@ -188,7 +212,9 @@ class PublishRequiresPreview(unittest.TestCase):
 
     def test_publish_without_a_reviewed_digest_is_refused_before_any_request(self):
         request = Mock(side_effect=AssertionError("No network"))
-        with self.assertRaisesRegex(ValueError, "--reviewed-digest " + self.bundle["content_digest"]):
+        with self.assertRaisesRegex(
+            ValueError, "--reviewed-digest " + self.bundle["content_digest"]
+        ):
             submit(self.bundle, True, request=request, presentation=self.presentation)
         request.assert_not_called()
 
@@ -214,7 +240,10 @@ class GithubErrors(unittest.TestCase):
                 api("user")
 
     def test_remote_text_is_never_reflected(self):
-        with self.fail("HTTP 500 secret-token-abc leaked"), self.assertRaises(ValueError) as caught:
+        with (
+            self.fail("HTTP 500 secret-token-abc leaked"),
+            self.assertRaises(ValueError) as caught,
+        ):
             api("user")
         self.assertNotIn("secret-token-abc", str(caught.exception))
         self.assertIn("HTTP 500", str(caught.exception))
@@ -222,16 +251,24 @@ class GithubErrors(unittest.TestCase):
 
 class CliErrorHandling(unittest.TestCase):
     def run_main(self, exc):
-        with patch.object(sys, "argv", ["silicon-shader", "discover"]), patch.object(
-            cli, "run", side_effect=exc
-        ), patch("sys.stderr") as err, self.assertRaises(SystemExit) as code:
+        with (
+            patch.object(sys, "argv", ["silicon-shader", "discover"]),
+            patch.object(cli, "run", side_effect=exc),
+            patch("sys.stderr") as err,
+            self.assertRaises(SystemExit) as code,
+        ):
             cli.main()
         return code.exception.code, "".join(c.args[0] for c in err.write.call_args_list)
 
     def test_previously_uncaught_exception_types_become_clean_errors(self):
         import zipfile
 
-        for exc in (AttributeError("x"), zipfile.BadZipFile("bad jar"), RecursionError(), subprocess.SubprocessError("p")):
+        for exc in (
+            AttributeError("x"),
+            zipfile.BadZipFile("bad jar"),
+            RecursionError(),
+            subprocess.SubprocessError("p"),
+        ):
             code, text = self.run_main(exc)
             self.assertEqual(code, 2)
             self.assertIn('"ok": false', text)
@@ -250,8 +287,12 @@ class RegistryWrite(unittest.TestCase):
             out = Path(folder) / "data.json"
             result = registry.build(ROOT / "contributions", out)
             self.assertGreaterEqual(result["entries"], 1)
-            self.assertEqual(sorted(p.name for p in Path(folder).iterdir()), ["data.json"])
-            self.assertEqual(len(json.loads(out.read_text())["entries"]), result["entries"])
+            self.assertEqual(
+                sorted(p.name for p in Path(folder).iterdir()), ["data.json"]
+            )
+            self.assertEqual(
+                len(json.loads(out.read_text())["entries"]), result["entries"]
+            )
 
 
 if __name__ == "__main__":

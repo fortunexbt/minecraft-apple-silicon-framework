@@ -22,7 +22,13 @@ class SiteConsistency(unittest.TestCase):
         self.assertEqual(sorted(i for i in ids if i not in present), [])
 
     def test_no_dynamic_html_injection(self):
-        for forbidden in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval("):
+        for forbidden in (
+            "innerHTML",
+            "outerHTML",
+            "insertAdjacentHTML",
+            "document.write",
+            "eval(",
+        ):
             self.assertNotIn(forbidden, self.script, forbidden)
 
     def test_results_grid_is_not_a_live_region(self):
@@ -35,7 +41,9 @@ class SiteConsistency(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("node"), "node is not installed")
     def test_script_parses(self):
-        result = subprocess.run(["node", "--check", str(SITE / "app.js")], capture_output=True, text=True)
+        result = subprocess.run(
+            ["node", "--check", str(SITE / "app.js")], capture_output=True, text=True
+        )
         self.assertEqual(result.returncode, 0, result.stderr)
 
 
