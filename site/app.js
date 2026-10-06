@@ -76,13 +76,16 @@ function setupTitle(entry) {
 }
 
 function githubProfile(handle, minecraftProfile) {
-  const safeHandle = /^[A-Za-z0-9-]{1,39}$/.test(handle || '') ? handle : 'unknown';
-  const link = node('a', undefined, {
-    class: 'contributor',
-    href: 'https://github.com/' + encodeURIComponent(safeHandle),
-    target: '_blank',
-    rel: 'noopener noreferrer'
-  });
+  const valid = /^[A-Za-z0-9-]{1,39}$/.test(handle || '');
+  const safeHandle = valid ? handle : 'unknown';
+  const link = valid
+    ? node('a', undefined, {
+      class: 'contributor',
+      href: 'https://github.com/' + encodeURIComponent(safeHandle),
+      target: '_blank',
+      rel: 'noopener noreferrer'
+    })
+    : node('span', undefined, { class: 'contributor' });
   let skin = typeof minecraftProfile === 'string' && /^(?:[A-Za-z0-9_]{3,16}|[a-fA-F0-9]{32}|[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$/.test(minecraftProfile);
   const defaultFace = 'https://mc-heads.net/avatar/MHF_Steve/64';
   const avatar = node('span', safeHandle.slice(0, 2).toUpperCase(), { class: 'avatar skin-avatar', 'aria-hidden': 'true' });
@@ -173,6 +176,70 @@ function renderDistance(entry) {
   return finite(settings(entry).render_distance);
 }
 
+const STABLE_FLOOR = 90;
+
+// Distant Horizons (or similar) level-of-detail radius, recorded by the submitter.
+function lodRadius(entry) {
+  const value = Number((settings(entry).visual_properties || {}).dh_lod_radius_chunks);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+// Effective distance used for sorting: real chunks, or the LOD radius when larger.
+function reach(entry) {
+  const real = renderDistance(entry);
+  const lod = lodRadius(entry);
+  return lod === null ? real : Math.max(real || 0, lod);
+}
+
+function delta(entry, key) {
+  const runs = entry.runs || {};
+  const base = finite((runs.baseline || {})[key]);
+  const cand = finite((runs.candidate || {})[key]);
+  return base === null || cand === null ? null : { base, cand, diff: cand - base };
+}
+
+function fpsCost(entry) {
+  const d = delta(entry, 'average_fps');
+  return d === null ? null : d.base - d.cand;
+}
+
+const INTERVENTION_LABELS = {
+  shader: 'Shader swap',
+  mods: 'Mods changed',
+  render_distance: 'View distance',
+  simulation_distance: 'Simulation distance',
+  scale: 'Render scale',
+  cap: 'Frame cap',
+  filter: 'Scaler filter',
+  visual_properties: 'Shader settings'
+};
+
+function diffLines(entry) {
+  const metadata = entry.metadata || {};
+  const base = metadata.baseline || {};
+  const cand = metadata.candidate || {};
+  const out = [];
+  const baseShader = base.shader || {};
+  const candShader = cand.shader || {};
+  if (baseShader.name !== candShader.name) out.push('Shader ' + titleCase(baseShader.name) + ' → ' + titleCase(candShader.name));
+  const baseMods = base.mods || {};
+  const candMods = cand.mods || {};
+  for (const name of Object.keys(candMods)) {
+    if (!(name in baseMods)) out.push('Adds ' + name + ' ' + candMods[name]);
+    else if (baseMods[name] !== candMods[name]) out.push(name + ' ' + baseMods[name] + ' → ' + candMods[name]);
+  }
+  for (const name of Object.keys(baseMods)) if (!(name in candMods)) out.push('Removes ' + name);
+  const baseSettings = base.settings || {};
+  const candSettings = cand.settings || {};
+  for (const [key, label] of [['render_distance', 'View distance'], ['simulation_distance', 'Simulation distance'], ['scale', 'Render scale'], ['cap', 'Frame cap']]) {
+    if (baseSettings[key] !== undefined && candSettings[key] !== undefined && baseSettings[key] !== candSettings[key]) {
+      const show = value => key === 'scale' ? Math.round(value * 100) + '%' : String(value);
+      out.push(label + ' ' + show(baseSettings[key]) + ' → ' + show(candSettings[key]));
+    }
+  }
+  return out;
+}
+
 function chipLabel(entry) {
   const chip = hardware(entry);
   return titleCase(asText(chip.family, 'Apple Silicon')) + ' · ' + titleCase(asText(chip.tier, 'Unknown tier'));
@@ -199,6 +266,10 @@ function populateFilters() {
   makeFilterOptions('filter-family', families, 'All families', value => value);
   makeFilterOptions('filter-tier', tiers, 'All tiers', titleCase);
   makeFilterOptions('filter-memory', memories, 'Any memory', value => formatNumber(value, 0) + ' GB');
+  const shaders = [...new Set(current.map(entry => asText(((entry.metadata || {}).candidate || {}).shader && entry.metadata.candidate.shader.name)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const versions = [...new Set(current.map(entry => asText((entry.metadata || {}).minecraft)).filter(Boolean))].sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+  makeFilterOptions('filter-shader', shaders, 'All shaders', titleCase);
+  makeFilterOptions('filter-mc', versions, 'Any version', value => value);
 }
 
 function createCover(entry, title) {
@@ -342,18 +413,52 @@ function createCard(entry) {
   hardwareLine.append(node('span', memoryLabel(entry), { class: 'hardware-chip secondary-chip' }));
   body.append(hardwareLine);
 
+  const changed = ((entry.metadata || {}).interventions || []).filter(key => typeof key === 'string');
+  if (changed.length) {
+    const changeLine = node('div', undefined, { class: 'hardware-line', 'aria-label': 'What changed from the baseline' });
+    for (const key of changed) changeLine.append(node('span', INTERVENTION_LABELS[key] || titleCase(key), { class: 'hardware-chip change-chip' }));
+    body.append(changeLine);
+  }
+
   const resolution = resolutionInfo(entry);
   const scaleNote = resolution.scale === null ? 'Internal resolution not recorded' : resolution.internal + ' internal · ' + formatNumber(resolution.scale * 100, 0) + '% scale';
   const viewDistance = renderDistance(entry);
   const specs = node('div', undefined, { class: 'setup-specs' });
   specs.append(
     dataRow('Output resolution', resolution.output, scaleNote),
-    dataRow('View distance', viewDistance === null ? 'Not recorded' : formatNumber(viewDistance, 0) + ' chunks')
+    dataRow(
+      'View distance',
+      viewDistance === null ? 'Not recorded' : formatNumber(viewDistance, 0) + ' chunks',
+      lodRadius(entry) === null ? undefined : '+ LOD terrain to ' + formatNumber(lodRadius(entry), 0) + ' chunks'
+    )
   );
   body.append(specs);
 
-  const lower = worstFps(entry);
-  body.append(node('p', lower === null ? 'Community performance capture' : 'Worst 5 sec: ' + formatNumber(lower) + ' FPS', { class: 'stability-note' }));
+  const perf = node('div', undefined, { class: 'perf-compare' });
+  const avgDelta = delta(entry, 'average_fps');
+  const worst = delta(entry, 'worst_5s_fps');
+  if (avgDelta) {
+    perf.append(node('p', 'Average ' + formatNumber(avgDelta.base) + ' → ' + formatNumber(avgDelta.cand) + ' FPS (' + (avgDelta.diff >= 0 ? '+' : '−') + formatNumber(Math.abs(avgDelta.diff)) + ' vs baseline)'));
+  }
+  if (worst) {
+    const held = worst.cand >= STABLE_FLOOR;
+    const line = node('p', 'Worst 5 sec ' + formatNumber(worst.base) + ' → ' + formatNumber(worst.cand) + ' FPS ');
+    line.append(node('span', held ? 'Held ' + STABLE_FLOOR + '+' : 'Dipped below ' + STABLE_FLOOR, {
+      class: 'hardware-chip ' + (held ? 'standard-workload' : 'earlier-workload')
+    }));
+    perf.append(line);
+  } else if (worstFps(entry) !== null) {
+    perf.append(node('p', 'Worst 5 sec: ' + formatNumber(worstFps(entry)) + ' FPS'));
+  }
+  perf.append(node('p', 'Self-reported · CPU frame production, not displayed FPS', { class: 'evidence-note' }));
+  body.append(perf);
+
+  const changes = diffLines(entry);
+  if (changes.length) {
+    const list = node('ul', undefined, { class: 'diff-list', 'aria-label': 'Differences from the baseline' });
+    for (const line of changes) list.append(node('li', line));
+    body.append(list);
+  }
   body.append(detailsFor(entry));
 
   const actions = node('div', undefined, { class: 'card-actions' });
@@ -373,6 +478,16 @@ function createCard(entry) {
   body.append(actions);
   card.append(body);
   return card;
+}
+
+// A single malformed entry is skipped (and logged) instead of hiding the whole library.
+function safeCard(entry) {
+  try {
+    return createCard(entry);
+  } catch (error) {
+    console.error('Skipped an entry that could not be displayed', error);
+    return null;
+  }
 }
 
 function copyText(value) {
@@ -396,11 +511,18 @@ function matchingEntries() {
   const family = byId('filter-family').value;
   const tier = byId('filter-tier').value;
   const memory = byId('filter-memory').value;
+  const shader = byId('filter-shader').value;
+  const version = byId('filter-mc').value;
+  const stable = byId('filter-stable').checked;
   return standardEntries().filter(entry => {
     const chip = hardware(entry);
+    const candidateShader = (((entry.metadata || {}).candidate || {}).shader || {}).name;
     return (!family || asText(chip.family) === family)
       && (!tier || asText(chip.tier) === tier)
-      && (!memory || String(finite(chip.memory_gib)) === memory);
+      && (!memory || String(finite(chip.memory_gib)) === memory)
+      && (!shader || asText(candidateShader) === shader)
+      && (!version || asText((entry.metadata || {}).minecraft) === version)
+      && (!stable || (worstFps(entry) !== null && worstFps(entry) >= STABLE_FLOOR));
   });
 }
 
@@ -408,7 +530,8 @@ function sortEntries(list) {
   const sort = byId('sort-by').value;
   const score = entry => {
     if (sort === 'worst') return worstFps(entry);
-    if (sort === 'distance') return renderDistance(entry);
+    if (sort === 'distance') return reach(entry);
+    if (sort === 'cost') return fpsCost(entry) === null ? null : -fpsCost(entry);
     return average(entry);
   };
   return list.slice().sort((a, b) => {
@@ -428,9 +551,8 @@ function showEmpty(title, message, actionLabel, action) {
   if (action === 'clear') {
     const clear = node('button', actionLabel, { type: 'button', class: 'button button-dark' });
     clear.addEventListener('click', () => {
-      byId('filter-family').value = '';
-      byId('filter-tier').value = '';
-      byId('filter-memory').value = '';
+      for (const id of ['filter-family', 'filter-tier', 'filter-memory', 'filter-shader', 'filter-mc']) byId(id).value = '';
+      byId('filter-stable').checked = false;
       visibleStandardCount = pageSize;
       visibleEarlierCount = pageSize;
       render();
@@ -464,7 +586,10 @@ function render() {
   showMoreEarlier.hidden = earlierVisible.length >= sortedEarlier.length;
   if (!showMoreEarlier.hidden) showMoreEarlier.textContent = 'Show ' + Math.min(pageSize, sortedEarlier.length - earlierVisible.length) + ' more earlier routes';
   const earlierFragment = document.createDocumentFragment();
-  for (const entry of earlierVisible) earlierFragment.append(createCard(entry));
+  for (const entry of earlierVisible) {
+    const card = safeCard(entry);
+    if (card) earlierFragment.append(card);
+  }
   earlierResults.append(earlierFragment);
 
   if (loadFailed) {
@@ -491,7 +616,10 @@ function render() {
     return;
   }
   const fragment = document.createDocumentFragment();
-  for (const entry of selected.slice(0, visibleStandardCount)) fragment.append(createCard(entry));
+  for (const entry of selected.slice(0, visibleStandardCount)) {
+    const card = safeCard(entry);
+    if (card) fragment.append(card);
+  }
   results.append(fragment);
 }
 
@@ -508,11 +636,42 @@ document.querySelectorAll('dialog .close').forEach(button => button.addEventList
 document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', event => {
   if (event.target === dialog) dialog.close();
 }));
-['filter-family', 'filter-tier', 'filter-memory', 'sort-by'].forEach(id => byId(id).addEventListener('change', () => {
+const stateFields = { 'filter-family': 'family', 'filter-tier': 'tier', 'filter-memory': 'memory', 'filter-shader': 'shader', 'filter-mc': 'mc', 'sort-by': 'sort' };
+
+function saveState() {
+  const params = new URLSearchParams();
+  for (const [id, key] of Object.entries(stateFields)) if (byId(id).value && !(id === 'sort-by' && byId(id).selectedIndex === 0)) params.set(key, byId(id).value);
+  if (byId('filter-stable').checked) params.set('stable', '1');
+  const query = params.toString();
+  try {
+    history.replaceState(null, '', query ? '?' + query : location.pathname);
+  } catch {}
+}
+
+function loadState() {
+  const params = new URLSearchParams(location.search);
+  for (const [id, key] of Object.entries(stateFields)) {
+    const wanted = params.get(key);
+    const select = byId(id);
+    if (wanted && [...select.options].some(option => option.value === wanted)) select.value = wanted;
+  }
+  byId('filter-stable').checked = params.get('stable') === '1';
+}
+
+[...Object.keys(stateFields), 'filter-stable'].forEach(id => byId(id).addEventListener('change', () => {
   visibleStandardCount = pageSize;
   visibleEarlierCount = pageSize;
+  saveState();
   render();
 }));
+byId('copy-link').addEventListener('click', async () => {
+  try {
+    await copyText(location.href);
+    byId('copy-link-status').textContent = 'Link copied.';
+  } catch {
+    byId('copy-link-status').textContent = 'Copy the address bar instead.';
+  }
+});
 byId('show-more').addEventListener('click', () => {
   visibleStandardCount += pageSize;
   render();
@@ -529,13 +688,15 @@ async function load() {
     const data = await response.json();
     if (!Array.isArray(data.entries)) throw new Error('Invalid evidence index');
     entries = data.entries.filter(entry => entry && entry.metadata && entry.runs);
-    populateFilters();
-    render();
   } catch {
     loadFailed = true;
     byId('load-status').textContent = 'Could not load the setup library.';
     render();
+    return;
   }
+  populateFilters();
+  loadState();
+  render();
 }
 
 byId('copy-prompt').addEventListener('click', async () => {
