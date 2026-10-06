@@ -37,6 +37,8 @@ silicon-shader profile rollback "$LAB" RECEIPT_ID --closed
 
 Use the receipt ID returned by `apply`. A profile must describe the chosen compatible settings; the example profiles are limited presets, not complete shader installations. Rollback refuses to overwrite later edits.
 
+The profile writer does not change the graphics backend (`preferredGraphicsBackend`) or window mode (`exclusiveFullscreen`). Edit those in the lab's `options.txt` while the game is closed, and write down the old values for rollback. Use `opengl` as the backend for Iris packs.
+
 ## Play, then keep or revert
 
 Launch the lab normally and check the actual image, movement, inventory, interactions and save/reload. Keep the original instance as your fallback. A visually useful trial can finish here; without a compatible capture, report performance as unmeasured.
