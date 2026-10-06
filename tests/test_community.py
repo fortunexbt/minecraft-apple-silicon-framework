@@ -154,7 +154,11 @@ class CommunityTests(unittest.TestCase):
                 raise AssertionError(endpoint)
 
             result = submit(
-                self.bundle, True, request=request, presentation=self.presentation
+                self.bundle,
+                True,
+                self.bundle["content_digest"],
+                request=request,
+                presentation=self.presentation,
             )
             self.assertEqual(result["state"], "open")
             writes = [c for c in calls if "/contents/" in c[0]]

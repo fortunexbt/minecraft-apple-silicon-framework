@@ -76,17 +76,27 @@
         <label>RAM
           <select id="filter-memory"><option value="">Any memory</option></select>
         </label>
+        <label>Shader
+          <select id="filter-shader"><option value="">All shaders</option></select>
+        </label>
+        <label>Minecraft
+          <select id="filter-mc"><option value="">Any version</option></select>
+        </label>
         <label class="sort-control">Sort by
           <select id="sort-by">
             <option value="average">Average FPS · highest first</option>
             <option value="worst">Worst 5 sec FPS · highest first</option>
-            <option value="distance">View distance · highest first</option>
+            <option value="distance">View distance incl. LOD · highest first</option>
+            <option value="cost">FPS cost vs baseline · smallest first</option>
           </select>
         </label>
+        <label class="check-control"><input type="checkbox" id="filter-stable"> Worst 5 sec at 90+ only</label>
+        <span class="link-control"><button type="button" id="copy-link" class="how-link">Copy link to this view</button><span id="copy-link-status" role="status" class="fine"></span></span>
       </div>
 
       <p id="load-status" class="sr-only" role="status">Loading setup library.</p>
-      <div id="results" class="setup-grid" aria-live="polite"></div>
+      <noscript><p class="empty-state">The setup library needs JavaScript. The published data is in <a href="data.json">data.json</a> and every entry links to its recipe and evidence on GitHub.</p></noscript>
+      <div id="results" class="setup-grid"></div>
       <div class="pagination-controls">
         <button id="show-more" class="show-more" type="button" hidden>Show more setups</button>
       </div>

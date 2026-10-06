@@ -1,6 +1,6 @@
 # M4 Far Horizon
 
-Sildur's Vibrant shaders with terrain out to the horizon at a stable 90 on a base M4 MacBook Pro (10 CPU cores, 10 GPU cores, 24 GiB). Real chunks stay close (10) and [Distant Horizons](https://modrinth.com/mod/distanthorizons) draws shaded level-of-detail terrain out to 256 chunks, beyond Minecraft's 32-chunk maximum. It starts from the [M4 wide-view recipe](../m4-wide24/README.md) and keeps its Minecraft 26.3, Fabric 0.19.5, mod list, Iris depth-identity fix, RenderScale build, Faithful 32x textures, Java 25 runtime and 4 GiB heap. It changes the shader pack, adds one mod and changes four settings.
+Sildur's Vibrant shaders with terrain out to the horizon at a stable 90 on a base M4 MacBook Pro (10 CPU cores, 10 GPU cores, 24 GiB). Real chunks stay close (10) and [Distant Horizons](https://modrinth.com/mod/distanthorizons) draws shaded level-of-detail terrain out to 256 chunks, beyond Minecraft's 32-chunk maximum. It starts from the [M4 wide-view recipe](../m4-wide24/README.md) and keeps its Minecraft 26.3, Fabric 0.19.5, mod list, Iris depth-identity fix, RenderScale build, Faithful 32x textures, Java 25 runtime and 4 GiB heap. It changes the shader pack, adds one mod, changes two vanilla settings (render distance and render scale) and sets three Distant Horizons options.
 
 ## Changes from M4 wide-view
 
@@ -14,6 +14,8 @@ Sildur's Vibrant shaders with terrain out to the horizon at a stable 90 on a bas
 | Distant Horizons `horizontalQuality` | not installed | `LOW` |
 | Distant Horizons `maxHorizontalResolution` | not installed | `FOUR_BLOCKS` |
 
+In `config/DistantHorizons.toml` these are `lodChunkRenderDistanceRadius = 256` and `horizontalQuality = "LOW"` under `[client.advanced.graphics.quality]`, `maxHorizontalResolution = "FOUR_BLOCKS"` in the same section, and `realTimeUpdateDistanceRadiusInChunks = 256` under `[server]`. The file is created on first launch.
+
 Every other Distant Horizons option is at its default. Everything else is unchanged, including simulation distance 6, nearest filtering, 8x anisotropic filtering and the 120 FPS cap used for measurement (a 90 cap gave the smoothest pacing in earlier runs). Both captures in the pair ran in borderless fullscreen (`exclusiveFullscreen:false`).
 
 Download Sildur's Vibrant Shaders v2.02 Lite from its official Modrinth page, version `cianYi38`: https://modrinth.com/shader/sildurs-vibrant-shaders/version/cianYi38 (All Rights Reserved; nothing is redistributed or patched). Download Distant Horizons 3.3.4 for 26.3 (Fabric) from Modrinth. Neither jar nor pack is included here.
@@ -24,7 +26,7 @@ Before measuring or playing, stand still near the spot for about 200 seconds so 
 
 One same-machine pair on the standard 420-tick Overworld flight-and-turn route at 3024x1898 output, both in borderless fullscreen, cap 120. Each capture is the third flight of its launch; the first flight of every launch was a warm-up and ran a few FPS slower with deeper 1% lows. The candidate launch stood still for 200 seconds before its flights so Distant Horizons could generate level-of-detail terrain.
 
-| | Wide view (R24, MakeUp, 60%) | Far Horizon (R10 + LOD 256, Sildur's, 50%) |
+| | Wide view settings (R24, MakeUp, 60%, borderless) | Far Horizon (R10 + LOD 256, Sildur's, 50%, borderless) |
 | --- | --- | --- |
 | Average | 108.97 FPS | 98.35 FPS |
 | Worst five seconds | 100.79 FPS | 92.81 FPS |

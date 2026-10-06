@@ -17,8 +17,12 @@ on:
       - "**/*.webp"
 permissions:
   contents: read
+concurrency:
+  group: fixtures-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   python:
+    timeout-minutes: 15
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -34,6 +38,8 @@ jobs:
       - run: silicon-shader --help
       - run: python -m py_compile workloads/overworld-v1/*.pyj recipes/m4-wide24/sampler/import_capture.py
       - run: node --check site/app.js
+      - name: Validate every published contribution with the current validators
+        run: python -m silicon_shader.registry contributions "$RUNNER_TEMP/data.json"
       - run: ruff check silicon_shader tests --select F
       - run: ruff format silicon_shader tests --check
   sampler:
