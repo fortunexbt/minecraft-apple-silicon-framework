@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * 1'
 permissions:
   contents: read
 concurrency:
@@ -19,6 +21,8 @@ jobs:
         with:
           python-version: '3.13'
       - run: python3 -m silicon_shader.registry contributions site/data.json
+      - name: Refuse to publish an empty library
+        run: python3 -c "import json; d = json.load(open('site/data.json')); assert d['entries'], 'no entries in the generated index'"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
