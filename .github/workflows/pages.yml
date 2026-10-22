@@ -23,7 +23,7 @@ jobs:
       - run: python3 -m silicon_shader.registry contributions site/data.json
       - name: Refuse to publish an empty library
         run: python3 -c "import json; d = json.load(open('site/data.json')); assert d['entries'], 'no entries in the generated index'"
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
   deploy:
