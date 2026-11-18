@@ -69,6 +69,10 @@ This table describes Mojang's game metadata, not a recommendation to use a parti
 
 The campaign's stock-version receipt records RenderScale 1.4.0-alpha.6. A later lab-only JAR changed `RenderScale.class` to force the forward dynamic-update `viewChanged` argument; its SHA-256 was `9fc93fd74c979124bd483f1b2b736b3caf084fc5e8e0001044df8619b4600b04`. A separate quantized-factor JAR (SHA-256 `8337af211bef89572bf57a2fe5aeeb0e4ab231beda1ac35f450bb1e9901e07e3`) was subsequently verified installed in the October 3 wide-view lab. Its dynamic extensions remain dormant at targetFrameRate 0; static 60% was used for the paired wide-view experiment. Reproducible source-only transforms are in [the wide-view recipe](recipes/m4-wide24/). Neither variant is an upstream release or included here. Dynamic scaling was not promoted; the accepted profile used static 75% scaling. The setup workflow preserves existing instance mods and does not replace a user's locally modified JAR with upstream stock.
 
+## Website font
+
+The website bundles the Latin subset of [Bricolage Grotesque](https://github.com/ateliertriay/bricolage) as `site/assets/fonts/bricolage-grotesque.woff2`, taken from the `@fontsource-variable/bricolage-grotesque` 5.3.0 package. It is licensed under the SIL Open Font License 1.1, and the licence text ships beside the font as `bricolage-grotesque-OFL.txt`.
+
 ## Screenshot and project disclaimer
 
 Minecraft screenshots are Mojang/Microsoft assets covered by the [Minecraft Usage Guidelines](https://www.minecraft.net/en-us/usage-guidelines). This project is unaffiliated and includes the required wording in the main README: **NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.** The screenshot is unmodified and is used as an example of a local visual comparison; it is not a product-performance claim.

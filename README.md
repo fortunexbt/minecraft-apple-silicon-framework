@@ -1,6 +1,6 @@
 # Silicon Shader
 
-![Minecraft shaders. Made for your Mac.](site/assets/social-card.jpg)
+![The Silicon Shader site comparing two shader setups over the same desert village frame, with their measured FPS and frame times beside them.](site/assets/social-card.jpg)
 
 Pick a Minecraft Java shader look that your Apple Silicon Mac can run well. Browse screenshots and measured results from real Macs, then let your coding agent adapt a setup to your launcher and mods without touching your current game.
 
@@ -25,7 +25,7 @@ Run to run noise is about 1 to 3 FPS once the first flight is discarded, so trea
 
 ## What the library is
 
-The site is a filterable library, not a global ranking. Each card has a screenshot with the player's skin, hardware, versions, resolution, view distance, FPS and frame pacing, and a recipe. Filter for a Mac like yours and sort by pacing, FPS or distance. A higher FPS can simply mean a lower resolution or a shorter view distance, so compare the picture before choosing. Entries are self reported, not certified.
+The site opens on a comparison bench. Every standard-route setup posed for the same frame, so you can drag a divider between two screenshots and read their average FPS, worst five seconds and frame times side by side. Below it is a filterable library, not a global ranking. Each entry has a screenshot with the player's skin, hardware, versions, resolution, view distance, FPS and frame pacing, and a recipe. Filter for a Mac like yours and sort by pacing, FPS or distance. A higher FPS can simply mean a lower resolution or a shorter view distance, so compare the picture before choosing. Entries are self reported, not certified.
 
 ## Quick start
 

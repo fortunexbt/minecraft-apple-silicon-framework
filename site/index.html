@@ -3,67 +3,84 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Browse Minecraft shader setups shared by Apple Silicon players. Compare the recipe, resolution, view distance, and community performance evidence.">
-  <title>Silicon Shader — setup library</title>
-  <meta name="theme-color" content="#183a2b">
+  <meta name="description" content="Minecraft Java shader setups for Apple silicon Macs. Every setup flew the same seeded route and posed for the same frame, so you can compare the picture and the measured frame pacing side by side.">
+  <title>Silicon Shader, shader setups compared on Apple silicon</title>
+  <meta name="theme-color" content="#1e2226">
+  <meta name="color-scheme" content="dark">
   <link rel="canonical" href="https://fortunexbt.github.io/minecraft-apple-silicon-framework/">
   <link rel="icon" href="favicon.ico" sizes="32x32">
   <link rel="icon" type="image/png" href="favicon.png" sizes="32x32">
   <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
   <link rel="manifest" href="site.webmanifest">
+  <link rel="preload" href="assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Silicon Shader">
-  <meta property="og:title" content="Minecraft shaders. Made for your Mac.">
-  <meta property="og:description" content="Real setups, screenshots and performance from Apple Silicon players. Find a shader recipe for your Mac and let your agent help you try it.">
+  <meta property="og:title" content="Minecraft shader setups, compared on Apple silicon">
+  <meta property="og:description" content="Same seed, same flight, same frame. Compare shader setups side by side with their measured frame pacing, then let your agent try one in an isolated copy of your game.">
   <meta property="og:url" content="https://fortunexbt.github.io/minecraft-apple-silicon-framework/">
   <meta property="og:image" content="https://fortunexbt.github.io/minecraft-apple-silicon-framework/assets/social-card.jpg">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Silicon Shader: Minecraft shaders. Made for your Mac. An ivory apple transforms into green Minecraft blocks.">
+  <meta property="og:image:alt" content="Two Minecraft shader setups split by a divider over the same desert village frame, with their measured FPS and frame times beside them.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Minecraft shaders. Made for your Mac.">
-  <meta name="twitter:description" content="Real setups, screenshots and performance from Apple Silicon players. Find a shader recipe for your Mac.">
+  <meta name="twitter:title" content="Minecraft shader setups, compared on Apple silicon">
+  <meta name="twitter:description" content="Same seed, same flight, same frame. Compare shader setups and their measured frame pacing side by side.">
   <meta name="twitter:image" content="https://fortunexbt.github.io/minecraft-apple-silicon-framework/assets/social-card.jpg">
-  <meta name="twitter:image:alt" content="Silicon Shader: Minecraft shaders. Made for your Mac. An ivory apple transforms into green Minecraft blocks.">
+  <meta name="twitter:image:alt" content="Two Minecraft shader setups split by a divider over the same desert village frame, with their measured FPS and frame times beside them.">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="site-header">
-    <a class="brand" href="./" aria-label="Silicon Shader home"><img class="brand-mark" src="assets/icon-192.png" width="36" height="36" alt=""><span>silicon<span class="brand-light">shader</span></span></a>
+  <a class="skip" href="#library">Skip to the full library</a>
+  <header class="bar">
+    <a class="brand" href="./" aria-label="Silicon Shader home"><img src="favicon.png" width="22" height="22" alt=""><span>Silicon Shader</span></a>
     <nav aria-label="Main navigation">
-      <a href="#library">Setup library</a>
-      <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework">GitHub <span aria-hidden="true">↗</span></a>
+      <a href="#library">Library</a>
+      <button type="button" class="link" data-dialog="rules">How to read a result</button>
+      <button type="button" class="link" data-dialog="participate">Tune my setup</button>
+      <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework">GitHub</a>
     </nav>
   </header>
 
   <main>
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-orbit orbit-one" aria-hidden="true"></div>
-      <div class="hero-orbit orbit-two" aria-hidden="true"></div>
-      <div class="hero-copy">
-        <p class="eyebrow"><span class="live-dot"></span> APPLE SILICON · MINECRAFT JAVA</p>
-        <h1 id="hero-title">A setup worth<br><em>playing with.</em></h1>
-        <p class="hero-description">Browse shader recipes shared by Mac players. Compare the image settings and performance evidence, then ask an agent to check a setup against your game.</p>
-        <div class="hero-actions">
-          <a class="button button-light" href="#library">Browse setups <span aria-hidden="true">↓</span></a>
-          <button class="button button-quiet" type="button" data-dialog="participate">Tune my setup <span aria-hidden="true">↗</span></button>
-        </div>
-        <p class="hero-footnote">Inspect first. Try changes in an isolated copy of your game.</p>
+    <section class="bench" aria-labelledby="bench-title">
+      <div class="bench-intro">
+        <h1 id="bench-title">Minecraft shader setups for Apple silicon, flown over one route and compared frame by frame.</h1>
+        <p>Every standard setup used the same seeded world, the same scripted flight and the same front-facing portrait. Drag the divider to compare the picture, then check what it cost.</p>
       </div>
-      <img class="hero-logo" src="assets/logo.png" width="320" height="320" alt="" aria-hidden="true" fetchpriority="high">
+
+      <div class="bench-grid">
+        <figure id="stage" class="stage" data-mode="empty">
+          <div class="stage-frame">
+            <img id="stage-a" class="stage-img" alt="" decoding="async" fetchpriority="high" hidden>
+            <img id="stage-b" class="stage-img stage-img-b" alt="" decoding="async" hidden>
+            <div class="stage-divider" aria-hidden="true"><span class="stage-grip"></span></div>
+            <span id="stage-tag-a" class="stage-tag tag-a" hidden></span>
+            <span id="stage-tag-b" class="stage-tag tag-b" hidden></span>
+            <input id="wipe" class="wipe" type="range" min="0" max="100" step="0.5" value="50" aria-label="Divider position between the two screenshots" hidden>
+            <p id="stage-empty" class="stage-empty">Loading the standard-route setups.</p>
+          </div>
+          <figcaption id="stage-caption">Seed 20260929, standard front-facing portrait. Screenshots use the <a href="https://faithfulpack.net/">Faithful 32x</a> resource pack.</figcaption>
+        </figure>
+
+        <div class="rail-wrap">
+          <h2 class="rail-title" id="rail-title">Standard-route setups</h2>
+          <ul id="rail" class="rail" aria-labelledby="rail-title"></ul>
+        </div>
+        <aside id="readout" class="readout" aria-labelledby="readout-title">
+          <h2 id="readout-title" class="sr-only">Measured results</h2>
+          <div id="readout-body"></div>
+        </aside>
+
+      </div>
     </section>
 
     <section class="library" id="library" aria-labelledby="library-title">
       <div class="library-heading">
-        <div>
-          <p class="eyebrow eyebrow-dark">THE COMMUNITY LIBRARY</p>
-          <h2 id="library-title">Find your next setup</h2>
-          <p class="section-note">New submissions share one flight route and one front-facing screenshot location. Shaders, resolution and hardware still differ, so compare those details too.</p>
-          <button class="how-link" type="button" data-dialog="rules">How to use the library ↗</button>
-        </div>
-        <p id="count" class="setup-count" aria-live="polite">Loading setups…</p>
+        <h2 id="library-title">The full library</h2>
+        <p class="section-note">New submissions share one flight route and one front-facing screenshot location. Shaders, resolution and hardware still differ, so compare those details too. Entries are self-reported, not certified.</p>
+        <p id="count" class="setup-count" aria-live="polite">Loading setups.</p>
       </div>
 
       <div id="filters" class="filters" hidden>
@@ -73,7 +90,7 @@
         <label>Chip tier
           <select id="filter-tier"><option value="">All tiers</option></select>
         </label>
-        <label>RAM
+        <label>Memory
           <select id="filter-memory"><option value="">Any memory</option></select>
         </label>
         <label>Shader
@@ -82,65 +99,64 @@
         <label>Minecraft
           <select id="filter-mc"><option value="">Any version</option></select>
         </label>
-        <label class="sort-control">Sort by
+        <label>Sort by
           <select id="sort-by">
-            <option value="average">Average FPS · highest first</option>
-            <option value="worst">Worst 5 sec FPS · highest first</option>
-            <option value="distance">View distance incl. LOD · highest first</option>
-            <option value="cost">FPS cost vs baseline · smallest first</option>
+            <option value="average">Average FPS</option>
+            <option value="worst">Worst five seconds</option>
+            <option value="distance">Farthest view with LOD</option>
+            <option value="cost">Smallest FPS cost</option>
           </select>
         </label>
-        <label class="check-control"><input type="checkbox" id="filter-stable"> Worst 5 sec at 90+ only</label>
-        <span class="link-control"><button type="button" id="copy-link" class="how-link">Copy link to this view</button><span id="copy-link-status" role="status" class="fine"></span></span>
+        <label class="check-control"><input type="checkbox" id="filter-stable"> Worst five seconds held 90 FPS</label>
+        <span class="link-control"><button type="button" id="copy-link" class="link">Copy link to this view</button><span id="copy-link-status" role="status" class="fine"></span></span>
       </div>
 
       <p id="load-status" class="sr-only" role="status">Loading setup library.</p>
       <noscript><p class="empty-state">The setup library needs JavaScript. The published data is in <a href="data.json">data.json</a> and every entry links to its recipe and evidence on GitHub.</p></noscript>
-      <div id="results" class="setup-grid"></div>
+      <div id="results" class="setup-list"></div>
       <div class="pagination-controls">
-        <button id="show-more" class="show-more" type="button" hidden>Show more setups</button>
+        <button id="show-more" class="button" type="button" hidden>Show more setups</button>
       </div>
       <div id="empty-state" class="empty-state" hidden></div>
 
       <details id="earlier-routes" class="earlier-routes" hidden>
         <summary><span>Earlier routes</span><span id="earlier-count"></span></summary>
-        <p>These setups were measured on different routes or before the standard was introduced. Their FPS is not directly comparable with standard-route results.</p>
-        <div id="earlier-results" class="setup-grid"></div>
+        <p>These setups were measured on different routes or before the standard was introduced. Their FPS is not directly comparable with standard-route results, so they stay out of the comparison above.</p>
+        <div id="earlier-results" class="setup-list"></div>
         <div class="pagination-controls">
-          <button id="show-more-earlier" class="show-more" type="button" hidden>Show more earlier routes</button>
+          <button id="show-more-earlier" class="button" type="button" hidden>Show more earlier routes</button>
         </div>
       </details>
 
       <aside class="contribute-note">
-        <div><span class="eyebrow eyebrow-dark">HAVE A SETUP TO SHARE?</span><p>Useful recipes and honest results help the next player get started.</p></div>
-        <button class="button button-dark" type="button" data-dialog="participate">Share or tune a setup <span aria-hidden="true">↗</span></button>
+        <p>Have a setup to share? Useful recipes and honest results help the next player get started.</p>
+        <button class="button button-primary" type="button" data-dialog="participate">Share or tune a setup</button>
       </aside>
     </section>
   </main>
 
   <footer class="site-footer">
-    <span>Silicon Shader <span class="footer-slash">/</span> community setup library</span>
     <nav aria-label="Footer navigation">
       <a href="data.json" download>Open data</a>
       <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md">How contributions work</a>
       <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/issues">Contribute</a>
+      <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/THIRD_PARTY.md">Credits</a>
     </nav>
-    <small>Independent community project. Not affiliated with Mojang, Microsoft, Apple or Yukon. No analytics or automatic uploads. Shared performance is community evidence; check the setup and scene before comparing results.</small>
+    <small>Independent community project. Not affiliated with Mojang, Microsoft, Apple or Yukon. Not an official Minecraft product. No analytics or automatic uploads. Shared performance is community evidence, so check the setup and scene before comparing results. Screenshot textures from <a href="https://faithfulpack.net/">Faithful 32x</a>.</small>
   </footer>
 
   <dialog id="participate" aria-labelledby="participate-title">
     <button class="close" type="button" aria-label="Close">×</button>
-    <p class="eyebrow eyebrow-dark">START WITH YOUR OWN SETUP</p>
-    <h2 id="participate-title">Let your agent help.</h2>
+    <h2 id="participate-title">Let your agent help</h2>
     <p>Give this prompt to Codex, Claude Code, or your preferred coding agent. It starts with your launcher, mods and image-quality preferences.</p>
     <pre id="agent-prompt">Use https://github.com/fortunexbt/minecraft-apple-silicon-framework and follow silicon_shader/skills/silicon-shader/SKILL.md. Detect my Mac, launcher, existing Minecraft session, loader, mods, harness, image quality and compatible community recipes. Preserve my worlds, current settings and any game already in use; adapt one compatible setup in an isolated copy, keeping current image quality as the default floor.
 
 For automatic performance comparison, require a supported game-control harness and the pinned disposable world. Run one matched baseline and one candidate on the same seed and fixed flight path; no manual steering or substitute terrain. Use brief in-game phase messages before measurement and after each capture. Announce the upcoming flight during warm-up; keep timed frames free of new chat messages or screenshots. Explain the candidate switch and final portrait outside measurement. Keep the repeat comparison under five minutes. If the world or supported controls are unavailable, finish setup and report performance as unmeasured instead of interrupting a running game.
 
 After testing, take exactly one candidate screenshot from the shared front-facing view. Prepare a data-only submission with observed hardware, launcher/mods, agent/model/harness, recipe, screenshot and validated timing. Publishing is optional: publish only when this task already authorizes it; once authorized, do not ask again. Otherwise leave the validated draft local. Changes to code or toolkit still go through review.</pre>
-    <button id="copy-prompt" class="button button-dark" type="button">Copy agent prompt</button>
+    <button id="copy-prompt" class="button button-primary" type="button">Copy agent prompt</button>
     <span id="copy-status" class="copy-status" role="status"></span>
-    <p class="fine">Public comparisons use the pinned standard workload shown by <code>silicon-shader challenge workload</code>. A compatible harness and save may take time to prepare; no performance result is assumed until the route receipt validates.</p>
+    <p class="fine">Public comparisons use the pinned standard workload shown by <code>silicon-shader challenge workload</code>. A compatible harness and save may take time to prepare. No performance result is assumed until the route receipt validates.</p>
     <details class="manual-install">
       <summary>Prefer the manual CLI?</summary>
       <p>Requires Python 3.10+ and Minecraft Java. Use a Python environment to avoid changing your system packages.</p>
@@ -149,22 +165,22 @@ cd minecraft-apple-silicon-framework
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install .</pre>
-      <p><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKFLOW.md">Optimize your setup ↗</a> · <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md#cli-and-hosted-board">Submit an experiment ↗</a></p>
-      <p class="fine">Publishing uses <a href="https://cli.github.com/">GitHub CLI</a> and your existing GitHub login. Data-only submissions pass automatic consistency checks before appearing in the library; performance remains contributor-reported. Changes to code and the toolkit still go through maintainer review.</p>
+      <p><a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/WORKFLOW.md">Optimise your setup</a>, or <a href="https://github.com/fortunexbt/minecraft-apple-silicon-framework/blob/main/docs/CHALLENGE.md#cli-and-hosted-board">submit an experiment</a>.</p>
+      <p class="fine">Publishing uses <a href="https://cli.github.com/">GitHub CLI</a> and your existing GitHub login. Data-only submissions pass automatic consistency checks before appearing in the library, and performance remains contributor-reported. Changes to code and the toolkit still go through maintainer review.</p>
     </details>
   </dialog>
 
   <dialog id="rules" aria-labelledby="rules-title">
     <button class="close" type="button" aria-label="Close">×</button>
-    <p class="eyebrow eyebrow-dark">A QUICK WAY TO USE THE LIBRARY</p>
-    <h2 id="rules-title">Check the recipe first.</h2>
-    <p>FPS depends on the Mac, shader, scene, resolution and settings. Read the recipe and evidence before comparing two cards.</p>
+    <h2 id="rules-title">Check the recipe first</h2>
+    <p>FPS depends on the Mac, shader, scene, resolution and settings. Read the recipe and evidence before comparing two setups.</p>
     <ol class="how-list">
       <li>Filter by your chip family, tier and memory.</li>
-      <li>Standard-route cards share the pinned test scene and movement. Compare output and internal resolution, shader settings, view distance and hardware too.</li>
+      <li>Standard-route setups share the pinned test scene and movement. Compare output and internal resolution, shader settings, view distance and hardware too.</li>
       <li>Ask your agent to check compatibility and prepare an isolated copy before trying a change.</li>
     </ol>
-    <p class="fine">Earlier-route setups remain available as recipe ideas; their FPS cannot be compared directly with the standard route. Captures are contributor-submitted, and an image-quality review is not an independent performance reproduction.</p>
+    <p>Each bar is a short CPU frame production measurement, not displayed or generated FPS. The notch on a bar is the matched baseline run from the same session. Run-to-run noise is about 1 to 3 FPS, so treat gaps under about 5 FPS between setups as ties.</p>
+    <p class="fine">Earlier-route setups remain available as recipe ideas. Their FPS cannot be compared directly with the standard route. Captures are contributor-submitted, and an image-quality review is not an independent performance reproduction.</p>
   </dialog>
 </body>
 </html>
