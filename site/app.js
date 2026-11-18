@@ -43,8 +43,8 @@ function isStandardEntry(entry) {
 
 function workloadLabel(entry) {
   if (isStandardEntry(entry)) return 'Standard route';
-  if (entry.benchmark === 'Earlier route' || !entry.workload_id) return 'Earlier route · not comparable';
-  return 'Unknown route · not comparable';
+  if (entry.benchmark === 'Earlier route' || !entry.workload_id) return 'Earlier route, not comparable';
+  return 'Unknown route, not comparable';
 }
 
 function standardEntries() {
@@ -72,7 +72,7 @@ function setupTitle(entry) {
   const presentation = entry.presentation || {};
   if (typeof presentation.title === 'string' && presentation.title.trim()) return presentation.title.trim();
   const chip = hardware(entry);
-  return shaderName(entry) + ' · ' + titleCase(asText(chip.family, 'Apple Silicon')) + ' ' + titleCase(asText(chip.tier, ''));
+  return shaderName(entry) + ', ' + titleCase(asText(chip.family, 'Apple Silicon')) + ' ' + titleCase(asText(chip.tier, ''));
 }
 
 function githubProfile(handle, minecraftProfile) {
@@ -242,12 +242,12 @@ function diffLines(entry) {
 
 function chipLabel(entry) {
   const chip = hardware(entry);
-  return titleCase(asText(chip.family, 'Apple Silicon')) + ' · ' + titleCase(asText(chip.tier, 'Unknown tier'));
+  return titleCase(asText(chip.family, 'Apple Silicon')) + ' ' + titleCase(asText(chip.tier, 'Unknown tier'));
 }
 
 function memoryLabel(entry) {
   const gib = finite(hardware(entry).memory_gib);
-  return gib === null ? 'Memory not recorded' : formatNumber(gib, 0) + ' GB RAM';
+  return gib === null ? 'Memory not recorded' : formatNumber(gib, 0) + ' GB memory';
 }
 
 function makeFilterOptions(id, values, placeholder, label) {
@@ -275,7 +275,7 @@ function populateFilters() {
 function createCover(entry, title) {
   const cover = node('div', undefined, { class: 'setup-cover' });
   const fallback = node('div', undefined, { class: 'cover-placeholder', role: 'img', 'aria-label': 'Screenshot unavailable for this setup' });
-  fallback.append(node('span', 'SCREENSHOT UNAVAILABLE', { class: 'placeholder-kicker' }), node('strong', 'Recipe first.', { class: 'placeholder-title' }), node('span', 'View the recipe and evidence', { class: 'placeholder-note' }));
+  fallback.append(node('strong', 'Screenshot unavailable'), node('span', 'Open the recipe and evidence instead.'));
   cover.append(fallback);
 
   const screenshot = safeScreenshotUrl((entry.presentation || {}).screenshot_url);
@@ -287,28 +287,23 @@ function createCover(entry, title) {
     fullImage.append(image);
     cover.append(fullImage);
   }
-
-  const fps = average(entry);
-  const performance = node('div', undefined, { class: 'performance-badge', 'aria-label': fps === null ? 'Candidate average FPS not recorded' : 'Candidate average FPS ' + formatNumber(fps) });
-  performance.append(node('strong', fps === null ? '—' : formatNumber(fps)), node('span', 'avg FPS'));
-  cover.append(performance);
   return cover;
 }
 
 function imageCaption(entry) {
   const caption = node('div', undefined, { class: 'image-caption' });
-  const route = isStandardEntry(entry) ? 'Standard · seed 20260929' : workloadLabel(entry);
+  const route = isStandardEntry(entry) ? 'Standard route, seed 20260929' : workloadLabel(entry);
   caption.append(node('span', route, { class: 'image-context' }));
 
   const candidate = entry.runs && entry.runs.candidate ? entry.runs.candidate : {};
   const p99 = finite(candidate.p99_ms);
-  caption.append(node('span', p99 === null ? 'p99 —' : 'p99 ' + formatNumber(p99) + ' ms', {
+  caption.append(node('span', p99 === null ? 'p99 not recorded' : 'p99 ' + formatNumber(p99) + ' ms', {
     class: 'image-pacing',
     title: '99th-percentile CPU frame production interval'
   }));
 
   const digest = /^[a-f0-9]{64}$/.test(entry.digest || '') ? entry.digest : null;
-  const evidence = node('a', digest ? digest.slice(0, 12) : 'Evidence ↗', {
+  const evidence = node('a', digest ? 'Evidence ' + digest.slice(0, 12) : 'Evidence', {
     class: 'image-evidence',
     href: evidenceUrl(entry),
     target: '_blank',
@@ -319,11 +314,10 @@ function imageCaption(entry) {
   return caption;
 }
 
-function dataRow(label, value, note) {
-  const cell = node('div', undefined, { class: 'spec-item' });
-  cell.append(node('span', label, { class: 'spec-label' }), node('strong', value, { class: 'spec-value' }));
-  if (note) cell.append(node('small', note, { class: 'spec-note' }));
-  return cell;
+function specList(rows) {
+  const list = node('dl', undefined, { class: 'setup-specs' });
+  for (const [label, value] of rows) list.append(node('dt', label), node('dd', value));
+  return list;
 }
 
 function countMetric(value) {
@@ -340,15 +334,15 @@ function detailsFor(entry) {
   const workload = metadata.workload || {};
   const quality = metadata.quality_review || {};
   const rows = [
-    ['Mac model', [asText(hardware(entry).model), asText(hardware(entry).model_identifier)].filter(Boolean).join(' · ') || 'Not recorded'],
-    ['Measurement', 'CPU frame production; not displayed or generated FPS'],
+    ['Mac model', [asText(hardware(entry).model), asText(hardware(entry).model_identifier)].filter(Boolean).join(', ') || 'Not recorded'],
+    ['Measurement', 'CPU frame production, not displayed or generated FPS'],
     ['Minecraft', asText(metadata.minecraft, 'Not recorded')],
-    ['Launcher and loader', [asText(metadata.launcher, 'Launcher not recorded'), metadata.loader ? titleCase(asText(metadata.loader.name, '')) + (metadata.loader.version ? ' ' + metadata.loader.version : '') : ''].filter(Boolean).join(' · ')],
+    ['Launcher and loader', [asText(metadata.launcher, 'Launcher not recorded'), metadata.loader ? titleCase(asText(metadata.loader.name, '')) + (metadata.loader.version ? ' ' + metadata.loader.version : '') : ''].filter(Boolean).join(', ')],
     ['Java runtime', asText(metadata.runtime, 'Not recorded')],
     ['Capture harness', asText(metadata.harness, 'Not recorded')],
-    ['Challenge route', isStandardEntry(entry) ? 'Standard route · ' + standardWorkloadId : workloadLabel(entry)],
-    ['Screenshot', (entry.presentation || {}).screenshot_view === 'overworld-front-v1' ? 'Standard front-facing portrait · 16:9' : 'Earlier screenshot framing'],
-    ['Test scene', [asText(workload.scene), asText(workload.route), asText(workload.terrain)].filter(Boolean).join(' · ') || 'Not recorded'],
+    ['Challenge route', isStandardEntry(entry) ? 'Standard route, ' + standardWorkloadId : workloadLabel(entry)],
+    ['Screenshot', (entry.presentation || {}).screenshot_view === 'overworld-front-v1' ? 'Standard front-facing portrait, 16:9' : 'Earlier screenshot framing'],
+    ['Test scene', [asText(workload.scene), asText(workload.route), asText(workload.terrain)].filter(Boolean).join(', ') || 'Not recorded'],
     ['Candidate worst 5 sec FPS', worstFps(entry) === null ? 'Not recorded' : formatNumber(worstFps(entry))],
     ['Candidate p95 / p99 frame time', formatNumber(candidate.p95_ms) + ' / ' + formatNumber(candidate.p99_ms) + ' ms'],
     ['Intervals over 33 / 50 / 100 ms', [countMetric(candidate.over_33), countMetric(candidate.over_50), countMetric(candidate.over_100)].map(value => value === null ? '—' : String(value)).join(' / ')],
@@ -368,7 +362,7 @@ function detailsFor(entry) {
   details.append(setupDetails);
 
   const fullEvidence = safeRecipeUrl(entry.evidence) || evidenceUrl(entry);
-  details.append(node('a', 'Open full recipe and evidence ↗', { href: fullEvidence, target: '_blank', rel: 'noopener noreferrer', class: 'evidence-link' }));
+  details.append(node('a', 'Open full recipe and evidence', { href: fullEvidence, target: '_blank', rel: 'noopener noreferrer', class: 'evidence-link' }));
   return details;
 }
 
@@ -389,19 +383,61 @@ function setupPrompt(entry) {
   ].join('\n');
 }
 
+function resolutionLine(entry) {
+  const resolution = resolutionInfo(entry);
+  if (resolution.scale === null) return resolution.output + ', internal resolution not recorded';
+  return resolution.output + ' output, ' + resolution.internal + ' internal at ' + formatNumber(resolution.scale * 100, 0) + '% scale';
+}
+
+function distanceLine(entry) {
+  const viewDistance = renderDistance(entry);
+  const base = viewDistance === null ? 'Not recorded' : formatNumber(viewDistance, 0) + ' chunks';
+  return lodRadius(entry) === null ? base : base + ', LOD terrain to ' + formatNumber(lodRadius(entry), 0);
+}
+
+function percent(value, max) {
+  return Math.max(0, Math.min(100, (value / max) * 100)).toFixed(2) + '%';
+}
+
+// One bar per run: the fill is the candidate, the notch is its matched baseline.
+function meter(label, value, baseline, max, fillClass, threshold) {
+  const row = node('div', undefined, { class: 'meter' });
+  const track = node('div', undefined, { class: 'track', 'aria-hidden': 'true' });
+  if (value !== null) {
+    const fill = node('span', undefined, { class: 'fill ' + fillClass });
+    fill.style.setProperty('--v', percent(value, max));
+    track.append(fill);
+  }
+  if (threshold) {
+    const mark = node('span', undefined, { class: 'mark' });
+    mark.style.setProperty('--v', percent(threshold, max));
+    track.append(mark);
+  }
+  if (baseline !== null) {
+    const notch = node('span', undefined, { class: 'notch' });
+    notch.style.setProperty('--v', percent(baseline, max));
+    track.append(notch);
+  }
+  const spoken = (value === null ? 'not recorded' : formatNumber(value) + ' FPS') + (baseline === null ? '' : ', matched baseline ' + formatNumber(baseline) + ' FPS');
+  row.append(label, track, node('span', value === null ? '—' : formatNumber(value), { class: 'meter-value', 'aria-label': spoken }));
+  return row;
+}
+
 function createCard(entry) {
   const title = setupTitle(entry);
   const card = node('article', undefined, { class: 'setup-card' });
-  card.append(createCover(entry, title), imageCaption(entry));
+  const media = node('div', undefined, { class: 'setup-media' });
+  media.append(createCover(entry, title), imageCaption(entry));
+  card.append(media);
 
   const body = node('div', undefined, { class: 'card-body' });
   const top = node('div', undefined, { class: 'card-top' });
   const titleBlock = node('div', undefined, { class: 'card-title-block' });
-  titleBlock.append(node('p', shaderName(entry), { class: 'eyebrow eyebrow-dark shader-kicker' }), node('h3', title));
+  titleBlock.append(node('h3', title), node('p', shaderName(entry), { class: 'shader-name' }));
   top.append(titleBlock, githubProfile(entry.author, (entry.presentation || {}).minecraft_profile));
   body.append(top);
   const agent = (entry.presentation || {}).agent || {};
-  body.append(node('p', 'Agent: ' + asText(agent.harness, 'Not recorded') + ' · Model: ' + asText(agent.model, 'Not recorded'), { class: 'agent-credit' }));
+  body.append(node('p', 'Tuned with ' + asText(agent.harness, 'an unrecorded agent') + ', model ' + asText(agent.model, 'not recorded'), { class: 'agent-credit' }));
 
   const hardwareLine = node('div', undefined, { class: 'hardware-line' });
   hardwareLine.append(node('span', workloadLabel(entry), {
@@ -420,37 +456,26 @@ function createCard(entry) {
     body.append(changeLine);
   }
 
-  const resolution = resolutionInfo(entry);
-  const scaleNote = resolution.scale === null ? 'Internal resolution not recorded' : resolution.internal + ' internal · ' + formatNumber(resolution.scale * 100, 0) + '% scale';
-  const viewDistance = renderDistance(entry);
-  const specs = node('div', undefined, { class: 'setup-specs' });
-  specs.append(
-    dataRow('Output resolution', resolution.output, scaleNote),
-    dataRow(
-      'View distance',
-      viewDistance === null ? 'Not recorded' : formatNumber(viewDistance, 0) + ' chunks',
-      lodRadius(entry) === null ? undefined : '+ LOD terrain to ' + formatNumber(lodRadius(entry), 0) + ' chunks'
-    )
-  );
-  body.append(specs);
+  body.append(specList([['Resolution', resolutionLine(entry)], ['View distance', distanceLine(entry)]]));
 
   const perf = node('div', undefined, { class: 'perf-compare' });
   const avgDelta = delta(entry, 'average_fps');
   const worst = delta(entry, 'worst_5s_fps');
+  const fillClass = 'fill-n';
+  const axis = fpsAxis([entry]);
   if (avgDelta) {
-    perf.append(node('p', 'Average ' + formatNumber(avgDelta.base) + ' → ' + formatNumber(avgDelta.cand) + ' FPS (' + (avgDelta.diff >= 0 ? '+' : '−') + formatNumber(Math.abs(avgDelta.diff)) + ' vs baseline)'));
+    perf.append(meter(node('span', 'Average FPS'), avgDelta.cand, avgDelta.base, axis, fillClass));
   }
   if (worst) {
-    const held = worst.cand >= STABLE_FLOOR;
-    const line = node('p', 'Worst 5 sec ' + formatNumber(worst.base) + ' → ' + formatNumber(worst.cand) + ' FPS ');
-    line.append(node('span', held ? 'Held ' + STABLE_FLOOR + '+' : 'Dipped below ' + STABLE_FLOOR, {
-      class: 'hardware-chip ' + (held ? 'standard-workload' : 'earlier-workload')
-    }));
-    perf.append(line);
+    perf.append(meter(node('span', 'Worst five seconds'), worst.cand, worst.base, axis, fillClass, STABLE_FLOOR));
   } else if (worstFps(entry) !== null) {
-    perf.append(node('p', 'Worst 5 sec: ' + formatNumber(worstFps(entry)) + ' FPS'));
+    perf.append(meter(node('span', 'Worst five seconds'), worstFps(entry), null, axis, fillClass, STABLE_FLOOR));
   }
-  perf.append(node('p', 'Self-reported · CPU frame production, not displayed FPS', { class: 'evidence-note' }));
+  const notes = [];
+  if (avgDelta) notes.push('Average ' + formatNumber(avgDelta.base) + ' to ' + formatNumber(avgDelta.cand) + ' FPS against its baseline (' + (avgDelta.diff >= 0 ? '+' : '−') + formatNumber(Math.abs(avgDelta.diff)) + ').');
+  if (worst) notes.push(worst.cand >= STABLE_FLOOR ? 'Worst five seconds held ' + STABLE_FLOOR + '+.' : 'Worst five seconds dipped below ' + STABLE_FLOOR + '.');
+  notes.push('Self-reported CPU frame production, not displayed FPS. The notch is the matched baseline, the dashed line is ' + STABLE_FLOOR + ' FPS.');
+  perf.append(node('p', notes.join(' '), { class: 'evidence-note' }));
   body.append(perf);
 
   const changes = diffLines(entry);
@@ -463,8 +488,15 @@ function createCard(entry) {
 
   const actions = node('div', undefined, { class: 'card-actions' });
   const recipe = recipeUrl(entry);
-  actions.append(node('a', 'Open recipe ↗', { href: recipe, target: '_blank', rel: 'noopener noreferrer', class: 'recipe-link' }));
-  const copy = node('button', 'Ask my agent to try this', { type: 'button', class: 'copy-setup' });
+  if (isStandardEntry(entry)) {
+    const compare = node('button', 'Compare on the bench', { type: 'button', class: 'button button-primary' });
+    compare.addEventListener('click', () => {
+      putOnBench(entry);
+      document.querySelector('.bench').scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+    });
+    actions.append(compare);
+  }
+  const copy = node('button', 'Ask my agent to try this', { type: 'button', class: 'button' });
   const status = node('span', '', { class: 'card-copy-status', role: 'status' });
   copy.addEventListener('click', async () => {
     try {
@@ -474,7 +506,7 @@ function createCard(entry) {
       status.textContent = 'Copy failed. Open the recipe link and try again.';
     }
   });
-  actions.append(copy, status);
+  actions.append(copy, node('a', 'Open recipe', { href: recipe, target: '_blank', rel: 'noopener noreferrer', class: 'recipe-link' }), status);
   body.append(actions);
   card.append(body);
   return card;
@@ -546,10 +578,10 @@ function sortEntries(list) {
 
 function showEmpty(title, message, actionLabel, action) {
   const empty = byId('empty-state');
-  empty.replaceChildren(node('span', '✳', { class: 'empty-mark', 'aria-hidden': 'true' }), node('h3', title), node('p', message));
-  if (action === 'dialog') empty.append(node('button', actionLabel, { type: 'button', class: 'button button-dark', 'data-dialog': 'participate' }));
+  empty.replaceChildren(node('h3', title), node('p', message));
+  if (action === 'dialog') empty.append(node('button', actionLabel, { type: 'button', class: 'button button-primary', 'data-dialog': 'participate' }));
   if (action === 'clear') {
-    const clear = node('button', actionLabel, { type: 'button', class: 'button button-dark' });
+    const clear = node('button', actionLabel, { type: 'button', class: 'button button-primary' });
     clear.addEventListener('click', () => {
       for (const id of ['filter-family', 'filter-tier', 'filter-memory', 'filter-shader', 'filter-mc']) byId(id).value = '';
       byId('filter-stable').checked = false;
@@ -560,7 +592,7 @@ function showEmpty(title, message, actionLabel, action) {
     empty.append(clear);
   }
   if (action === 'repository') {
-    empty.append(node('a', actionLabel, { href: repo, target: '_blank', rel: 'noopener noreferrer', class: 'button button-dark' }));
+    empty.append(node('a', actionLabel, { href: repo, target: '_blank', rel: 'noopener noreferrer', class: 'button button-primary' }));
   }
   empty.hidden = false;
 }
@@ -594,14 +626,14 @@ function render() {
 
   if (loadFailed) {
     byId('count').textContent = 'Library unavailable';
-    showEmpty('Could not load the setup library.', 'Reload this page or open the project repository to inspect the published data.', 'Open GitHub ↗', 'repository');
+    showEmpty('Could not load the setup library.', 'Reload this page or open the project repository to inspect the published data.', 'Open GitHub', 'repository');
     return;
   }
 
   if (current.length === 0) {
     byId('count').textContent = 'No standard-route setups yet';
     byId('load-status').textContent = 'No standard-route setup has been published yet.';
-    showEmpty('The first standard run could be yours.', 'There are no captures on the pinned challenge route yet. Ask your agent to run `silicon-shader challenge workload`, follow its instructions, then share a setup measured on that same route.', 'Start with the standard route ↗', 'dialog');
+    showEmpty('The first standard run could be yours.', 'There are no captures on the pinned challenge route yet. Ask your agent to run `silicon-shader challenge workload`, follow its instructions, then share a setup measured on that same route.', 'Start with the standard route', 'dialog');
     return;
   }
 
@@ -623,6 +655,314 @@ function render() {
   results.append(fragment);
 }
 
+// The bench compares standard-route setups only: they share the seed, flight and portrait.
+const TIE_FPS = 5;
+let benchA = null;
+let benchB = null;
+let wipeAnimation = 0;
+
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function benchKey(entry) {
+  return /^[a-f0-9]{64}$/.test(entry.digest || '') ? entry.digest.slice(0, 12) : setupTitle(entry);
+}
+
+function benchEntries() {
+  return sortEntries(standardEntries());
+}
+
+function findBench(key) {
+  return key ? standardEntries().find(entry => benchKey(entry) === key) || null : null;
+}
+
+function shortTitle(entry) {
+  // Presentation titles read "M4 Vibrant 16 - Sildur's Vibrant at stable 90"; the part before the dash names the setup.
+  return setupTitle(entry).split(' - ')[0];
+}
+
+function fpsAxis(list) {
+  let top = 0;
+  for (const entry of list) {
+    for (const run of ['baseline', 'candidate']) top = Math.max(top, average(entry, run) || 0, worstFps(entry, run) || 0);
+  }
+  return Math.max(120, Math.ceil(top / 30) * 30);
+}
+
+function msAxis(list) {
+  let top = 0;
+  for (const entry of list) top = Math.max(top, finite(((entry.runs || {}).candidate || {}).max_ms) || 0);
+  return Math.max(25, Math.ceil(top / 5) * 5);
+}
+
+function slotBadge(slot) {
+  return node('span', slot.toUpperCase(), { class: 'slot slot-' + slot, 'aria-hidden': 'true' });
+}
+
+function scaleRow(stops, max, unit) {
+  const row = node('div', undefined, { class: 'scale', 'aria-hidden': 'true' });
+  for (const stop of stops) {
+    const label = node('span', stop + (stop === stops[stops.length - 1] ? ' ' + unit : ''));
+    label.style.setProperty('--v', percent(stop, max));
+    row.append(label);
+  }
+  return row;
+}
+
+function fpsChart(title, note, picks, axis, key, threshold) {
+  const chart = node('figure', undefined, { class: 'chart' });
+  const heading = node('figcaption', undefined, { class: 'chart-title' });
+  heading.append(node('span', title), node('small', note));
+  chart.append(heading);
+  for (const [slot, entry] of picks) {
+    chart.append(meter(slotBadge(slot), key === 'average' ? average(entry) : worstFps(entry), key === 'average' ? average(entry, 'baseline') : worstFps(entry, 'baseline'), axis, 'fill-' + slot, threshold));
+  }
+  const stops = [];
+  for (let value = 0; value <= axis; value += 30) stops.push(value);
+  chart.append(scaleRow(stops, axis, 'FPS'));
+  return chart;
+}
+
+function frameTimeChart(picks) {
+  const axis = msAxis(picks.map(pick => pick[1]));
+  const chart = node('figure', undefined, { class: 'chart' });
+  const heading = node('figcaption', undefined, { class: 'chart-title' });
+  heading.append(node('span', 'Frame time over the flight'), node('small', 'p50 to p99, tick p95'));
+  chart.append(heading);
+  for (const [slot, entry] of picks) {
+    const run = (entry.runs || {}).candidate || {};
+    const p50 = finite(run.p50_ms);
+    const p95 = finite(run.p95_ms);
+    const p99 = finite(run.p99_ms);
+    const max = finite(run.max_ms);
+    const row = node('div', undefined, { class: 'meter' });
+    const ladder = node('div', undefined, { class: 'ladder', 'aria-hidden': 'true' });
+    const budget = node('span', undefined, { class: 'mark' });
+    budget.style.setProperty('--v', percent(1000 / STABLE_FLOOR, axis));
+    ladder.append(budget);
+    if (p99 !== null && max !== null) {
+      const cap = node('span', undefined, { class: 'cap' });
+      cap.style.setProperty('--from', percent(p99, axis));
+      cap.style.setProperty('--to', percent(max, axis));
+      ladder.append(cap);
+    }
+    if (p50 !== null && p99 !== null) {
+      const band = node('span', undefined, { class: 'band band-' + slot });
+      band.style.setProperty('--from', percent(p50, axis));
+      band.style.setProperty('--to', percent(p99, axis));
+      ladder.append(band);
+    }
+    if (p95 !== null) {
+      const tick = node('span', undefined, { class: 'tick' });
+      tick.style.setProperty('--v', percent(p95, axis));
+      ladder.append(tick);
+    }
+    const spoken = 'p50 ' + formatNumber(p50) + ' ms, p95 ' + formatNumber(p95) + ' ms, p99 ' + formatNumber(p99) + ' ms, max ' + formatNumber(max) + ' ms';
+    row.append(slotBadge(slot), ladder, node('span', formatNumber(p99), { class: 'meter-value', 'aria-label': spoken, title: spoken }));
+    chart.append(row);
+  }
+  const stops = [];
+  for (let value = 0; value <= axis; value += 5) stops.push(value);
+  chart.append(scaleRow(stops, axis, 'ms'));
+  const spikes = picks.map(([slot, entry]) => {
+    const run = (entry.runs || {}).candidate || {};
+    const counts = [run.over_33, run.over_50, run.over_100].map(countMetric);
+    const local = countMetric(run.local_outliers);
+    return slot.toUpperCase() + ' had ' + counts.map(value => value === null ? '—' : String(value)).join(' / ') + ' intervals over 33 / 50 / 100 ms and ' + (local === null ? 'unrecorded' : local) + ' local ' + (local === 1 ? 'outlier' : 'outliers') + '.';
+  });
+  chart.append(node('p', 'Value is p99. Dashed line is ' + formatNumber(1000 / STABLE_FLOOR) + ' ms, the ' + STABLE_FLOOR + ' FPS frame budget. ' + spikes.join(' '), { class: 'chart-note' }));
+  return chart;
+}
+
+function verdict(a, b) {
+  const left = average(a);
+  const right = average(b);
+  if (left === null || right === null) return 'One of these setups has no recorded average, so compare the picture and recipe.';
+  const gap = Math.abs(left - right);
+  if (gap < TIE_FPS) return 'Average FPS differs by ' + formatNumber(gap) + ', inside the ' + TIE_FPS + ' FPS run-to-run margin, so treat it as a tie and choose by the picture and view distance.';
+  const faster = left > right ? shortTitle(a) : shortTitle(b);
+  return faster + ' averaged ' + formatNumber(gap) + ' FPS more on the same flight. Check resolution and view distance before calling it faster.';
+}
+
+function specTable(picks) {
+  const table = node('table', undefined, { class: 'spec-table' });
+  table.append(node('caption', 'Recipe at a glance'));
+  if (picks.length > 1) {
+    const head = node('thead');
+    const row = node('tr');
+    row.append(node('td'));
+    for (const [slot] of picks) {
+      const cell = node('th', undefined, { scope: 'col' });
+      cell.append(slotBadge(slot), node('span', slot === 'a' ? 'Left' : 'Right', { class: 'sr-only' }));
+      row.append(cell);
+    }
+    head.append(row);
+    table.append(head);
+  }
+  const rows = [
+    ['Shader', entry => shaderName(entry)],
+    ['Resolution', entry => resolutionInfo(entry).output + (resolutionInfo(entry).scale === null ? '' : ' at ' + formatNumber(resolutionInfo(entry).scale * 100, 0) + '%')],
+    ['View distance', entry => distanceLine(entry)],
+    ['Mac', entry => chipLabel(entry) + ', ' + memoryLabel(entry)]
+  ];
+  const tbody = node('tbody');
+  for (const [label, value] of rows) {
+    const row = node('tr');
+    row.append(node('th', label, { scope: 'row' }));
+    for (const [, entry] of picks) row.append(node('td', value(entry)));
+    tbody.append(row);
+  }
+  table.append(tbody);
+  return table;
+}
+
+function whoBlock(slot, entry, closable) {
+  const who = node('div', undefined, { class: 'who' });
+  who.append(slotBadge(slot), node('h3', shortTitle(entry), { class: 'who-name' }));
+  if (closable) {
+    const close = node('button', 'Remove', { type: 'button', class: 'who-close', 'aria-label': 'Remove ' + shortTitle(entry) + ' from the comparison' });
+    close.addEventListener('click', () => setBench(findBench(slot === 'a' ? benchB : benchA), null));
+    who.append(close);
+  } else who.append(node('span'));
+  const agent = (entry.presentation || {}).agent || {};
+  who.append(node('p', shaderName(entry) + ', shared by @' + asText(entry.author, 'unknown') + ' with ' + asText(agent.harness, 'an unrecorded agent'), { class: 'who-meta' }));
+  return who;
+}
+
+function renderReadout(a, b) {
+  const body = byId('readout-body');
+  body.replaceChildren();
+  if (!a) {
+    body.append(node('p', loadFailed ? 'The setup library could not be loaded.' : 'No standard-route setups have been published yet.', { class: 'readout-fine' }));
+    return;
+  }
+  const picks = b ? [['a', a], ['b', b]] : [['a', a]];
+  const heads = node('div', undefined, { class: 'readout-heads' });
+  for (const [slot, entry] of picks) heads.append(whoBlock(slot, entry, Boolean(b)));
+  body.append(heads);
+  body.append(node('p', b ? verdict(a, b) : 'Pick Compare on another setup to split the frame.', { class: 'verdict' }));
+  const axis = fpsAxis(picks.map(pick => pick[1]));
+  body.append(
+    fpsChart('Average FPS', 'notch is the matched baseline', picks, axis, 'average'),
+    fpsChart('Worst five seconds', 'dashed line is ' + STABLE_FLOOR + ' FPS', picks, axis, 'worst', STABLE_FLOOR),
+    frameTimeChart(picks)
+  );
+  body.append(specTable(picks));
+  const links = node('p', undefined, { class: 'readout-links' });
+  for (const [slot, entry] of picks) {
+    const label = b ? (slot === 'a' ? 'left' : 'right') + ' ' : '';
+    links.append(node('a', 'Open ' + label + 'recipe', { href: recipeUrl(entry), target: '_blank', rel: 'noopener noreferrer' }));
+    const shot = safeScreenshotUrl((entry.presentation || {}).screenshot_url);
+    if (shot) links.append(node('a', 'Full ' + label + 'screenshot', { href: shot, target: '_blank', rel: 'noopener noreferrer' }));
+  }
+  body.append(links, node('p', 'Self-reported on one base M4 MacBook Pro unless the Mac row says otherwise. CPU frame production, not displayed or generated FPS.', { class: 'readout-fine' }));
+}
+
+function setStageImage(img, entry) {
+  const url = entry ? safeScreenshotUrl((entry.presentation || {}).screenshot_url) : null;
+  img.hidden = !url;
+  if (!url) {
+    img.removeAttribute('src');
+    return;
+  }
+  img.alt = 'In-game screenshot of ' + shortTitle(entry) + ', ' + shaderName(entry);
+  if (img.getAttribute('src') !== url) {
+    img.classList.add('is-loading');
+    img.addEventListener('load', () => img.classList.remove('is-loading'), { once: true });
+    img.src = url;
+  }
+}
+
+function setWipe(value) {
+  byId('wipe').value = String(value);
+  byId('stage').querySelector('.stage-frame').style.setProperty('--wipe', value + '%');
+}
+
+function slideWipeIn() {
+  cancelAnimationFrame(wipeAnimation);
+  if (prefersReducedMotion()) {
+    setWipe(50);
+    return;
+  }
+  const start = performance.now();
+  const step = now => {
+    const t = Math.min(1, (now - start) / 650);
+    const eased = 1 - Math.pow(1 - t, 3);
+    setWipe(Math.round((100 - 50 * eased) * 2) / 2);
+    if (t < 1) wipeAnimation = requestAnimationFrame(step);
+  };
+  setWipe(100);
+  wipeAnimation = requestAnimationFrame(step);
+}
+
+function renderBench() {
+  const list = benchEntries();
+  let a = findBench(benchA);
+  let b = findBench(benchB);
+  if (!a && list.length) a = list[0];
+  if (b && a && benchKey(b) === benchKey(a)) b = null;
+  const stage = byId('stage');
+  stage.dataset.mode = !a ? 'empty' : b ? 'compare' : 'single';
+  byId('stage-empty').hidden = Boolean(a);
+  if (!a) byId('stage-empty').textContent = loadFailed ? 'Could not load the setup library.' : 'No standard-route setups yet. The first one could be yours.';
+  setStageImage(byId('stage-a'), a);
+  setStageImage(byId('stage-b'), b);
+  byId('wipe').hidden = !b;
+  const tagA = byId('stage-tag-a');
+  const tagB = byId('stage-tag-b');
+  tagA.hidden = !a;
+  tagB.hidden = !b;
+  if (a) tagA.replaceChildren(...(b ? [node('b', 'A')] : []), node('span', shortTitle(a)));
+  if (b) tagB.replaceChildren(node('b', 'B'), node('span', shortTitle(b)));
+
+  const rail = byId('rail');
+  rail.replaceChildren();
+  for (const entry of list) {
+    const key = benchKey(entry);
+    const slot = a && benchKey(a) === key ? 'a' : b && benchKey(b) === key ? 'b' : '';
+    const tile = node('li', undefined, { class: 'tile' });
+    if (slot) tile.dataset.slot = slot;
+    const show = node('button', undefined, { type: 'button', class: 'tile-show', 'aria-pressed': String(slot !== ''), 'aria-label': 'Show ' + shortTitle(entry) + ' on the left' });
+    const thumb = node('img', undefined, { alt: '', loading: 'lazy', decoding: 'async', width: '320', height: '180' });
+    const shot = safeScreenshotUrl((entry.presentation || {}).screenshot_url);
+    if (shot) thumb.src = shot;
+    const text = node('span', undefined, { class: 'tile-text' });
+    const shader = titleCase(asText((((entry.metadata || {}).candidate || {}).shader || {}).name, 'Shader setup'));
+    text.append(node('span', shortTitle(entry), { class: 'tile-name' }), node('span', shader, { class: 'tile-shader' }), node('span', formatNumber(average(entry)) + ' FPS', { class: 'tile-shader' }));
+    show.append(thumb, text);
+    show.addEventListener('click', () => setBench(entry, null));
+    tile.append(node('span', slot.toUpperCase(), { class: 'tile-slot', 'aria-hidden': 'true' }), show);
+    if (a && !slot) {
+      const compare = node('button', 'Compare', { type: 'button', class: 'tile-compare', 'aria-label': 'Compare ' + shortTitle(entry) + ' with ' + shortTitle(a) });
+      compare.addEventListener('click', () => setBench(a, entry));
+      tile.append(compare);
+    }
+    rail.append(tile);
+  }
+  renderReadout(a, b);
+}
+
+function setBench(a, b) {
+  const wasComparing = Boolean(findBench(benchB));
+  benchA = a ? benchKey(a) : null;
+  benchB = b ? benchKey(b) : null;
+  saveState();
+  renderBench();
+  if (b && !wasComparing) slideWipeIn();
+}
+
+function putOnBench(entry) {
+  const a = findBench(benchA) || benchEntries()[0];
+  if (!a || benchKey(a) === benchKey(entry)) setBench(entry, null);
+  else setBench(a, entry);
+}
+
+byId('wipe').addEventListener('input', event => {
+  cancelAnimationFrame(wipeAnimation);
+  setWipe(Number(event.target.value));
+});
+
 function openDialog(id) {
   const dialog = byId(id);
   if (dialog && !dialog.open) dialog.showModal();
@@ -642,6 +982,8 @@ function saveState() {
   const params = new URLSearchParams();
   for (const [id, key] of Object.entries(stateFields)) if (byId(id).value && !(id === 'sort-by' && byId(id).selectedIndex === 0)) params.set(key, byId(id).value);
   if (byId('filter-stable').checked) params.set('stable', '1');
+  if (benchA) params.set('a', benchA);
+  if (benchB) params.set('b', benchB);
   const query = params.toString();
   try {
     history.replaceState(null, '', query ? '?' + query : location.pathname);
@@ -656,6 +998,8 @@ function loadState() {
     if (wanted && [...select.options].some(option => option.value === wanted)) select.value = wanted;
   }
   byId('filter-stable').checked = params.get('stable') === '1';
+  benchA = params.get('a');
+  benchB = params.get('b');
 }
 
 [...Object.keys(stateFields), 'filter-stable'].forEach(id => byId(id).addEventListener('change', () => {
@@ -663,6 +1007,7 @@ function loadState() {
   visibleEarlierCount = pageSize;
   saveState();
   render();
+  renderBench();
 }));
 byId('copy-link').addEventListener('click', async () => {
   try {
@@ -692,17 +1037,19 @@ async function load() {
     loadFailed = true;
     byId('load-status').textContent = 'Could not load the setup library.';
     render();
+    renderBench();
     return;
   }
   populateFilters();
   loadState();
   render();
+  renderBench();
 }
 
 byId('copy-prompt').addEventListener('click', async () => {
   try {
     await copyText(byId('agent-prompt').textContent);
-    byId('copy-status').textContent = 'Copied — paste it into your agent.';
+    byId('copy-status').textContent = 'Copied. Paste it into your agent.';
   } catch {
     byId('copy-status').textContent = 'Select and copy the prompt above.';
   }
